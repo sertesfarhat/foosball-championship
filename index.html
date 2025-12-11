@@ -490,7 +490,13 @@
 
             try {
                 if(isOnline) {
-                    await db.collection('registrations').add(data);
+                    // Create a promise that rejects after 5 seconds to prevent hanging
+                    const savePromise = db.collection('registrations').add(data);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Időtúllépés. A szerver nem válaszol.")), 5000)
+                    );
+                    
+                    await Promise.race([savePromise, timeoutPromise]);
                 } else {
                     registrations.push(data);
                     localStorage.setItem('musz_registrations', JSON.stringify(registrations));
@@ -506,7 +512,7 @@
 
             } catch (err) {
                 console.error("Registration error:", err);
-                alertBox.textContent = "Hiba a mentéskor: " + err.message;
+                alertBox.textContent = "Hiba: " + err.message;
                 alertBox.className = "mb-4 p-4 rounded bg-red-500/20 border border-red-500 text-red-200 text-center block";
                 alertBox.classList.remove('hidden');
             } finally {
@@ -638,24 +644,111 @@
             camera.position.set(0, 15, 20); camera.lookAt(0,0,0);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            container.innerHTML = ''; // Clear previous if any
             container.appendChild(renderer.domElement);
             
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(10, 20, 10); scene.add(dl);
-            
-            // Simple Floor
-            const plane = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshBasicMaterial({color: 0x0f172a}));
-            plane.rotation.x = -Math.PI/2; plane.position.y = -5; scene.add(plane);
-            
+            const spotLight = new THREE.PointLight(0xe63946, 1, 20); spotLight.position.set(0, 5, 0); scene.add(spotLight);
+
             // Table Group
-            const table = new THREE.Group(); scene.add(table);
-            const field = new THREE.Mesh(new THREE.BoxGeometry(14, 0.5, 8), new THREE.MeshLambertMaterial({color: 0x2d6a4f})); table.add(field);
-            const wL = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 0.5), new THREE.MeshLambertMaterial({color: 0x8B4513})); wL.position.set(0,1,4.25); table.add(wL);
-            const wR = wL.clone(); wR.position.set(0,1,-4.25); table.add(wR);
+            const tableGroup = new THREE.Group(); scene.add(tableGroup);
+
+            // Field
+            const field = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 8), new THREE.MeshLambertMaterial({color: 0x2d6a4f}));
+            tableGroup.add(field);
+
+            // Walls
+            const woodMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const longWallGeo = new THREE.BoxGeometry(15, 2, 0.5);
+            const shortWallGeo = new THREE.BoxGeometry(0.5, 2, 8);
             
-            function animate() { requestAnimationFrame(animate); table.rotation.y += 0.002; renderer.render(scene, camera); }
+            const w1 = new THREE.Mesh(longWallGeo, woodMat); w1.position.set(0, 1, 4.25); tableGroup.add(w1);
+            const w2 = new THREE.Mesh(longWallGeo, woodMat); w2.position.set(0, 1, -4.25); tableGroup.add(w2);
+            const w3 = new THREE.Mesh(shortWallGeo, woodMat); w3.position.set(7.25, 1, 0); tableGroup.add(w3);
+            const w4 = new THREE.Mesh(shortWallGeo, woodMat); w4.position.set(-7.25, 1, 0); tableGroup.add(w4);
+
+            // Legs
+            const legGeo = new THREE.BoxGeometry(1, 6, 1);
+            const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(6, -3, 3); tableGroup.add(l1);
+            const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(6, -3, -3); tableGroup.add(l2);
+            const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-6, -3, 3); tableGroup.add(l3);
+            const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-6, -3, -3); tableGroup.add(l4);
+
+            // Rods Logic
+            const rodGeo = new THREE.CylinderGeometry(0.1, 0.1, 10);
+            const rodMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+            const pRedMat = new THREE.MeshLambertMaterial({ color: 0xe63946 });
+            const pBlueMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
+            const playerGeo = new THREE.BoxGeometry(0.4, 1.5, 0.4);
+
+            function createRod(x, playerColor, count) {
+                const rod = new THREE.Mesh(rodGeo, rodMat);
+                rod.rotation.x = Math.PI / 2;
+                rod.position.y = 1.5;
+                rod.position.x = x;
+                const spacing = 6 / (count + 1);
+                for(let i=1; i<=count; i++) {
+                    const p = new THREE.Mesh(playerGeo, playerColor);
+                    p.position.y = 0; 
+                    p.position.z = -3 + (i * spacing);
+                    p.rotation.x = -Math.PI / 2;
+                    rod.add(p);
+                }
+                return rod;
+            }
+
+            const r1 = createRod(-5, pRedMat, 1);
+            const r2 = createRod(-3, pRedMat, 2);
+            const r3 = createRod(-1, pBlueMat, 3);
+            const r4 = createRod(1, pRedMat, 5);
+            const r5 = createRod(3, pBlueMat, 5);
+            const r6 = createRod(5, pBlueMat, 2);
+            tableGroup.add(r1, r2, r3, r4, r5, r6);
+
+            // Snow
+            const snowGeo = new THREE.BufferGeometry();
+            const snowCount = 800;
+            const pos = new Float32Array(snowCount*3);
+            for(let i=0; i<snowCount*3; i++) pos[i] = (Math.random()-0.5)*60;
+            snowGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const snowMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff, transparent: true, opacity: 0.6 });
+            const snow = new THREE.Points(snowGeo, snowMat);
+            scene.add(snow);
+
+            // Animation
+            let mouseX = 0, mouseY = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                tableGroup.rotation.y += 0.002;
+                tableGroup.rotation.x = 0.2 + (mouseY * 0.0005);
+                tableGroup.rotation.y += mouseX * 0.0005;
+
+                // Spin rods
+                [r1,r2,r3,r4,r5,r6].forEach(r => r.rotation.y += 0.05);
+
+                // Snow
+                const p = snow.geometry.attributes.position.array;
+                for(let i=1; i<p.length; i+=3) {
+                    p[i] -= 0.1;
+                    if(p[i] < -20) p[i] = 20;
+                }
+                snow.geometry.attributes.position.needsUpdate = true;
+
+                renderer.render(scene, camera);
+            }
+
+            document.addEventListener('mousemove', e => {
+                mouseX = e.clientX - window.innerWidth/2;
+                mouseY = e.clientY - window.innerHeight/2;
+            });
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth/window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
             animate();
-            window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
 
         window.onload = () => { 
