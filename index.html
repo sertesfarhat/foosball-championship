@@ -247,7 +247,7 @@
     </main>
 
     <script>
-        // --- 1. CONFIGURATION ---
+        // --- 1. CONFIGURATION (PRE-FILLED) ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
             authDomain: "karacsonyi-csocso.firebaseapp.com",
@@ -270,6 +270,14 @@
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
+                
+                // --- CRITICAL FIREWALL FIX ---
+                // Forces simple HTTP requests instead of streams/websockets
+                db.settings({ 
+                    experimentalForceLongPolling: true,
+                    useFetchStreams: false 
+                });
+                
                 const auth = firebase.auth();
                 auth.signInAnonymously().then(() => {
                     console.log("Connected to Database");
@@ -490,17 +498,15 @@
 
             try {
                 if(isOnline) {
-                    // Create a promise that rejects after 5 seconds to prevent hanging
+                    // Create a promise that rejects after 15 seconds (Extended)
                     const savePromise = db.collection('registrations').add(data);
                     const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error("Időtúllépés. A szerver nem válaszol.")), 5000)
+                        setTimeout(() => reject(new Error("Időtúllépés. A szerver nem válaszol.")), 15000)
                     );
                     
                     await Promise.race([savePromise, timeoutPromise]);
                 } else {
-                    registrations.push(data);
-                    localStorage.setItem('musz_registrations', JSON.stringify(registrations));
-                    loadRegisteredTeams();
+                    throw new Error("Offline mód."); 
                 }
 
                 // Success
@@ -512,9 +518,18 @@
 
             } catch (err) {
                 console.error("Registration error:", err);
-                alertBox.textContent = "Hiba: " + err.message;
-                alertBox.className = "mb-4 p-4 rounded bg-red-500/20 border border-red-500 text-red-200 text-center block";
+                
+                // Fallback to LocalStorage if server fails
+                registrations.push(data);
+                localStorage.setItem('musz_registrations', JSON.stringify(registrations));
+                loadRegisteredTeams();
+
+                alertBox.textContent = "Szerver hiba. Mentve (Offline módban).";
+                alertBox.className = "mb-4 p-4 rounded bg-yellow-500/20 border border-yellow-500 text-yellow-200 text-center block";
                 alertBox.classList.remove('hidden');
+                e.target.reset();
+                setTimeout(() => alertBox.classList.add('hidden'), 4000);
+
             } finally {
                 // Reset Button
                 submitBtn.disabled = false;
@@ -644,7 +659,6 @@
             camera.position.set(0, 15, 20); camera.lookAt(0,0,0);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            container.innerHTML = ''; // Clear previous if any
             container.appendChild(renderer.domElement);
             
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
