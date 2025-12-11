@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MÚSZ Csócsó Bajnokság</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Mountains of Christmas', 'cursive'],
+                    },
+                    colors: {
+                        festiveRed: '#e63946',
+                        festiveGold: '#ffd700',
+                        festiveGreen: '#2d6a4f',
+                        wood: '#8B4513',
+                        dark: '#0b0f19',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1a2332 0%, #0b0f19 90%);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .gold-glow {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        }
+
+        .input-field {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #e63946;
+            box-shadow: 0 0 10px rgba(230, 57, 70, 0.3);
+        }
+        
+        @keyframes flashGreen {
+            0% { background-color: rgba(34, 197, 94, 0.5); }
+            100% { background-color: rgba(0, 0, 0, 0.4); }
+        }
+        .flash-success {
+            animation: flashGreen 1s ease-out;
+        }
+
+        /* Raffle Specific Styles */
+        .raffle-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .slot-machine-text {
+            font-family: 'Mountains of Christmas', cursive;
+            text-shadow: 0 0 15px currentColor;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ffd700;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        /* Page Transitions */
+        .page-section {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .hidden-page {
+            display: none;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-festiveRed selection:text-white">
+
+    <div id="canvas-container"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-300 glass-panel border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
+                <span class="text-2xl pt-1">🎄</span>
+                <span class="text-xl md:text-2xl font-display font-bold tracking-wider text-white">MÚSZ <span class="text-festiveRed">BAJNOKSÁG</span></span>
+            </div>
+            <div class="hidden md:flex space-x-6 text-sm font-semibold tracking-wide items-center">
+                <button onclick="showPage('home')" class="hover:text-festiveGold transition-colors">KEZDŐLAP</button>
+                <button onclick="showPage('raffle')" class="text-festiveRed hover:text-white transition-colors font-bold">SORSOLÁS</button>
+                <button onclick="scrollToSection('matches')" class="hover:text-festiveGold transition-colors">MECCSEK</button>
+                <button onclick="scrollToSection('standings')" class="hover:text-festiveGold transition-colors">TABELLA</button>
+            </div>
+            <button onclick="scrollToSection('register')" class="bg-festiveRed text-white px-4 py-2 text-sm md:text-base rounded-full font-bold hover:bg-red-700 transition-colors shadow-lg">
+                NEVEZÉS
+            </button>
+        </div>
+    </nav>
+
+    <main class="relative z-10 pt-24 pb-20 space-y-32">
+
+        <!-- ================= HOME PAGE ================= -->
+        <div id="page-home" class="page-section space-y-32">
+            
+            <!-- HERO SECTION -->
+            <section id="welcome" class="min-h-[80vh] flex items-center justify-center px-6">
+                <div class="text-center max-w-4xl mx-auto space-y-6">
+                    <span class="inline-block py-1 px-4 rounded-full border border-festiveGold/30 bg-festiveGold/10 text-festiveGold text-sm font-bold tracking-widest uppercase mb-4">
+                        ❄️ Téli Szezon 2025
+                    </span>
+                    <h1 class="text-5xl md:text-8xl font-display font-bold leading-tight text-white drop-shadow-lg">
+                        KARÁCSONYI <br/>
+                        <span class="text-festiveRed gold-glow">CSÓCSÓ KUPA</span>
+                    </h1>
+                    <p class="text-lg text-gray-300 max-w-xl mx-auto leading-relaxed">
+                        A hivatalos MÚSZ csócsó bajnokság visszatért! Regisztráljatok, pörgessétek fel az ünnepi hangulatot és nyerjétek meg az Arany Karácsonyfadíszt!
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+                        <button onclick="document.getElementById('register').scrollIntoView({behavior: 'smooth'})" class="group relative px-8 py-4 bg-festiveRed text-white font-bold text-lg rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
+                            <span class="relative z-10">NEVEZÉS INDÍTÁSA</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REGISTRATION SECTION -->
+            <section id="register" class="max-w-3xl mx-auto px-6">
+                <div class="glass-panel rounded-2xl p-8 md:p-12 relative overflow-hidden border-t-4 border-festiveRed">
+                    <div class="absolute -top-10 -right-10 text-9xl opacity-10 rotate-12">🎅</div>
+                    
+                    <h2 class="text-4xl font-display font-bold mb-8 text-center text-festiveGold">NEVEZÉS</h2>
+                    
+                    <div class="flex justify-center mb-8 border-b border-white/10">
+                        <button id="tab-solo" class="pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all" onclick="switchTab('solo')">Egyéni</button>
+                        <button id="tab-team" class="pb-3 px-6 text-gray-400 hover:text-white transition-all" onclick="switchTab('team')">Csapat</button>
+                    </div>
+
+                    <div id="form-alert" class="hidden mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-sm text-center"></div>
+
+                    <form id="form-solo" class="space-y-5">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2">Teljes Név</label>
+                            <input type="text" id="solo-name" required class="input-field w-full p-3 rounded" placeholder="Kovács János">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2">Részleg</label>
+                            <input type="text" id="solo-dept" required class="input-field w-full p-3 rounded" placeholder="IT, HR, Pénzügy...">
+                        </div>
+                        <button type="submit" class="w-full bg-festiveGold hover:bg-yellow-400 text-black font-bold py-4 rounded transition-all mt-4 uppercase tracking-widest shadow-lg">
+                            Egyéni Jelentkezés
+                        </button>
+                        <p class="text-center text-xs text-gray-400 mt-2">Véletlenszerűen sorsolunk párt melléd.</p>
+                    </form>
+
+                    <form id="form-team" class="space-y-5 hidden">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2">Csapatnév</label>
+                            <input type="text" id="team-name" required class="input-field w-full p-3 rounded" placeholder="A Hótörők">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2">1. Játékos</label>
+                                <input type="text" id="p1-name" required class="input-field w-full p-3 rounded" placeholder="Csapatkapitány">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2">2. Játékos</label>
+                                <input type="text" id="p2-name" required class="input-field w-full p-3 rounded" placeholder="Csatár">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-festiveGold hover:bg-yellow-400 text-black font-bold py-4 rounded transition-all mt-4 uppercase tracking-widest shadow-lg">
+                            Csapat Regisztráció
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- UPCOMING MATCHES -->
+            <section id="matches" class="max-w-6xl mx-auto px-6">
+                <div class="flex items-center justify-between mb-10">
+                    <h2 class="text-3xl md:text-4xl font-display font-bold text-festiveRed">KÖVETKEZŐ MECCSEK</h2>
+                    <span class="text-festiveGold text-xs md:text-sm animate-pulse flex items-center gap-2">
+                        <span class="w-2 h-2 bg-festiveGold rounded-full"></span> ÉLŐ
+                    </span>
+                </div>
+                
+                <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Matches will be injected here via JS -->
+                </div>
+            </section>
+
+            <!-- STANDINGS TABLE -->
+            <section id="standings" class="max-w-5xl mx-auto px-6">
+                <h2 class="text-4xl font-display font-bold mb-8 text-center text-white">RANGILISTA</h2>
+                <div class="glass-panel rounded-xl overflow-hidden shadow-[0_0_20px_rgba(230,57,70,0.2)] overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-festiveRed/20 text-gray-300 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-medium">Helyezés</th>
+                                <th class="p-4 font-medium">Csapat</th>
+                                <th class="p-4 font-medium text-center">Meccs</th>
+                                <th class="p-4 font-medium text-center">Gy-V</th>
+                                <th class="p-4 font-medium text-right text-festiveGold">Pont</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body" class="divide-y divide-white/5 text-sm"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- RULES SECTION -->
+            <section id="rules" class="max-w-4xl mx-auto px-6">
+                 <h2 class="text-4xl font-display font-bold mb-10 text-center text-white">JÁTÉKSZABÁLYOK</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed">
+                         <h3 class="text-xl font-bold mb-3 text-festiveGold">01. Pörgetés</h3>
+                         <p id="rule-0" class="text-gray-400">Tilos a rúd pörgetése! A 360 foknál nagyobb fordulat szabálytalannak minősül.</p>
+                     </div>
+                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed">
+                         <h3 class="text-xl font-bold mb-3 text-festiveGold">02. Pontozás</h3>
+                         <p id="rule-1" class="text-gray-400">A meccsek 10 gólig tartanak. Két góllal kell nyerni, de legfeljebb 12-ig.</p>
+                     </div>
+                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed">
+                         <h3 class="text-xl font-bold mb-3 text-festiveGold">03. Holt labda</h3>
+                         <p id="rule-2" class="text-gray-400">Ha a labda elérhetetlen helyen áll meg, azé a csapaté a labda, aki utoljára gólt kapott.</p>
+                     </div>
+                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed">
+                         <h3 class="text-xl font-bold mb-3 text-festiveGold">04. Fair Play</h3>
+                         <p id="rule-3" class="text-gray-400">Tiszteld az ellenfelet! Az asztal rángatása tilos. A cél a jó hangulat!</p>
+                     </div>
+                 </div>
+            </section>
+        </div>
+
+        <!-- ================= RAFFLE PAGE (Hidden by default) ================= -->
+        <div id="page-raffle" class="page-section hidden-page">
+            <section class="max-w-6xl mx-auto px-6 relative pt-10">
+                <button onclick="showPage('home')" class="mb-8 text-gray-400 hover:text-white flex items-center gap-2">
+                    <span>←</span> Vissza a főoldalra
+                </button>
+                <h2 class="text-4xl font-display font-bold mb-8 text-center text-festiveGold drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">SORSOLÁS ARÉNA</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left: Team Pool -->
+                    <div class="glass-panel p-6 rounded-xl order-2 lg:order-1">
+                        <h3 class="text-xl font-bold mb-4 text-white">Sorsolási Kalap</h3>
+                        <p class="text-xs text-gray-400 mb-2">A regisztrált csapatok automatikusan betöltődnek.</p>
+                        <textarea id="raffle-pool" class="w-full h-48 bg-black/40 border border-white/20 rounded-lg p-3 text-sm text-gray-300 focus:border-festiveGold outline-none" placeholder="Hótörők&#10;Grinchék"></textarea>
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="loadRegisteredTeams()" class="text-xs text-festiveGold underline hover:text-white font-bold">Regisztrációk Betöltése</button>
+                            <div class="flex-1"></div>
+                            <span id="pool-count" class="text-sm text-festiveGold font-bold self-center">0 csapat</span>
+                        </div>
+                    </div>
+
+                    <!-- Center: The Stage -->
+                    <div class="col-span-1 lg:col-span-2 order-1 lg:order-2 flex flex-col items-center">
+                        <div class="w-full bg-black/60 border-4 border-festiveRed rounded-2xl p-8 mb-8 relative overflow-hidden shadow-[0_0_50px_rgba(230,57,70,0.3)] min-h-[300px] flex flex-col justify-center items-center">
+                            <div id="raffle-display" class="w-full flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 opacity-50 transition-all duration-500">
+                                <div class="raffle-box w-full md:w-1/2 h-32 flex items-center justify-center rounded-lg relative overflow-hidden">
+                                    <span id="slot-1" class="slot-machine-text text-3xl md:text-4xl text-white text-center px-2">?</span>
+                                </div>
+                                <div class="text-4xl font-black text-festiveRed italic drop-shadow-[0_0_10px_rgba(230,57,70,0.8)]">VS</div>
+                                <div class="raffle-box w-full md:w-1/2 h-32 flex items-center justify-center rounded-lg relative overflow-hidden">
+                                    <span id="slot-2" class="slot-machine-text text-3xl md:text-4xl text-white text-center px-2">?</span>
+                                </div>
+                            </div>
+                            <div id="match-announcement" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-10 hidden transform scale-0 transition-transform duration-500">
+                                 <div class="text-center">
+                                     <h3 class="text-festiveGold text-sm uppercase tracking-widest mb-2">Új Párosítás</h3>
+                                     <div id="announced-match" class="text-3xl md:text-5xl font-display font-bold text-white leading-tight"></div>
+                                 </div>
+                            </div>
+                        </div>
+                        <button id="draw-btn" onclick="startDraw()" class="w-full max-w-md py-4 bg-gradient-to-r from-festiveRed to-red-700 text-white font-bold text-xl rounded-full shadow-[0_0_20px_rgba(230,57,70,0.6)] hover:scale-105 transition-transform uppercase tracking-widest border border-white/20">
+                            KÖVETKEZŐ PÁROSÍTÁS
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-12 glass-panel p-8 rounded-xl">
+                    <h3 class="text-2xl font-display font-bold mb-6 text-center text-gray-300">KISORSOLT MECCSEK</h3>
+                    <div id="drawn-matches-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <p class="text-gray-500 text-center col-span-full italic">Még nincs kisorsolt párosítás...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= ADMIN PANEL ================= -->
+        <div id="admin-login-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-4">
+            <div class="bg-gray-900 border border-festiveRed p-8 rounded-xl max-w-sm w-full shadow-2xl">
+                <h3 class="text-xl font-bold text-white mb-4 text-center">Admin Belépés</h3>
+                <input type="password" id="admin-password" placeholder="Jelszó" class="w-full p-3 bg-gray-800 text-white rounded mb-4 border border-gray-700 focus:border-festiveRed outline-none">
+                <div class="flex gap-2">
+                    <button onclick="checkAdminPassword()" class="flex-1 bg-festiveRed hover:bg-red-700 text-white py-2 rounded font-bold transition">Belépés</button>
+                    <button onclick="closeAdminModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-bold transition">Mégse</button>
+                </div>
+            </div>
+        </div>
+
+        <section id="admin-panel" class="hidden max-w-5xl mx-auto px-6 pb-20 mt-20 border-t border-white/10 pt-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-display font-bold text-red-500">ADMINISZTRÁCIÓ</h2>
+                <button onclick="closeAdminPanel()" class="text-gray-400 hover:text-white underline text-sm">Kilépés</button>
+            </div>
+            
+            <div class="grid gap-8">
+                <!-- Registration List -->
+                <div class="glass-panel p-6 rounded-lg">
+                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Regisztrált Csapatok & Játékosok</h3>
+                    <div id="admin-registrations-list" class="space-y-2 max-h-60 overflow-y-auto bg-black/20 p-4 rounded text-sm text-gray-300">
+                        <p class="italic">Nincs regisztráció.</p>
+                    </div>
+                </div>
+
+                <!-- Rules Editor -->
+                <div class="glass-panel p-6 rounded-lg">
+                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Szabályok Szerkesztése</h3>
+                    <div class="space-y-4">
+                        <textarea id="admin-rule-0" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
+                        <textarea id="admin-rule-1" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
+                        <textarea id="admin-rule-2" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
+                        <textarea id="admin-rule-3" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
+                        <button onclick="saveRules()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold">Szabályok Mentése</button>
+                    </div>
+                </div>
+
+                <!-- Match Editor -->
+                <div class="glass-panel p-6 rounded-lg">
+                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Eredmények és Csapatok Módosítása</h3>
+                    <div id="admin-matches-list" class="space-y-4">
+                        <!-- Matches injected here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-white/10 py-12 text-center text-gray-500 text-sm mt-20">
+            <p>&copy; 2025 MÚSZ Csócsó Bajnokság.</p>
+            <button onclick="openAdminModal()" class="mt-4 text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- DATA STATE ---
+        let matchesData = [
+            { id: 1, t1: "Hótörők", t2: "Rénszarvasok", s1: 0, s2: 0, time: "Ma, 14:00", status: "Hamarosan" },
+            { id: 2, t1: "Télapó Manói", t2: "Grinchék", s1: 0, s2: 0, time: "Ma, 14:30", status: "Hamarosan" },
+            { id: 3, t1: "Jegesmedvék", t2: "Pingvinek", s1: 0, s2: 0, time: "Holnap, 10:00", status: "Tervezett" },
+            { id: 4, t1: "Ünnepi Hősök", t2: "Krampuszok", s1: 0, s2: 0, time: "Holnap, 11:00", status: "Tervezett" }
+        ];
+
+        let rulesData = [
+            "Tilos a rúd pörgetése! A 360 foknál nagyobb fordulat szabálytalannak minősül.",
+            "A meccsek 10 gólig tartanak. Két góllal kell nyerni, de legfeljebb 12-ig.",
+            "Ha a labda elérhetetlen helyen áll meg, azé a csapaté a labda, aki utoljára gólt kapott.",
+            "Tiszteld az ellenfelet! Az asztal rángatása tilos. A cél a jó hangulat!"
+        ];
+
+        let registrations = [];
+        
+        // Load Data from LocalStorage
+        const savedMatches = localStorage.getItem('musz_matches');
+        if (savedMatches) matchesData = JSON.parse(savedMatches);
+
+        const savedRules = localStorage.getItem('musz_rules');
+        if (savedRules) rulesData = JSON.parse(savedRules);
+
+        const savedRegs = localStorage.getItem('musz_registrations');
+        if (savedRegs) registrations = JSON.parse(savedRegs);
+
+        // --- NAVIGATION LOGIC ---
+        function showPage(pageId) {
+            const home = document.getElementById('page-home');
+            const raffle = document.getElementById('page-raffle');
+            
+            if (pageId === 'home') {
+                home.classList.remove('hidden-page');
+                raffle.classList.add('hidden-page');
+                setTimeout(() => home.style.opacity = 1, 50);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (pageId === 'raffle') {
+                home.classList.add('hidden-page');
+                raffle.classList.remove('hidden-page');
+                // Ensure raffle loads data
+                loadRegisteredTeams();
+                setTimeout(() => raffle.style.opacity = 1, 50);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function scrollToSection(id) {
+            showPage('home');
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if(el) el.scrollIntoView({behavior: 'smooth'});
+            }, 100);
+        }
+
+        // --- RENDER UI ---
+        function renderRules() {
+            rulesData.forEach((rule, idx) => {
+                const el = document.getElementById(`rule-${idx}`);
+                if(el) el.innerText = rule;
+            });
+        }
+
+        function renderMatches() {
+            const container = document.getElementById('matches-container');
+            if(!container) return;
+            container.innerHTML = matchesData.map(m => `
+                <div class="glass-panel p-6 rounded-xl hover:bg-white/5 transition-all group border-b-4 ${m.s1 > 0 || m.s2 > 0 ? 'border-green-500' : 'border-gray-700'} flex flex-col justify-between h-full">
+                    <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-3">
+                        <span class="text-xs font-bold text-festiveGold uppercase tracking-widest">${m.status}</span>
+                        <span class="text-xs text-gray-400 font-mono">${m.time}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1 text-left"><div class="font-bold text-white text-lg leading-tight break-words">${m.t1}</div></div>
+                        <div class="px-4 py-2 bg-black/40 rounded-lg border border-white/10 min-w-[80px] text-center shrink-0">
+                            <span class="font-display font-bold text-3xl text-white tracking-widest">${m.s1}-${m.s2}</span>
+                        </div>
+                        <div class="flex-1 text-right"><div class="font-bold text-white text-lg leading-tight break-words">${m.t2}</div></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- RAFFLE LOGIC ---
+        let raffleTeams = [];
+        let isShuffling = false;
+
+        function updatePoolCount() {
+            const text = document.getElementById('raffle-pool').value;
+            raffleTeams = text.split('\n').filter(line => line.trim() !== '');
+            document.getElementById('pool-count').textContent = `${raffleTeams.length} csapat`;
+        }
+        
+        document.getElementById('raffle-pool').addEventListener('input', updatePoolCount);
+
+        function loadRegisteredTeams() {
+            // Collect team names from registrations
+            const teamNames = registrations
+                .filter(r => r.type === 'team')
+                .map(r => r.teamName);
+            
+            // Add individuals as pairs if needed (mock logic) or just list them
+            const individuals = registrations.filter(r => r.type === 'individual').map(r => r.name);
+            
+            let allText = teamNames.join('\n');
+            if (individuals.length > 0) {
+                allText += '\n' + individuals.join('\n');
+            }
+
+            if(!allText) allText = "Hótörők\nGrinchék\nTélapó Manói\nRénszarvasok"; // Fallback
+
+            document.getElementById('raffle-pool').value = allText;
+            updatePoolCount();
+        }
+
+        function startDraw() {
+            updatePoolCount();
+            if (raffleTeams.length < 2) { alert("Legalább 2 csapat kell!"); return; }
+            if (isShuffling) return;
+
+            isShuffling = true;
+            document.getElementById('draw-btn').disabled = true;
+            document.getElementById('draw-btn').classList.add('opacity-50');
+
+            const slot1 = document.getElementById('slot-1');
+            const slot2 = document.getElementById('slot-2');
+            let duration = 3000, start = Date.now();
+
+            const idx1 = Math.floor(Math.random() * raffleTeams.length);
+            let idx2 = Math.floor(Math.random() * raffleTeams.length);
+            while(idx2 === idx1) idx2 = Math.floor(Math.random() * raffleTeams.length);
+
+            const t1 = raffleTeams[idx1];
+            const t2 = raffleTeams[idx2];
+
+            const timer = setInterval(() => {
+                slot1.innerText = raffleTeams[Math.floor(Math.random() * raffleTeams.length)];
+                slot2.innerText = raffleTeams[Math.floor(Math.random() * raffleTeams.length)];
+                if (Date.now() - start > duration) {
+                    clearInterval(timer);
+                    finalizeDraw(t1, t2, idx1, idx2);
+                }
+            }, 50);
+        }
+
+        function finalizeDraw(t1, t2, i1, i2) {
+            document.getElementById('slot-1').innerText = t1;
+            document.getElementById('slot-2').innerText = t2;
+            
+            // Remove drawn
+            const newPool = [...raffleTeams];
+            if (i1 > i2) { newPool.splice(i1, 1); newPool.splice(i2, 1); } 
+            else { newPool.splice(i2, 1); newPool.splice(i1, 1); }
+            document.getElementById('raffle-pool').value = newPool.join('\n');
+            updatePoolCount();
+
+            // Announce
+            const overlay = document.getElementById('match-announcement');
+            document.getElementById('announced-match').innerHTML = `${t1} <br><span class="text-festiveRed">VS</span><br> ${t2}`;
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('scale-0'), 10);
+
+            // Add to list
+            const list = document.getElementById('drawn-matches-list');
+            const card = document.createElement('div');
+            card.className = "bg-white/10 p-4 rounded border-l-4 border-festiveGold flex justify-between animate-pulse";
+            card.innerHTML = `<span class="font-bold">${t1}</span><span class="text-red-500 font-bold">VS</span><span class="font-bold">${t2}</span>`;
+            list.prepend(card);
+
+            setTimeout(() => {
+                overlay.classList.add('scale-0');
+                setTimeout(() => overlay.classList.add('hidden'), 500);
+                isShuffling = false;
+                document.getElementById('draw-btn').disabled = false;
+                document.getElementById('draw-btn').classList.remove('opacity-50');
+            }, 3000);
+        }
+
+        // --- ADMIN LOGIC ---
+        function openAdminModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
+        function checkAdminPassword() {
+            if (document.getElementById('admin-password').value === 'admin') {
+                closeAdminModal();
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('admin-panel').scrollIntoView({behavior: 'smooth'});
+                renderAdminPanel();
+            } else alert("Hibás jelszó!");
+        }
+        function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); window.scrollTo(0,0); }
+
+        function renderAdminPanel() {
+            // Registrations
+            const regList = document.getElementById('admin-registrations-list');
+            if (registrations.length === 0) {
+                regList.innerHTML = '<p class="italic">Nincs regisztráció.</p>';
+            } else {
+                regList.innerHTML = registrations.map(r => `
+                    <div class="border-b border-white/10 py-2">
+                        <span class="text-festiveGold font-bold uppercase text-xs">[${r.type === 'team' ? 'CSAPAT' : 'EGYÉNI'}]</span>
+                        <span class="text-white ml-2">${r.type === 'team' ? r.teamName : r.name}</span>
+                        <span class="text-gray-500 text-xs ml-2">(${new Date(r.timestamp).toLocaleString()})</span>
+                    </div>
+                `).join('');
+            }
+
+            // Rules
+            rulesData.forEach((rule, i) => {
+                document.getElementById(`admin-rule-${i}`).value = rule;
+            });
+
+            // Matches
+            document.getElementById('admin-matches-list').innerHTML = matchesData.map(m => `
+                <div id="admin-row-${m.id}" class="flex flex-col md:flex-row items-center gap-4 bg-black/40 p-4 rounded border border-white/10">
+                    <div class="w-full md:w-1/3"><input type="text" value="${m.t1}" id="team1-${m.id}" class="w-full bg-transparent text-festiveGold font-bold text-center md:text-left border-b border-white/10 focus:border-festiveGold outline-none py-1"></div>
+                    <div class="flex items-center gap-3 justify-center">
+                        <input type="number" value="${m.s1}" id="score1-${m.id}" class="w-16 p-2 bg-gray-800 rounded text-center text-white border border-gray-600 focus:border-festiveRed outline-none font-bold text-xl">
+                        <span class="text-gray-500">-</span>
+                        <input type="number" value="${m.s2}" id="score2-${m.id}" class="w-16 p-2 bg-gray-800 rounded text-center text-white border border-gray-600 focus:border-festiveRed outline-none font-bold text-xl">
+                    </div>
+                    <div class="w-full md:w-1/3"><input type="text" value="${m.t2}" id="team2-${m.id}" class="w-full bg-transparent text-gray-300 font-bold text-center md:text-right border-b border-white/10 focus:border-festiveGold outline-none py-1"></div>
+                    <button onclick="updateMatch(${m.id})" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded font-bold text-sm">MENTÉS</button>
+                </div>
+            `).join('');
+        }
+
+        function saveRules() {
+            const newRules = [
+                document.getElementById('admin-rule-0').value,
+                document.getElementById('admin-rule-1').value,
+                document.getElementById('admin-rule-2').value,
+                document.getElementById('admin-rule-3').value
+            ];
+            rulesData = newRules;
+            localStorage.setItem('musz_rules', JSON.stringify(rulesData));
+            renderRules();
+            alert("Szabályok frissítve!");
+        }
+
+        function updateMatch(matchId) {
+            const s1 = parseInt(document.getElementById(`score1-${matchId}`).value) || 0;
+            const s2 = parseInt(document.getElementById(`score2-${matchId}`).value) || 0;
+            const t1 = document.getElementById(`team1-${matchId}`).value;
+            const t2 = document.getElementById(`team2-${matchId}`).value;
+            
+            const idx = matchesData.findIndex(m => m.id === matchId);
+            if (idx !== -1) {
+                matchesData[idx] = { ...matchesData[idx], s1, s2, t1, t2, status: (s1>0||s2>0)?"Véget ért":"Hamarosan" };
+                localStorage.setItem('musz_matches', JSON.stringify(matchesData));
+                renderMatches();
+                alert("Meccs frissítve!");
+            }
+        }
+
+        // --- REGISTRATION LOGIC ---
+        function switchTab(type) {
+            if (type === 'solo') {
+                document.getElementById('tab-solo').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
+                document.getElementById('tab-team').className = "pb-3 px-6 text-gray-400 hover:text-white transition-all";
+                document.getElementById('form-solo').classList.remove('hidden');
+                document.getElementById('form-team').classList.add('hidden');
+            } else {
+                document.getElementById('tab-team').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
+                document.getElementById('tab-solo').className = "pb-3 px-6 text-gray-400 hover:text-white transition-all";
+                document.getElementById('form-team').classList.remove('hidden');
+                document.getElementById('form-solo').classList.add('hidden');
+            }
+        }
+
+        async function handleRegistration(e, type) {
+            e.preventDefault();
+            const alertBox = document.getElementById('form-alert');
+            let data = { type, timestamp: new Date().toISOString() };
+            
+            if (type === 'individual') {
+                data.name = document.getElementById('solo-name').value;
+                data.dept = document.getElementById('solo-dept').value;
+            } else {
+                data.teamName = document.getElementById('team-name').value;
+                data.p1 = document.getElementById('p1-name').value;
+                data.p2 = document.getElementById('p2-name').value;
+            }
+
+            // Save to LocalStorage
+            registrations.push(data);
+            localStorage.setItem('musz_registrations', JSON.stringify(registrations));
+
+            // Try Firebase (Optional)
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (firebaseConfig) {
+                try {
+                    const app = firebase.app(); // Assume init
+                    await app.firestore().collection('artifacts').doc(typeof __app_id !== 'undefined' ? __app_id : 'app').collection('public').doc('data').collection('foosball_registrations').add(data);
+                } catch(err) { console.log("Firebase skip", err); }
+            }
+
+            alertBox.textContent = "Sikeres regisztráció! Köszönjük.";
+            alertBox.classList.remove('hidden');
+            alertBox.className = "mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-center block";
+            e.target.reset();
+            setTimeout(() => alertBox.classList.add('hidden'), 4000);
+        }
+        document.getElementById('form-solo').addEventListener('submit', (e) => handleRegistration(e, 'individual'));
+        document.getElementById('form-team').addEventListener('submit', (e) => handleRegistration(e, 'team'));
+
+        // --- 3D FOOSBALL TABLE ---
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            if(!container) return;
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0b0f19, 0.05);
+            const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 15, 20);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+            dl.position.set(10, 20, 10);
+            scene.add(dl);
+            const spotLight = new THREE.PointLight(0xe63946, 1, 20);
+            spotLight.position.set(0, 5, 0);
+            scene.add(spotLight);
+
+            // --- Construct Table ---
+            const tableGroup = new THREE.Group();
+            scene.add(tableGroup);
+
+            // Field
+            const fieldGeo = new THREE.BoxGeometry(14, 0.2, 8);
+            const fieldMat = new THREE.MeshLambertMaterial({ color: 0x2d6a4f });
+            const field = new THREE.Mesh(fieldGeo, fieldMat);
+            tableGroup.add(field);
+
+            // Walls (Wood)
+            const woodMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const longWallGeo = new THREE.BoxGeometry(15, 2, 0.5);
+            const shortWallGeo = new THREE.BoxGeometry(0.5, 2, 8);
+            
+            const w1 = new THREE.Mesh(longWallGeo, woodMat); w1.position.set(0, 1, 4.25); tableGroup.add(w1);
+            const w2 = new THREE.Mesh(longWallGeo, woodMat); w2.position.set(0, 1, -4.25); tableGroup.add(w2);
+            const w3 = new THREE.Mesh(shortWallGeo, woodMat); w3.position.set(7.25, 1, 0); tableGroup.add(w3);
+            const w4 = new THREE.Mesh(shortWallGeo, woodMat); w4.position.set(-7.25, 1, 0); tableGroup.add(w4);
+
+            // Legs
+            const legGeo = new THREE.BoxGeometry(1, 6, 1);
+            const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(6, -3, 3); tableGroup.add(l1);
+            const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(6, -3, -3); tableGroup.add(l2);
+            const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-6, -3, 3); tableGroup.add(l3);
+            const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-6, -3, -3); tableGroup.add(l4);
+
+            // Rods & Players
+            const rodGeo = new THREE.CylinderGeometry(0.1, 0.1, 10);
+            const rodMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+            const pRedMat = new THREE.MeshLambertMaterial({ color: 0xe63946 });
+            const pBlueMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
+            
+            const playerGeo = new THREE.BoxGeometry(0.4, 1.5, 0.4);
+
+            function createRod(x, playerColor, count) {
+                const rod = new THREE.Mesh(rodGeo, rodMat);
+                rod.rotation.x = Math.PI / 2;
+                rod.position.y = 1.5;
+                rod.position.x = x;
+                
+                // Players
+                const spacing = 6 / (count + 1);
+                for(let i=1; i<=count; i++) {
+                    const p = new THREE.Mesh(playerGeo, playerColor);
+                    p.position.y = 0; // relative to rod center
+                    p.position.z = -3 + (i * spacing); // distribute along Z (which is rotated Y)
+                    // Since rod is rotated X=90, rod local Y is world Z. 
+                    // Actually, cylinder default is Y-up. Rotated X=90 makes Y axis point to World Z.
+                    // So we modify local Y to move along the rod.
+                    p.rotation.x = -Math.PI / 2; // Un-rotate player so they stand up? No, they spin with rod.
+                    // Let's just group them
+                    rod.add(p);
+                }
+                return rod;
+            }
+
+            const r1 = createRod(-5, pRedMat, 1); // Goalie
+            const r2 = createRod(-3, pRedMat, 2); // Defenders
+            const r3 = createRod(-1, pBlueMat, 3); // Attackers (Opponent)
+            const r4 = createRod(1, pRedMat, 5);  // Midfield
+            const r5 = createRod(3, pBlueMat, 5); // Midfield
+            const r6 = createRod(5, pBlueMat, 2); // Defenders
+            
+            tableGroup.add(r1, r2, r3, r4, r5, r6);
+
+            // Snow (Keep festive vibe)
+            const snowGeo = new THREE.BufferGeometry();
+            const snowCount = 800;
+            const pos = new Float32Array(snowCount*3);
+            for(let i=0; i<snowCount*3; i++) pos[i] = (Math.random()-0.5)*60;
+            snowGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const snowMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff, transparent: true, opacity: 0.6 });
+            const snow = new THREE.Points(snowGeo, snowMat);
+            scene.add(snow);
+
+            // Animation
+            let mouseX = 0, mouseY = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate table slowly
+                tableGroup.rotation.y += 0.002;
+                tableGroup.rotation.x = 0.2 + (mouseY * 0.0005); // Tilt
+                tableGroup.rotation.y += mouseX * 0.0005;
+
+                // Spin rods randomly
+                [r1,r2,r3,r4,r5,r6].forEach(r => r.rotation.y += 0.05); // Rod local Y is axis
+
+                // Snow fall
+                const p = snow.geometry.attributes.position.array;
+                for(let i=1; i<p.length; i+=3) {
+                    p[i] -= 0.1;
+                    if(p[i] < -20) p[i] = 20;
+                }
+                snow.geometry.attributes.position.needsUpdate = true;
+
+                renderer.render(scene, camera);
+            }
+
+            document.addEventListener('mousemove', e => {
+                mouseX = e.clientX - window.innerWidth/2;
+                mouseY = e.clientY - window.innerHeight/2;
+            });
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth/window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            animate();
+        }
+
+        window.onload = () => {
+            init3D();
+            renderRules();
+            renderMatches();
+            
+            // Firebase init check
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (firebaseConfig) {
+                try {
+                    firebase.initializeApp(firebaseConfig);
+                    const auth = firebase.auth();
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        auth.signInWithCustomToken(__initial_auth_token);
+                    } else {
+                        auth.signInAnonymously();
+                    }
+                } catch(e) { console.log('Firebase init error', e); }
+            }
+        };
+    </script>
+</body>
+</html>
