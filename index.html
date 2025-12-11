@@ -49,6 +49,7 @@
         .hidden-page { display: none; opacity: 0; }
         @keyframes flashGreen { 0% { background-color: rgba(34, 197, 94, 0.5); } 100% { background-color: rgba(0, 0, 0, 0.4); } }
         .flash-success { animation: flashGreen 1s ease-out; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body class="antialiased selection:bg-festiveRed selection:text-white">
@@ -246,7 +247,7 @@
     </main>
 
     <script>
-        // --- 1. CONFIGURATION (FIXED) ---
+        // --- 1. CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
             authDomain: "karacsonyi-csocso.firebaseapp.com",
@@ -299,7 +300,6 @@
             const savedReg = localStorage.getItem('musz_registrations');
             if (savedReg) registrations = JSON.parse(savedReg);
             
-            // Safe render check
             setTimeout(renderAll, 500); 
         }
 
@@ -465,9 +465,18 @@
             alert("Szabályok mentve!");
         }
 
+        // UPDATED REGISTRATION HANDLER
         async function handleRegistration(e, type) {
             e.preventDefault();
             const alertBox = document.getElementById('form-alert');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+
+            // UI Feedback: Loading
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Mentés folyamatban...";
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
             let data = { type, timestamp: Date.now() };
             
             if (type === 'individual') {
@@ -479,23 +488,33 @@
                 data.p2 = document.getElementById('p2-name').value;
             }
 
-            if(isOnline) {
-                try {
+            try {
+                if(isOnline) {
                     await db.collection('registrations').add(data);
-                } catch (err) {
-                    alert("Hiba a mentéskor: " + err.message + "\nEllenőrizd a Firestore Rules beállításait (Test Mode)!");
-                    return;
+                } else {
+                    registrations.push(data);
+                    localStorage.setItem('musz_registrations', JSON.stringify(registrations));
+                    loadRegisteredTeams();
                 }
-            } else {
-                registrations.push(data);
-                localStorage.setItem('musz_registrations', JSON.stringify(registrations));
-                loadRegisteredTeams();
-            }
 
-            alertBox.textContent = "Sikeres regisztráció!";
-            alertBox.className = "mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-center block";
-            e.target.reset();
-            setTimeout(() => alertBox.classList.add('hidden'), 3000);
+                // Success
+                alertBox.textContent = "Sikeres regisztráció!";
+                alertBox.className = "mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-center block";
+                alertBox.classList.remove('hidden');
+                e.target.reset();
+                setTimeout(() => alertBox.classList.add('hidden'), 3000);
+
+            } catch (err) {
+                console.error("Registration error:", err);
+                alertBox.textContent = "Hiba a mentéskor: " + err.message;
+                alertBox.className = "mb-4 p-4 rounded bg-red-500/20 border border-red-500 text-red-200 text-center block";
+                alertBox.classList.remove('hidden');
+            } finally {
+                // Reset Button
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
 
         document.getElementById('form-solo').addEventListener('submit', (e) => handleRegistration(e, 'individual'));
