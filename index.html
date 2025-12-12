@@ -263,6 +263,7 @@
 
     </main>
 
+    <!-- MOVED SCRIPT TO BOTTOM TO FIX LOADING ISSUES -->
     <script>
         // --- 1. CONFIGURATION (SANITIZED) ---
         const firebaseConfig = {
@@ -314,11 +315,14 @@
                     firebase.initializeApp(firebaseConfig);
                     db = firebase.firestore();
                     
-                    // FIX FOR CORPORATE FIREWALLS
-                    db.settings({ 
-                        experimentalForceLongPolling: true,
-                        useFetchStreams: false 
-                    });
+                    // FIX FOR MOBILE & CORPORATE: AUTO DETECT + NO STREAMS
+                    // This allows mobile to pick web sockets if available, or fall back to polling
+                    try {
+                        db.settings({ 
+                            experimentalAutoDetectLongPolling: true,
+                            useFetchStreams: false 
+                        });
+                    } catch(err) { console.log("Settings warning:", err); }
                     
                     const auth = firebase.auth();
                     auth.signInAnonymously().then(() => {
@@ -363,12 +367,20 @@
 
             // Registrations
             db.collection('registrations').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-                registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderAdminRegistrations();
-                loadRegisteredTeams(); 
+                // IMPORTANT FIX: Don't overwrite local data with empty cloud data if cloud connection is wonky
+                if (!snapshot.empty) {
+                    registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderAdminRegistrations();
+                    loadRegisteredTeams(); 
+                } else if (snapshot.empty && !isUsingLocalStorage) {
+                    // Only clear if we are genuinely online and database is truly empty
+                    registrations = [];
+                    renderAdminRegistrations();
+                    loadRegisteredTeams();
+                }
             }, (error) => {
                 console.warn("Snapshot Listener Error (Regs):", error);
-                // If listener fails, fallback to local for admin view
+                // If listener fails, switch to local mode to show saved data
                 useLocalStorageFallback();
             });
 
@@ -383,6 +395,47 @@
             });
         }
 
+        // --- DIAGNOSTICS ---
+        async function runDiagnostics() {
+            document.getElementById('diag-modal').classList.remove('hidden');
+            const output = document.getElementById('diag-content');
+            
+            if (!db) { 
+                output.innerText = "HIBA: Firebase nincs inicializálva.\n(Ellenőrizd az API kulcsokat a kódban)"; 
+                return; 
+            }
+            
+            let report = "--- RENDSZER DIAGNOSZTIKA ---\n\n";
+            output.innerText = report + "Tesztelés...";
+            
+            // 1. Auth Check
+            const user = firebase.auth().currentUser;
+            report += `1. AUTHENTIKÁCIÓ:\n   > ${user ? 'SIKERES ✅ (UID: ' + user.uid.substring(0,5) + '...)' : 'SIKERTELEN ❌ (Nincs belépve)'}\n`;
+            if(!user) report += "   > Tipp: Engedélyezd az 'Anonymous' belépést a Firebase konzolon.\n";
+            report += "\n";
+            output.innerText = report + "Adatbázis írás tesztelése...";
+
+            // 2. Write Check
+            try {
+                // Timeout check for write
+                const writePromise = db.collection('_diagnostics').add({ timestamp: Date.now(), user: user ? user.uid : 'anon', check: 'system_test' });
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Időtúllépés (5s) - Tűzfal blokkolja?")), 5000)
+                );
+                
+                await Promise.race([writePromise, timeoutPromise]);
+                
+                report += "2. ADATBÁZIS ÍRÁS:\n   > SIKERES ✅ (Kapcsolat stabil)\n";
+            } catch (err) {
+                report += `2. ADATBÁZIS ÍRÁS:\n   > SIKERTELEN ❌\n   > Üzenet: ${err.message}\n`;
+                if(err.code === 'permission-denied') {
+                    report += "\n   >>> MEGOLDÁS: <<<\n   A Firestore Rules blokkolja az írást.\n   Menj a Firebase Console -> Build -> Firestore Database -> Rules fülre.\n   Írd át erre: allow read, write: if true;\n";
+                }
+            }
+
+            output.innerText = report;
+        }
+
         // --- RENDER FUNCTIONS ---
         function renderAll() {
             renderMatches();
@@ -395,7 +448,6 @@
             }
         }
 
-        // ... (renderMatches, renderStandings, renderRules same as before) ...
         function renderMatches() {
             const container = document.getElementById('matches-container');
             if(!container) return;
@@ -420,24 +472,54 @@
             const body = document.getElementById('standings-body');
             if(!body) return;
             body.innerHTML = '';
+
             const stats = {};
-            const initTeam = (name) => { if (!stats[name]) stats[name] = { name, played: 0, w: 0, l: 0, pts: 0 }; };
+            
+            // Segédfüggvény csapat inicializáláshoz
+            const initTeam = (name) => {
+                if (!stats[name]) stats[name] = { name, played: 0, w: 0, l: 0, pts: 0 };
+            };
+
             matchesData.forEach(m => {
                 if(m.t1 && m.t2) {
-                    initTeam(m.t1); initTeam(m.t2);
+                    initTeam(m.t1);
+                    initTeam(m.t2);
+                    
+                    // Csak ha volt eredmény
                     if (m.s1 > 0 || m.s2 > 0) { 
-                        stats[m.t1].played++; stats[m.t2].played++;
-                        if (m.s1 > m.s2) { stats[m.t1].w++; stats[m.t1].pts += 3; stats[m.t2].l++; } 
-                        else if (m.s2 > m.s1) { stats[m.t2].w++; stats[m.t2].pts += 3; stats[m.t1].l++; } 
-                        else { stats[m.t1].pts += 1; stats[m.t2].pts += 1; }
+                        stats[m.t1].played++;
+                        stats[m.t2].played++;
+                        
+                        if (m.s1 > m.s2) {
+                            stats[m.t1].w++;
+                            stats[m.t1].pts += 3;
+                            stats[m.t2].l++;
+                        } else if (m.s2 > m.s1) {
+                            stats[m.t2].w++;
+                            stats[m.t2].pts += 3;
+                            stats[m.t1].l++;
+                        } else {
+                            // Döntetlen (opcionális, ha van ilyen szabály)
+                            stats[m.t1].pts += 1;
+                            stats[m.t2].pts += 1;
+                        }
                     }
                 }
             });
+
+            // Rendezés: Pontszám (csökkenő), majd Győzelmek (csökkenő)
             const sortedTeams = Object.values(stats).sort((a,b) => b.pts - a.pts || b.w - a.w);
-            if (sortedTeams.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Még nincs lejátszott meccs.</td></tr>'; return; }
+
+            if (sortedTeams.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Még nincs lejátszott meccs.</td></tr>';
+                return;
+            }
+
             body.innerHTML = sortedTeams.map((t, i) => `
                 <tr class="hover:bg-white/5 transition-colors">
-                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">${i === 0 ? '👑 ' : ''}#${i+1}</td>
+                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">
+                        ${i === 0 ? '👑 ' : ''}#${i+1}
+                    </td>
                     <td class="p-4 font-medium text-white">${t.name}</td>
                     <td class="p-4 text-center text-gray-400">${t.played}</td>
                     <td class="p-4 text-center text-gray-400">${t.w}-${t.l}</td>
@@ -447,7 +529,10 @@
         }
 
         function renderRules() {
-            rulesData.forEach((r, i) => { const el = document.getElementById(`rule-${i}`); if(el) el.innerText = r; });
+            rulesData.forEach((r, i) => { 
+                const el = document.getElementById(`rule-${i}`);
+                if(el) el.innerText = r;
+            });
         }
 
         function renderAdminRegistrations() {
@@ -493,19 +578,25 @@
         }
 
         function renderAdminRules() {
-             rulesData.forEach((r, i) => { const el = document.getElementById(`admin-rule-${i}`); if(el) el.value = r; });
+             rulesData.forEach((r, i) => {
+                 const el = document.getElementById(`admin-rule-${i}`);
+                 if(el) el.value = r;
+             });
         }
 
         // --- ACTIONS (DB WRITES) ---
-        // ... (saveMatch, addNewMatch, deleteMatch, saveRules same as before) ...
+
         async function saveMatch(id) {
             const t1 = document.getElementById(`team1-${id}`).value;
             const t2 = document.getElementById(`team2-${id}`).value;
             const s1 = parseInt(document.getElementById(`score1-${id}`).value) || 0;
             const s2 = parseInt(document.getElementById(`score2-${id}`).value) || 0;
+            
             const updateData = { t1, t2, s1, s2, status: (s1 > 0 || s2 > 0) ? 'Véget ért' : 'Hamarosan' };
-            if(isOnline && !isUsingLocalStorage) { await db.collection('matches').doc(id).update(updateData); } 
-            else {
+
+            if(isOnline && !isUsingLocalStorage) {
+                await db.collection('matches').doc(id).update(updateData);
+            } else {
                 const idx = matchesData.findIndex(m => m.id === id);
                 if(idx !== -1) matchesData[idx] = { ...matchesData[idx], ...updateData };
                 localStorage.setItem('musz_matches', JSON.stringify(matchesData));
@@ -515,8 +606,9 @@
 
         async function addNewMatch() {
             const newMatch = { t1: "Csapat A", t2: "Csapat B", s1: 0, s2: 0, status: "Tervezett", timestamp: Date.now() };
-            if (isOnline && !isUsingLocalStorage) { await db.collection('matches').add(newMatch); } 
-            else {
+            if (isOnline && !isUsingLocalStorage) {
+                await db.collection('matches').add(newMatch);
+            } else {
                 newMatch.id = Date.now().toString();
                 matchesData.push(newMatch);
                 localStorage.setItem('musz_matches', JSON.stringify(matchesData));
@@ -541,22 +633,29 @@
                 document.getElementById('admin-rule-2').value,
                 document.getElementById('admin-rule-3').value
             ];
-            if(isOnline && !isUsingLocalStorage) { await db.collection('settings').doc('rules').set({ list: newRules }); } 
-            else {
+            if(isOnline && !isUsingLocalStorage) {
+                await db.collection('settings').doc('rules').set({ list: newRules });
+            } else {
                 rulesData = newRules;
                 localStorage.setItem('musz_rules', JSON.stringify(rulesData));
             }
             alert("Szabályok mentve!");
         }
 
-        // --- UPDATED: HYBRID REGISTRATION ---
+        // UPDATED REGISTRATION HANDLER
         async function handleRegistration(e, type) {
             e.preventDefault();
             const alertBox = document.getElementById('form-alert');
             const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+
+            // UI Feedback: Loading
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Mentés folyamatban...";
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
             
-            // 1. Prepare Data
             let data = { type, timestamp: Date.now() };
+            
             if (type === 'individual') {
                 data.name = document.getElementById('solo-name').value;
                 data.dept = document.getElementById('solo-dept').value;
@@ -566,43 +665,56 @@
                 data.p2 = document.getElementById('p2-name').value;
             }
 
-            // 2. Optimistic Update (Save Locally First)
+            // 1. Optimistic Update (Save Locally First)
+            // This ensures data is visible IMMEDIATELY on this device, even if cloud fails
             registrations.push(data);
             localStorage.setItem('musz_registrations', JSON.stringify(registrations));
             loadRegisteredTeams();
             renderAdminRegistrations();
 
-            // 3. UI Feedback Immediately
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Szinkronizálás...";
-            
-            // 4. Try Syncing to Cloud
             try {
-                if(isOnline) {
-                    await db.collection('registrations').add(data);
-                    alertBox.textContent = "Sikeres regisztráció! (Felhőbe mentve)";
+                if(isOnline && !isUsingLocalStorage) {
+                    // Create a promise that rejects after 15 seconds (Extended)
+                    const savePromise = db.collection('registrations').add(data);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Timeout (15s)")), 15000)
+                    );
+                    
+                    await Promise.race([savePromise, timeoutPromise]);
+                    alertBox.textContent = "Sikeres regisztráció! (Szinkronizálva)";
                     alertBox.className = "mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-center block";
                 } else {
-                    throw new Error("Offline");
+                    throw new Error("Offline mód."); 
                 }
             } catch (err) {
-                console.warn("Cloud sync failed, kept local:", err);
-                alertBox.textContent = "Sikeres regisztráció! (Helyi mentés - a felhő nem elérhető)";
-                alertBox.className = "mb-4 p-4 rounded bg-yellow-500/20 border border-yellow-500 text-yellow-200 text-center block";
-            }
+                console.warn("Cloud write failed (keeping local copy):", err);
+                
+                // IMPORTANT: If write failed, we suspect connection issues.
+                // We should ensure we don't let empty snapshots wipe our data later.
+                isUsingLocalStorage = true;
+                renderAdminRegistrations(); // Update UI to show "Local Mode"
 
-            // Reset UI
-            alertBox.classList.remove('hidden');
-            e.target.reset();
-            setTimeout(() => alertBox.classList.add('hidden'), 4000);
-            submitBtn.disabled = false;
-            submitBtn.innerText = type === 'individual' ? 'Egyéni Jelentkezés' : 'Csapat Regisztráció';
+                let friendlyError = "Szerver hiba (" + (err.code || "Ismeretlen") + ")";
+                
+                if (err.code === 'permission-denied') friendlyError = "Nincs jogosultság (Rules)";
+                else if (err.code === 'unavailable') friendlyError = "Szerver nem elérhető";
+
+                alertBox.textContent = friendlyError + ". Mentve (Offline módban).";
+                alertBox.className = "mb-4 p-4 rounded bg-yellow-500/20 border border-yellow-500 text-yellow-200 text-center block";
+            } finally {
+                alertBox.classList.remove('hidden');
+                e.target.reset();
+                setTimeout(() => alertBox.classList.add('hidden'), 5000);
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
 
         document.getElementById('form-solo').addEventListener('submit', (e) => handleRegistration(e, 'individual'));
         document.getElementById('form-team').addEventListener('submit', (e) => handleRegistration(e, 'team'));
 
-        // ... (UI HELPERS, RAFFLE, ADMIN LOGIN, 3D - same as before) ...
+        // --- UI HELPERS ---
         function switchTab(type) {
             if (type === 'solo') {
                 document.getElementById('tab-solo').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
@@ -636,6 +748,7 @@
             setTimeout(() => { const el = document.getElementById(id); if(el) el.scrollIntoView({behavior: 'smooth'}); }, 100);
         }
         
+        // --- RAFFLE ---
         function loadRegisteredTeams() {
             const teams = registrations.filter(r => r.type === 'team').map(r => r.teamName);
             const individuals = registrations.filter(r => r.type === 'individual').map(r => r.name);
@@ -662,14 +775,19 @@
                     const idx1 = Math.floor(Math.random()*pool.length);
                     let idx2 = Math.floor(Math.random()*pool.length);
                     while(idx1===idx2) idx2 = Math.floor(Math.random()*pool.length);
-                    const t1 = pool[idx1]; const t2 = pool[idx2];
+                    
+                    const t1 = pool[idx1];
+                    const t2 = pool[idx2];
                     document.getElementById('slot-1').innerText = t1;
                     document.getElementById('slot-2').innerText = t2;
+                    
                     const overlay = document.getElementById('match-announcement');
                     document.getElementById('announced-match').innerHTML = `${t1} <br><span class="text-festiveRed">VS</span><br> ${t2}`;
                     overlay.classList.remove('hidden');
                     setTimeout(() => overlay.classList.remove('scale-0'), 10);
+                    
                     addNewMatchFromRaffle(t1, t2);
+                    
                     setTimeout(() => {
                         overlay.classList.add('scale-0');
                         setTimeout(() => overlay.classList.add('hidden'), 500);
@@ -679,6 +797,18 @@
             }, 100);
         }
 
+        async function addNewMatchFromRaffle(t1, t2) {
+             const newMatch = { t1, t2, s1: 0, s2: 0, status: "Kisorsolva", timestamp: Date.now() };
+             if(isOnline && !isUsingLocalStorage) await db.collection('matches').add(newMatch);
+             else { 
+                 newMatch.id = Date.now().toString();
+                 matchesData.push(newMatch); 
+                 localStorage.setItem('musz_matches', JSON.stringify(matchesData));
+                 renderAll();
+             }
+        }
+
+        // --- ADMIN LOGIN ---
         function openAdminModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
         function closeAdminModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
         function checkAdminPassword() {
@@ -692,26 +822,7 @@
         }
         function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); window.scrollTo(0,0); }
 
-        async function runDiagnostics() {
-            document.getElementById('diag-modal').classList.remove('hidden');
-            const output = document.getElementById('diag-content');
-            if (!db) { output.innerText = "HIBA: Firebase nincs inicializálva."; return; }
-            let report = "--- RENDSZER DIAGNOSZTIKA ---\n\n";
-            output.innerText = report + "Tesztelés...";
-            const user = firebase.auth().currentUser;
-            report += `1. AUTHENTIKÁCIÓ:\n   > ${user ? 'SIKERES ✅' : 'SIKERTELEN ❌'}\n\n`;
-            output.innerText = report + "Írás teszt...";
-            try {
-                const writePromise = db.collection('_diagnostics').add({ timestamp: Date.now(), check: 'sys' });
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
-                await Promise.race([writePromise, timeoutPromise]);
-                report += "2. ADATBÁZIS ÍRÁS:\n   > SIKERES ✅\n";
-            } catch (err) {
-                report += `2. ADATBÁZIS ÍRÁS:\n   > SIKERTELEN ❌ (${err.message})\n`;
-            }
-            output.innerText = report;
-        }
-
+        // --- 3D ---
         function init3D() {
             const container = document.getElementById('canvas-container');
             if(!container) return;
@@ -721,60 +832,121 @@
             camera.position.set(0, 15, 20); camera.lookAt(0,0,0);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            container.innerHTML = ''; container.appendChild(renderer.domElement);
+            container.innerHTML = ''; // Clear previous if any
+            container.appendChild(renderer.domElement);
+            
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(10, 20, 10); scene.add(dl);
             const spotLight = new THREE.PointLight(0xe63946, 1, 20); spotLight.position.set(0, 5, 0); scene.add(spotLight);
+
+            // Table Group
             const tableGroup = new THREE.Group(); scene.add(tableGroup);
-            const field = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 8), new THREE.MeshLambertMaterial({color: 0x2d6a4f})); tableGroup.add(field);
+
+            // Field
+            const field = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 8), new THREE.MeshLambertMaterial({color: 0x2d6a4f}));
+            tableGroup.add(field);
+
+            // Walls
             const woodMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-            const longWallGeo = new THREE.BoxGeometry(15, 2, 0.5); const shortWallGeo = new THREE.BoxGeometry(0.5, 2, 8);
+            const longWallGeo = new THREE.BoxGeometry(15, 2, 0.5);
+            const shortWallGeo = new THREE.BoxGeometry(0.5, 2, 8);
+            
             const w1 = new THREE.Mesh(longWallGeo, woodMat); w1.position.set(0, 1, 4.25); tableGroup.add(w1);
             const w2 = new THREE.Mesh(longWallGeo, woodMat); w2.position.set(0, 1, -4.25); tableGroup.add(w2);
             const w3 = new THREE.Mesh(shortWallGeo, woodMat); w3.position.set(7.25, 1, 0); tableGroup.add(w3);
             const w4 = new THREE.Mesh(shortWallGeo, woodMat); w4.position.set(-7.25, 1, 0); tableGroup.add(w4);
+
+            // Legs
             const legGeo = new THREE.BoxGeometry(1, 6, 1);
             const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(6, -3, 3); tableGroup.add(l1);
             const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(6, -3, -3); tableGroup.add(l2);
             const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-6, -3, 3); tableGroup.add(l3);
             const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-6, -3, -3); tableGroup.add(l4);
+
+            // Rods Logic
             const rodGeo = new THREE.CylinderGeometry(0.1, 0.1, 10);
             const rodMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
             const pRedMat = new THREE.MeshLambertMaterial({ color: 0xe63946 });
             const pBlueMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
             const playerGeo = new THREE.BoxGeometry(0.4, 1.5, 0.4);
+
             function createRod(x, playerColor, count) {
                 const rod = new THREE.Mesh(rodGeo, rodMat);
-                rod.rotation.x = Math.PI / 2; rod.position.y = 1.5; rod.position.x = x;
+                rod.rotation.x = Math.PI / 2;
+                rod.position.y = 1.5;
+                rod.position.x = x;
                 const spacing = 6 / (count + 1);
                 for(let i=1; i<=count; i++) {
                     const p = new THREE.Mesh(playerGeo, playerColor);
-                    p.position.y = 0; p.position.z = -3 + (i * spacing); p.rotation.x = -Math.PI / 2; rod.add(p);
+                    p.position.y = 0; 
+                    p.position.z = -3 + (i * spacing);
+                    p.rotation.x = -Math.PI / 2;
+                    rod.add(p);
                 }
                 return rod;
             }
-            const r1 = createRod(-5, pRedMat, 1); const r2 = createRod(-3, pRedMat, 2); const r3 = createRod(-1, pBlueMat, 3);
-            const r4 = createRod(1, pRedMat, 5); const r5 = createRod(3, pBlueMat, 5); const r6 = createRod(5, pBlueMat, 2);
+
+            const r1 = createRod(-5, pRedMat, 1);
+            const r2 = createRod(-3, pRedMat, 2);
+            const r3 = createRod(-1, pBlueMat, 3);
+            const r4 = createRod(1, pRedMat, 5);
+            const r5 = createRod(3, pBlueMat, 5);
+            const r6 = createRod(5, pBlueMat, 2);
             tableGroup.add(r1, r2, r3, r4, r5, r6);
-            const snowGeo = new THREE.BufferGeometry(); const snowCount = 800; const pos = new Float32Array(snowCount*3);
+
+            // Snow
+            const snowGeo = new THREE.BufferGeometry();
+            const snowCount = 800;
+            const pos = new Float32Array(snowCount*3);
             for(let i=0; i<snowCount*3; i++) pos[i] = (Math.random()-0.5)*60;
             snowGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             const snowMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff, transparent: true, opacity: 0.6 });
-            const snow = new THREE.Points(snowGeo, snowMat); scene.add(snow);
+            const snow = new THREE.Points(snowGeo, snowMat);
+            scene.add(snow);
+
+            // Animation
             let mouseX = 0, mouseY = 0;
             function animate() {
                 requestAnimationFrame(animate);
-                tableGroup.rotation.y += 0.002; tableGroup.rotation.x = 0.2 + (mouseY * 0.0005); tableGroup.rotation.y += mouseX * 0.0005;
+                
+                tableGroup.rotation.y += 0.002;
+                tableGroup.rotation.x = 0.2 + (mouseY * 0.0005);
+                tableGroup.rotation.y += mouseX * 0.0005;
+
+                // Spin rods
                 [r1,r2,r3,r4,r5,r6].forEach(r => r.rotation.y += 0.05);
+
+                // Snow
                 const p = snow.geometry.attributes.position.array;
-                for(let i=1; i<p.length; i+=3) { p[i] -= 0.1; if(p[i] < -20) p[i] = 20; }
+                for(let i=1; i<p.length; i+=3) {
+                    p[i] -= 0.1;
+                    if(p[i] < -20) p[i] = 20;
+                }
                 snow.geometry.attributes.position.needsUpdate = true;
+
                 renderer.render(scene, camera);
             }
-            document.addEventListener('mousemove', e => { mouseX = e.clientX - window.innerWidth/2; mouseY = e.clientY - window.innerHeight/2; });
-            window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+
+            document.addEventListener('mousemove', e => {
+                mouseX = e.clientX - window.innerWidth/2;
+                mouseY = e.clientY - window.innerHeight/2;
+            });
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth/window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
             animate();
         }
+
+        window.onload = () => { 
+            // Safety check for Three.js
+            if(typeof THREE === 'undefined') {
+                console.error("Three.js not loaded.");
+            } else {
+                init3D(); 
+            }
+        };
     </script>
 </body>
 </html>
