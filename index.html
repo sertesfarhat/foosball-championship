@@ -241,21 +241,23 @@
         <footer class="border-t border-white/10 py-12 text-center text-gray-500 text-sm mt-20">
             <p>&copy; 2025 MÚSZ Csócsó Bajnokság.</p>
             <div id="db-status" class="text-xs font-mono mt-2 text-gray-600">⚪ Kapcsolódás...</div>
-            <button onclick="openAdminModal()" class="mt-4 text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
+            <div class="flex justify-center gap-4 mt-4">
+                <button onclick="runDiagnostics()" class="text-blue-400 hover:text-blue-300 text-xs uppercase tracking-widest cursor-pointer">🔧 Rendszer Teszt</button>
+                <button onclick="openAdminModal()" class="text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
+            </div>
         </footer>
 
     </main>
 
     <script>
-        // --- 1. CONFIGURATION (PRE-FILLED) ---
+        // --- 1. CONFIGURATION (SANITIZED) ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
             authDomain: "karacsonyi-csocso.firebaseapp.com",
             projectId: "karacsonyi-csocso",
             storageBucket: "karacsonyi-csocso.firebasestorage.app",
             messagingSenderId: "541085489834",
-            appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
-            measurementId: "G-TLS2S2PR71"
+            appId: "1:541085489834:web:790c95e5dff50ffd80ced3"
         };
 
         // --- GLOBAL STATE ---
@@ -265,14 +267,19 @@
         let db = null;
         let isOnline = false;
 
+        // --- ERROR HANDLER ---
+        window.onerror = function(msg, url, line, col, error) {
+            alert("Rendszer Hiba: " + msg);
+            return false;
+        };
+
         // --- INIT FIREBASE ---
         if (typeof firebase !== 'undefined' && firebaseConfig.apiKey) {
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 
-                // --- CRITICAL FIREWALL FIX ---
-                // Forces simple HTTP requests instead of streams/websockets
+                // FIX FOR CORPORATE FIREWALLS
                 db.settings({ 
                     experimentalForceLongPolling: true,
                     useFetchStreams: false 
@@ -282,7 +289,6 @@
                 auth.signInAnonymously().then(() => {
                     console.log("Connected to Database");
                     isOnline = true;
-                    // Update Status Indicator
                     const statusEl = document.getElementById('db-status');
                     if(statusEl) {
                         statusEl.innerHTML = '🟢 Adatbázis: Kapcsolódva';
@@ -297,7 +303,7 @@
                         statusEl.className = 'text-xs font-mono mt-2 text-red-500';
                     }
                 });
-            } catch(e) { console.error("Firebase init failed", e); }
+            } catch(e) { console.error("Firebase init failed", e); alert("Firebase Init Hiba: " + e.message); }
         } else {
             console.warn("No Firebase Config or SDK! Using LocalStorage only.");
             // Load LocalStorage fallback
@@ -336,6 +342,30 @@
                     db.collection('settings').doc('rules').set({ list: rulesData });
                 }
             });
+        }
+
+        // --- DIAGNOSTICS ---
+        async function runDiagnostics() {
+            if (!db) { alert("HIBA: Firebase nincs inicializálva."); return; }
+            
+            let report = "DIAGNOSZTIKA:\n";
+            
+            // 1. Auth Check
+            const user = firebase.auth().currentUser;
+            report += `1. Belépve: ${user ? 'IGEN (UID: ' + user.uid.substring(0,5) + '...)' : 'NEM'}\n`;
+            
+            // 2. Write Check
+            try {
+                await db.collection('_diagnostics').add({ timestamp: Date.now(), user: user ? user.uid : 'anon' });
+                report += "2. Írás teszt: SIKERES ✅\n";
+            } catch (err) {
+                report += `2. Írás teszt: SIKERTELEN ❌\n   Kód: ${err.code}\n   Üzenet: ${err.message}\n`;
+                if(err.code === 'permission-denied') {
+                    report += "\n>>> MEGOLDÁS: A Firestore Rules nincs 'Test Mode'-ban. Állítsd 'allow read, write: if true;'-ra a konzolon! <<<\n";
+                }
+            }
+
+            alert(report);
         }
 
         // --- RENDER FUNCTIONS ---
@@ -524,11 +554,17 @@
                 localStorage.setItem('musz_registrations', JSON.stringify(registrations));
                 loadRegisteredTeams();
 
-                alertBox.textContent = "Szerver hiba. Mentve (Offline módban).";
+                let friendlyError = "Szerver hiba (" + err.message + ")";
+                
+                if (err.message.includes('permission-denied') || err.code === 'permission-denied') {
+                    friendlyError = "HIBA: Nincs jogosultságod! Ellenőrizd a Firestore Rules-t (Legyen 'Test Mode' vagy 'allow read, write: if true;')";
+                }
+
+                alertBox.textContent = friendlyError + ". Mentve (Offline módban).";
                 alertBox.className = "mb-4 p-4 rounded bg-yellow-500/20 border border-yellow-500 text-yellow-200 text-center block";
                 alertBox.classList.remove('hidden');
                 e.target.reset();
-                setTimeout(() => alertBox.classList.add('hidden'), 4000);
+                setTimeout(() => alertBox.classList.add('hidden'), 8000);
 
             } finally {
                 // Reset Button
@@ -659,6 +695,7 @@
             camera.position.set(0, 15, 20); camera.lookAt(0,0,0);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            container.innerHTML = ''; // Clear previous if any
             container.appendChild(renderer.domElement);
             
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
