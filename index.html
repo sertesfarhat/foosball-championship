@@ -11,10 +11,10 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Firebase SDKs (Version 9 compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- Firebase SDKs (Version 10.8.0 compat - UPDATED) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -225,7 +225,7 @@
             <div class="grid gap-8">
                 <!-- Registration List -->
                 <div class="glass-panel p-6 rounded-lg">
-                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Regisztrációk</h3>
+                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Regisztrációk <span id="data-source-indicator" class="text-xs ml-2 text-gray-500"></span></h3>
                     <div id="admin-registrations-list" class="space-y-2 max-h-60 overflow-y-auto bg-black/20 p-4 rounded text-sm text-gray-300">
                         <p class="italic">Betöltés...</p>
                     </div>
@@ -281,6 +281,7 @@
         let registrations = [];
         let db = null;
         let isOnline = false;
+        let isUsingLocalStorage = false;
 
         // --- ERROR HANDLER ---
         window.onerror = function(msg, url, line, col, error) {
@@ -303,11 +304,13 @@
                     firebase.initializeApp(firebaseConfig);
                     db = firebase.firestore();
                     
-                    // FIX FOR CORPORATE FIREWALLS
-                    db.settings({ 
-                        experimentalForceLongPolling: true,
-                        useFetchStreams: false 
-                    });
+                    // FIX FOR CORPORATE FIREWALLS - Updated Method
+                    try {
+                        db.settings({ 
+                            experimentalAutoDetectLongPolling: true,
+                            useFetchStreams: false 
+                        });
+                    } catch(err) { console.log("Settings warning:", err); }
                     
                     const auth = firebase.auth();
                     auth.signInAnonymously().then(() => {
@@ -330,17 +333,22 @@
                 } catch(e) { console.error("Firebase init failed", e); alert("Firebase Init Hiba: " + e.message); }
             } else {
                 console.warn("No Firebase Config or SDK! Using LocalStorage only.");
-                // Load LocalStorage fallback
-                const savedM = localStorage.getItem('musz_matches');
-                if (savedM) matchesData = JSON.parse(savedM);
-                const savedR = localStorage.getItem('musz_rules');
-                if (savedR) rulesData = JSON.parse(savedR);
-                const savedReg = localStorage.getItem('musz_registrations');
-                if (savedReg) registrations = JSON.parse(savedReg);
-                
-                renderAll();
+                useLocalStorageFallback();
             }
         });
+
+        function useLocalStorageFallback() {
+            isUsingLocalStorage = true;
+            // Load LocalStorage fallback
+            const savedM = localStorage.getItem('musz_matches');
+            if (savedM) matchesData = JSON.parse(savedM);
+            const savedR = localStorage.getItem('musz_rules');
+            if (savedR) rulesData = JSON.parse(savedR);
+            const savedReg = localStorage.getItem('musz_registrations');
+            if (savedReg) registrations = JSON.parse(savedReg);
+            
+            renderAll();
+        }
 
         // --- REALTIME LISTENERS ---
         function startListeners() {
@@ -348,6 +356,9 @@
             db.collection('matches').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
                 matchesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderAll();
+            }, (error) => {
+                console.warn("Snapshot Listener Error (Matches):", error);
+                // If permission denied or failed, don't crash, maybe notify
             });
 
             // Registrations
@@ -355,6 +366,8 @@
                 registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderAdminRegistrations();
                 loadRegisteredTeams(); // Update raffle pool automatically
+            }, (error) => {
+                console.warn("Snapshot Listener Error (Regs):", error);
             });
 
             // Rules
@@ -366,6 +379,8 @@
                     // Seed initial rules if missing
                     db.collection('settings').doc('rules').set({ list: rulesData });
                 }
+            }, (error) => {
+                console.warn("Snapshot Listener Error (Rules):", error);
             });
         }
 
@@ -391,10 +406,17 @@
 
             // 2. Write Check
             try {
-                await db.collection('_diagnostics').add({ timestamp: Date.now(), user: user ? user.uid : 'anon', check: 'system_test' });
+                // Timeout check for write
+                const writePromise = db.collection('_diagnostics').add({ timestamp: Date.now(), user: user ? user.uid : 'anon', check: 'system_test' });
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Időtúllépés (5s) - Tűzfal blokkolja?")), 5000)
+                );
+                
+                await Promise.race([writePromise, timeoutPromise]);
+                
                 report += "2. ADATBÁZIS ÍRÁS:\n   > SIKERES ✅ (Kapcsolat stabil)\n";
             } catch (err) {
-                report += `2. ADATBÁZIS ÍRÁS:\n   > SIKERTELEN ❌\n   > Kód: ${err.code}\n   > Üzenet: ${err.message}\n`;
+                report += `2. ADATBÁZIS ÍRÁS:\n   > SIKERTELEN ❌\n   > Üzenet: ${err.message}\n`;
                 if(err.code === 'permission-denied') {
                     report += "\n   >>> MEGOLDÁS: <<<\n   A Firestore Rules blokkolja az írást.\n   Menj a Firebase Console -> Build -> Firestore Database -> Rules fülre.\n   Írd át erre: allow read, write: if true;\n";
                 }
@@ -410,6 +432,7 @@
             renderRules();
             if(!document.getElementById('admin-panel').classList.contains('hidden')) {
                 renderAdminMatches();
+                renderAdminRegistrations();
                 renderAdminRules();
             }
         }
@@ -504,6 +527,16 @@
 
         function renderAdminRegistrations() {
             const list = document.getElementById('admin-registrations-list');
+            const indicator = document.getElementById('data-source-indicator');
+            
+            if (isUsingLocalStorage) {
+                indicator.innerText = "(💻 Helyi mentés - Nem szinkronizál)";
+                indicator.className = "text-xs ml-2 text-yellow-500 font-bold";
+            } else {
+                indicator.innerText = "(☁️ Felhő - ÉLŐ)";
+                indicator.className = "text-xs ml-2 text-green-500 font-bold";
+            }
+
             if(!list) return;
             if (registrations.length === 0) list.innerHTML = '<p class="italic">Nincs adat.</p>';
             else {
@@ -551,7 +584,7 @@
             
             const updateData = { t1, t2, s1, s2, status: (s1 > 0 || s2 > 0) ? 'Véget ért' : 'Hamarosan' };
 
-            if(isOnline) {
+            if(isOnline && !isUsingLocalStorage) {
                 await db.collection('matches').doc(id).update(updateData);
             } else {
                 const idx = matchesData.findIndex(m => m.id === id);
@@ -563,7 +596,7 @@
 
         async function addNewMatch() {
             const newMatch = { t1: "Csapat A", t2: "Csapat B", s1: 0, s2: 0, status: "Tervezett", timestamp: Date.now() };
-            if (isOnline) {
+            if (isOnline && !isUsingLocalStorage) {
                 await db.collection('matches').add(newMatch);
             } else {
                 newMatch.id = Date.now().toString();
@@ -575,7 +608,7 @@
 
         async function deleteMatch(id) {
              if(!confirm("Biztosan törlöd?")) return;
-             if(isOnline) await db.collection('matches').doc(id).delete();
+             if(isOnline && !isUsingLocalStorage) await db.collection('matches').doc(id).delete();
              else {
                  matchesData = matchesData.filter(m => m.id !== id);
                  localStorage.setItem('musz_matches', JSON.stringify(matchesData));
@@ -590,7 +623,7 @@
                 document.getElementById('admin-rule-2').value,
                 document.getElementById('admin-rule-3').value
             ];
-            if(isOnline) {
+            if(isOnline && !isUsingLocalStorage) {
                 await db.collection('settings').doc('rules').set({ list: newRules });
             } else {
                 rulesData = newRules;
@@ -623,7 +656,7 @@
             }
 
             try {
-                if(isOnline) {
+                if(isOnline && !isUsingLocalStorage) {
                     // Create a promise that rejects after 15 seconds (Extended)
                     const savePromise = db.collection('registrations').add(data);
                     const timeoutPromise = new Promise((_, reject) => 
@@ -648,6 +681,10 @@
                 // Fallback to LocalStorage if server fails
                 registrations.push(data);
                 localStorage.setItem('musz_registrations', JSON.stringify(registrations));
+                
+                // Force local usage flag
+                useLocalStorageFallback(); 
+                
                 loadRegisteredTeams();
 
                 let friendlyError = "Szerver hiba (" + (err.code || "Ismeretlen") + ": " + err.message + ")";
@@ -760,7 +797,7 @@
 
         async function addNewMatchFromRaffle(t1, t2) {
              const newMatch = { t1, t2, s1: 0, s2: 0, status: "Kisorsolva", timestamp: Date.now() };
-             if(isOnline) await db.collection('matches').add(newMatch);
+             if(isOnline && !isUsingLocalStorage) await db.collection('matches').add(newMatch);
              else { 
                  newMatch.id = Date.now().toString();
                  matchesData.push(newMatch); 
