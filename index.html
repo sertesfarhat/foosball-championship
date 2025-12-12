@@ -269,7 +269,8 @@
 
         // --- ERROR HANDLER ---
         window.onerror = function(msg, url, line, col, error) {
-            alert("Rendszer Hiba: " + msg);
+            // Prevent alerting for every small thing, but log crucial connection errors
+            if(msg.includes('renderStandings')) alert("Rendszer Hiba: " + msg);
             return false;
         };
 
@@ -397,6 +398,56 @@
                     </div>
                 </div>
             `).join('') : '<p class="text-gray-400 col-span-full text-center">Nincsenek aktív meccsek.</p>';
+        }
+
+        function renderStandings() {
+            const body = document.getElementById('standings-body');
+            if(!body) return;
+            body.innerHTML = '';
+
+            const stats = {};
+            
+            const initTeam = (name) => {
+                if (!stats[name]) stats[name] = { name, played: 0, w: 0, l: 0, pts: 0 };
+            };
+
+            matchesData.forEach(m => {
+                if(m.t1 && m.t2) {
+                    initTeam(m.t1);
+                    initTeam(m.t2);
+                    
+                    if (m.s1 > 0 || m.s2 > 0) { 
+                        stats[m.t1].played++;
+                        stats[m.t2].played++;
+                        if (m.s1 > m.s2) {
+                            stats[m.t1].w++;
+                            stats[m.t1].pts += 3;
+                            stats[m.t2].l++;
+                        } else if (m.s2 > m.s1) {
+                            stats[m.t2].w++;
+                            stats[m.t2].pts += 3;
+                            stats[m.t1].l++;
+                        }
+                    }
+                }
+            });
+
+            const sortedTeams = Object.values(stats).sort((a,b) => b.pts - a.pts || b.w - a.w);
+
+            if (sortedTeams.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Még nincs lejátszott meccs.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = sortedTeams.map((t, i) => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">${i === 0 ? '👑 ' : ''}#${i+1}</td>
+                    <td class="p-4 font-medium text-white">${t.name}</td>
+                    <td class="p-4 text-center text-gray-400">${t.played}</td>
+                    <td class="p-4 text-center text-gray-400">${t.w}-${t.l}</td>
+                    <td class="p-4 text-right font-bold text-festiveRed">${t.pts}</td>
+                </tr>
+            `).join('');
         }
 
         function renderRules() {
