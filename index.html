@@ -17,247 +17,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Mountains of Christmas', 'cursive'],
-                    },
-                    colors: {
-                        festiveRed: '#e63946',
-                        festiveGold: '#ffd700',
-                        festiveGreen: '#2d6a4f',
-                        wood: '#8B4513',
-                        dark: '#0b0f19',
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body { background-color: #0b0f19; color: #f1f5f9; overflow-x: hidden; }
-        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: -1; background: radial-gradient(circle at center, #1a2332 0%, #0b0f19 90%); }
-        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 215, 0, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
-        .gold-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
-        .input-field { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
-        .input-field:focus { outline: none; border-color: #e63946; box-shadow: 0 0 10px rgba(230, 57, 70, 0.3); }
-        .raffle-box { background: rgba(0, 0, 0, 0.6); border: 2px solid #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
-        .slot-machine-text { font-family: 'Mountains of Christmas', cursive; text-shadow: 0 0 15px currentColor; }
-        .page-section { transition: opacity 0.3s ease-in-out; }
-        .hidden-page { display: none; opacity: 0; }
-        @keyframes flashGreen { 0% { background-color: rgba(34, 197, 94, 0.5); } 100% { background-color: rgba(0, 0, 0, 0.4); } }
-        .flash-success { animation: flashGreen 1s ease-out; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-    </style>
-</head>
-<body class="antialiased selection:bg-festiveRed selection:text-white">
-
-    <div id="canvas-container"></div>
-
-    <nav class="fixed w-full z-50 transition-all duration-300 glass-panel border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
-                <span class="text-2xl pt-1">🎄</span>
-                <span class="text-xl md:text-2xl font-display font-bold tracking-wider text-white">MÚSZ <span class="text-festiveRed">BAJNOKSÁG</span></span>
-            </div>
-            <div class="hidden md:flex space-x-6 text-sm font-semibold tracking-wide items-center">
-                <button onclick="showPage('home')" class="hover:text-festiveGold transition-colors">KEZDŐLAP</button>
-                <button onclick="showPage('raffle')" class="text-festiveRed hover:text-white transition-colors font-bold">SORSOLÁS</button>
-                <button onclick="scrollToSection('matches')" class="hover:text-festiveGold transition-colors">MECCSEK</button>
-                <button onclick="scrollToSection('standings')" class="hover:text-festiveGold transition-colors">TABELLA</button>
-            </div>
-            <button onclick="scrollToSection('register')" class="bg-festiveRed text-white px-4 py-2 text-sm md:text-base rounded-full font-bold hover:bg-red-700 transition-colors shadow-lg">
-                NEVEZÉS
-            </button>
-        </div>
-    </nav>
-
-    <main class="relative z-10 pt-24 pb-20 space-y-32">
-
-        <!-- ================= HOME PAGE ================= -->
-        <div id="page-home" class="page-section space-y-32">
-            <section id="welcome" class="min-h-[80vh] flex items-center justify-center px-6">
-                <div class="text-center max-w-4xl mx-auto space-y-6">
-                    <span class="inline-block py-1 px-4 rounded-full border border-festiveGold/30 bg-festiveGold/10 text-festiveGold text-sm font-bold tracking-widest uppercase mb-4">❄️ Téli Szezon 2025</span>
-                    <h1 class="text-5xl md:text-8xl font-display font-bold leading-tight text-white drop-shadow-lg">KARÁCSONYI <br/><span class="text-festiveRed gold-glow">CSÓCSÓ KUPA</span></h1>
-                    <p class="text-lg text-gray-300 max-w-xl mx-auto leading-relaxed">A hivatalos MÚSZ csócsó bajnokság visszatért! Regisztráljatok, pörgessétek fel az ünnepi hangulatot!</p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-                        <button onclick="document.getElementById('register').scrollIntoView({behavior: 'smooth'})" class="group relative px-8 py-4 bg-festiveRed text-white font-bold text-lg rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
-                            <span class="relative z-10">NEVEZÉS INDÍTÁSA</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <section id="register" class="max-w-3xl mx-auto px-6">
-                <div class="glass-panel rounded-2xl p-8 md:p-12 relative overflow-hidden border-t-4 border-festiveRed">
-                    <div class="absolute -top-10 -right-10 text-9xl opacity-10 rotate-12">🎅</div>
-                    <h2 class="text-4xl font-display font-bold mb-8 text-center text-festiveGold">NEVEZÉS</h2>
-                    <div class="flex justify-center mb-8 border-b border-white/10">
-                        <button id="tab-solo" class="pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all" onclick="switchTab('solo')">Egyéni</button>
-                        <button id="tab-team" class="pb-3 px-6 text-gray-400 hover:text-white transition-all" onclick="switchTab('team')">Csapat</button>
-                    </div>
-                    <div id="form-alert" class="hidden mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-sm text-center"></div>
-
-                    <form id="form-solo" class="space-y-5">
-                        <input type="text" id="solo-name" required class="input-field w-full p-3 rounded" placeholder="Teljes Név">
-                        <input type="text" id="solo-dept" required class="input-field w-full p-3 rounded" placeholder="Részleg">
-                        <button type="submit" class="w-full bg-festiveGold hover:bg-yellow-400 text-black font-bold py-4 rounded transition-all mt-4 uppercase tracking-widest shadow-lg">Egyéni Jelentkezés</button>
-                    </form>
-
-                    <form id="form-team" class="space-y-5 hidden">
-                        <input type="text" id="team-name" required class="input-field w-full p-3 rounded" placeholder="Csapatnév">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="p1-name" required class="input-field w-full p-3 rounded" placeholder="1. Játékos">
-                            <input type="text" id="p2-name" required class="input-field w-full p-3 rounded" placeholder="2. Játékos">
-                        </div>
-                        <button type="submit" class="w-full bg-festiveGold hover:bg-yellow-400 text-black font-bold py-4 rounded transition-all mt-4 uppercase tracking-widest shadow-lg">Csapat Regisztráció</button>
-                    </form>
-                </div>
-            </section>
-
-            <section id="matches" class="max-w-6xl mx-auto px-6">
-                <div class="flex items-center justify-between mb-10">
-                    <h2 class="text-3xl md:text-4xl font-display font-bold text-festiveRed">KÖVETKEZŐ MECCSEK</h2>
-                    <span class="text-festiveGold text-xs md:text-sm animate-pulse flex items-center gap-2">
-                        <span class="w-2 h-2 bg-festiveGold rounded-full"></span> ÉLŐ
-                    </span>
-                </div>
-                <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </section>
-
-            <section id="standings" class="max-w-5xl mx-auto px-6">
-                <h2 class="text-4xl font-display font-bold mb-8 text-center text-white">RANGILISTA</h2>
-                <div class="glass-panel rounded-xl overflow-hidden shadow-[0_0_20px_rgba(230,57,70,0.2)] overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
-                        <thead>
-                            <tr class="bg-festiveRed/20 text-gray-300 text-xs uppercase tracking-wider">
-                                <th class="p-4 font-medium">Helyezés</th>
-                                <th class="p-4 font-medium">Csapat</th>
-                                <th class="p-4 font-medium text-center">Meccs</th>
-                                <th class="p-4 font-medium text-center">Gy-V</th>
-                                <th class="p-4 font-medium text-right text-festiveGold">Pont</th>
-                            </tr>
-                        </thead>
-                        <tbody id="standings-body" class="divide-y divide-white/5 text-sm"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="rules" class="max-w-4xl mx-auto px-6">
-                 <h2 class="text-4xl font-display font-bold mb-10 text-center text-white">JÁTÉKSZABÁLYOK</h2>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed"><h3 class="text-xl font-bold mb-3 text-festiveGold">01. Pörgetés</h3><p id="rule-0" class="text-gray-400">...</p></div>
-                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed"><h3 class="text-xl font-bold mb-3 text-festiveGold">02. Pontozás</h3><p id="rule-1" class="text-gray-400">...</p></div>
-                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed"><h3 class="text-xl font-bold mb-3 text-festiveGold">03. Holt labda</h3><p id="rule-2" class="text-gray-400">...</p></div>
-                     <div class="glass-panel p-6 rounded-lg border-l-4 border-festiveRed"><h3 class="text-xl font-bold mb-3 text-festiveGold">04. Fair Play</h3><p id="rule-3" class="text-gray-400">...</p></div>
-                 </div>
-            </section>
-        </div>
-
-        <!-- ================= RAFFLE PAGE ================= -->
-        <div id="page-raffle" class="page-section hidden-page">
-            <section class="max-w-6xl mx-auto px-6 relative pt-10">
-                <button onclick="showPage('home')" class="mb-8 text-gray-400 hover:text-white flex items-center gap-2"><span>←</span> Vissza a főoldalra</button>
-                <h2 class="text-4xl font-display font-bold mb-8 text-center text-festiveGold drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">SORSOLÁS ARÉNA</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="glass-panel p-6 rounded-xl order-2 lg:order-1">
-                        <h3 class="text-xl font-bold mb-4 text-white">Sorsolási Kalap</h3>
-                        <p class="text-xs text-gray-400 mb-2">Regisztrált csapatok:</p>
-                        <textarea id="raffle-pool" class="w-full h-48 bg-black/40 border border-white/20 rounded-lg p-3 text-sm text-gray-300 focus:border-festiveGold outline-none"></textarea>
-                        <div class="flex gap-2 mt-4">
-                            <button onclick="loadRegisteredTeams()" class="text-xs text-festiveGold underline hover:text-white font-bold">Frissítés</button>
-                            <div class="flex-1"></div>
-                            <span id="pool-count" class="text-sm text-festiveGold font-bold self-center">0 csapat</span>
-                        </div>
-                    </div>
-                    <div class="col-span-1 lg:col-span-2 order-1 lg:order-2 flex flex-col items-center">
-                        <div class="w-full bg-black/60 border-4 border-festiveRed rounded-2xl p-8 mb-8 relative overflow-hidden shadow-[0_0_50px_rgba(230,57,70,0.3)] min-h-[300px] flex flex-col justify-center items-center">
-                            <div id="raffle-display" class="w-full flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 opacity-50 transition-all duration-500">
-                                <div class="raffle-box w-full md:w-1/2 h-32 flex items-center justify-center rounded-lg relative overflow-hidden"><span id="slot-1" class="slot-machine-text text-3xl md:text-4xl text-white text-center px-2">?</span></div>
-                                <div class="text-4xl font-black text-festiveRed italic drop-shadow-[0_0_10px_rgba(230,57,70,0.8)]">VS</div>
-                                <div class="raffle-box w-full md:w-1/2 h-32 flex items-center justify-center rounded-lg relative overflow-hidden"><span id="slot-2" class="slot-machine-text text-3xl md:text-4xl text-white text-center px-2">?</span></div>
-                            </div>
-                            <div id="match-announcement" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-10 hidden transform scale-0 transition-transform duration-500">
-                                 <div class="text-center"><h3 class="text-festiveGold text-sm uppercase tracking-widest mb-2">Új Párosítás</h3><div id="announced-match" class="text-3xl md:text-5xl font-display font-bold text-white leading-tight"></div></div>
-                            </div>
-                        </div>
-                        <button id="draw-btn" onclick="startDraw()" class="w-full max-w-md py-4 bg-gradient-to-r from-festiveRed to-red-700 text-white font-bold text-xl rounded-full shadow-[0_0_20px_rgba(230,57,70,0.6)] hover:scale-105 transition-transform uppercase tracking-widest border border-white/20">KÖVETKEZŐ PÁROSÍTÁS</button>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- ================= ADMIN PANEL ================= -->
-        <div id="admin-login-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-4">
-            <div class="bg-gray-900 border border-festiveRed p-8 rounded-xl max-w-sm w-full shadow-2xl">
-                <h3 class="text-xl font-bold text-white mb-4 text-center">Admin Belépés</h3>
-                <input type="password" id="admin-password" placeholder="Jelszó" class="w-full p-3 bg-gray-800 text-white rounded mb-4 border border-gray-700 focus:border-festiveRed outline-none">
-                <div class="flex gap-2">
-                    <button onclick="checkAdminPassword()" class="flex-1 bg-festiveRed hover:bg-red-700 text-white py-2 rounded font-bold transition">Belépés</button>
-                    <button onclick="closeAdminModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-bold transition">Mégse</button>
-                </div>
-            </div>
-        </div>
-
-        <section id="admin-panel" class="hidden max-w-5xl mx-auto px-6 pb-20 mt-20 border-t border-white/10 pt-10">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-display font-bold text-red-500">ADMINISZTRÁCIÓ</h2>
-                <button onclick="closeAdminPanel()" class="text-gray-400 hover:text-white underline text-sm">Kilépés</button>
-            </div>
-            
-            <div class="grid gap-8">
-                <!-- Registration List -->
-                <div class="glass-panel p-6 rounded-lg">
-                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Regisztrációk</h3>
-                    <div id="admin-registrations-list" class="space-y-2 max-h-60 overflow-y-auto bg-black/20 p-4 rounded text-sm text-gray-300">
-                        <p class="italic">Betöltés...</p>
-                    </div>
-                </div>
-
-                <!-- Rules Editor -->
-                <div class="glass-panel p-6 rounded-lg">
-                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Szabályok</h3>
-                    <div class="space-y-4">
-                        <textarea id="admin-rule-0" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
-                        <textarea id="admin-rule-1" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
-                        <textarea id="admin-rule-2" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
-                        <textarea id="admin-rule-3" class="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-300 text-sm" rows="2"></textarea>
-                        <button onclick="saveRules()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold">Szabályok Mentése</button>
-                    </div>
-                </div>
-
-                <!-- Match Editor -->
-                <div class="glass-panel p-6 rounded-lg">
-                    <h3 class="text-lg font-bold mb-4 text-festiveGold">Meccsek Kezelése</h3>
-                    <button onclick="addNewMatch()" class="mb-4 bg-festiveGold text-black px-4 py-2 rounded text-sm font-bold">+ Új Meccs</button>
-                    <div id="admin-matches-list" class="space-y-4"></div>
-                </div>
-            </div>
-        </section>
-
-        <footer class="border-t border-white/10 py-12 text-center text-gray-500 text-sm mt-20">
-            <p>&copy; 2025 MÚSZ Csócsó Bajnokság.</p>
-            <div id="db-status" class="text-xs font-mono mt-2 text-gray-600">⚪ Kapcsolódás...</div>
-            <div class="flex justify-center gap-4 mt-4">
-                <button onclick="runDiagnostics()" class="text-blue-400 hover:text-blue-300 text-xs uppercase tracking-widest cursor-pointer">🔧 Rendszer Teszt</button>
-                <button onclick="openAdminModal()" class="text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
-            </div>
-        </footer>
-
-    </main>
-
-    <script>
-        // --- 1. CONFIGURATION (SANITIZED) ---
+        // --- 1. CONFIGURATION (UPDATED) ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
             authDomain: "karacsonyi-csocso.firebaseapp.com",
             projectId: "karacsonyi-csocso",
             storageBucket: "karacsonyi-csocso.firebasestorage.app",
             messagingSenderId: "541085489834",
-            appId: "1:541085489834:web:790c95e5dff50ffd80ced3"
+            appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
+            measurementId: "G-TLS2S2PR71"
         };
 
         // --- GLOBAL STATE ---
@@ -281,10 +49,13 @@
                 db = firebase.firestore();
                 
                 // FIX FOR CORPORATE FIREWALLS
-                db.settings({ 
-                    experimentalForceLongPolling: true,
-                    useFetchStreams: false 
-                });
+                // Changed to AutoDetect which is often more reliable than Force
+                try {
+                    db.settings({ 
+                        experimentalAutoDetectLongPolling: true,
+                        useFetchStreams: false 
+                    });
+                } catch(err) { console.log("Settings error (ignorable):", err); }
                 
                 const auth = firebase.auth();
                 auth.signInAnonymously().then(() => {
@@ -582,7 +353,7 @@
                     // Create a promise that rejects after 15 seconds (Extended)
                     const savePromise = db.collection('registrations').add(data);
                     const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error("Időtúllépés. A szerver nem válaszol.")), 15000)
+                        setTimeout(() => reject(new Error("Timeout (15s)")), 15000)
                     );
                     
                     await Promise.race([savePromise, timeoutPromise]);
@@ -605,10 +376,12 @@
                 localStorage.setItem('musz_registrations', JSON.stringify(registrations));
                 loadRegisteredTeams();
 
-                let friendlyError = "Szerver hiba (" + err.message + ")";
+                let friendlyError = "Szerver hiba (" + (err.code || "Ismeretlen") + ": " + err.message + ")";
                 
-                if (err.message.includes('permission-denied') || err.code === 'permission-denied') {
-                    friendlyError = "HIBA: Nincs jogosultságod! Ellenőrizd a Firestore Rules-t (Legyen 'Test Mode' vagy 'allow read, write: if true;')";
+                if (err.code === 'permission-denied') {
+                    friendlyError = "HIBA: Nincs jogosultságod! (Ellenőrizd a Firestore Rules-t a konzolon)";
+                } else if (err.code === 'unavailable') {
+                    friendlyError = "HIBA: A szerver nem elérhető (Tűzfal vagy hálózati hiba)";
                 }
 
                 alertBox.textContent = friendlyError + ". Mentve (Offline módban).";
