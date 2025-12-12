@@ -190,6 +190,20 @@
             </section>
         </div>
 
+        <!-- ================= DIAGNOSTICS MODAL ================= -->
+        <div id="diag-modal" class="fixed inset-0 z-[70] bg-black/90 hidden flex items-center justify-center p-4">
+            <div class="bg-gray-900 border-2 border-blue-500 p-6 rounded-xl max-w-lg w-full shadow-2xl relative">
+                <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+                <h3 class="text-xl font-mono font-bold text-blue-400 mb-4">🔧 Rendszer Diagnosztika</h3>
+                <div id="diag-content" class="font-mono text-xs text-gray-300 space-y-2 whitespace-pre-wrap h-64 overflow-y-auto bg-black/50 p-4 rounded border border-gray-800">
+                    Tesztelés folyamatban...
+                </div>
+                <div class="mt-4 text-center">
+                    <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold text-sm">Bezárás</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= ADMIN PANEL ================= -->
         <div id="admin-login-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-4">
             <div class="bg-gray-900 border border-festiveRed p-8 rounded-xl max-w-sm w-full shadow-2xl">
@@ -357,26 +371,36 @@
 
         // --- DIAGNOSTICS ---
         async function runDiagnostics() {
-            if (!db) { alert("HIBA: Firebase nincs inicializálva."); return; }
+            document.getElementById('diag-modal').classList.remove('hidden');
+            const output = document.getElementById('diag-content');
             
-            let report = "DIAGNOSZTIKA:\n";
+            if (!db) { 
+                output.innerText = "HIBA: Firebase nincs inicializálva.\n(Ellenőrizd az API kulcsokat a kódban)"; 
+                return; 
+            }
+            
+            let report = "--- RENDSZER DIAGNOSZTIKA ---\n\n";
+            output.innerText = report + "Tesztelés...";
             
             // 1. Auth Check
             const user = firebase.auth().currentUser;
-            report += `1. Belépve: ${user ? 'IGEN (UID: ' + user.uid.substring(0,5) + '...)' : 'NEM'}\n`;
-            
+            report += `1. AUTHENTIKÁCIÓ:\n   > ${user ? 'SIKERES ✅ (UID: ' + user.uid.substring(0,5) + '...)' : 'SIKERTELEN ❌ (Nincs belépve)'}\n`;
+            if(!user) report += "   > Tipp: Engedélyezd az 'Anonymous' belépést a Firebase konzolon.\n";
+            report += "\n";
+            output.innerText = report + "Adatbázis írás tesztelése...";
+
             // 2. Write Check
             try {
-                await db.collection('_diagnostics').add({ timestamp: Date.now(), user: user ? user.uid : 'anon' });
-                report += "2. Írás teszt: SIKERES ✅\n";
+                await db.collection('_diagnostics').add({ timestamp: Date.now(), user: user ? user.uid : 'anon', check: 'system_test' });
+                report += "2. ADATBÁZIS ÍRÁS:\n   > SIKERES ✅ (Kapcsolat stabil)\n";
             } catch (err) {
-                report += `2. Írás teszt: SIKERTELEN ❌\n   Kód: ${err.code}\n   Üzenet: ${err.message}\n`;
+                report += `2. ADATBÁZIS ÍRÁS:\n   > SIKERTELEN ❌\n   > Kód: ${err.code}\n   > Üzenet: ${err.message}\n`;
                 if(err.code === 'permission-denied') {
-                    report += "\n>>> MEGOLDÁS: A Firestore Rules nincs 'Test Mode'-ban. Állítsd 'allow read, write: if true;'-ra a konzolon! <<<\n";
+                    report += "\n   >>> MEGOLDÁS: <<<\n   A Firestore Rules blokkolja az írást.\n   Menj a Firebase Console -> Build -> Firestore Database -> Rules fülre.\n   Írd át erre: allow read, write: if true;\n";
                 }
             }
 
-            alert(report);
+            output.innerText = report;
         }
 
         // --- RENDER FUNCTIONS ---
@@ -410,6 +434,7 @@
             `).join('') : '<p class="text-gray-400 col-span-full text-center">Nincsenek aktív meccsek.</p>';
         }
 
+        // --- FIX: ADDED MISSING RENDER STANDINGS FUNCTION ---
         function renderStandings() {
             const body = document.getElementById('standings-body');
             if(!body) return;
@@ -417,6 +442,7 @@
 
             const stats = {};
             
+            // Segédfüggvény csapat inicializáláshoz
             const initTeam = (name) => {
                 if (!stats[name]) stats[name] = { name, played: 0, w: 0, l: 0, pts: 0 };
             };
@@ -426,9 +452,11 @@
                     initTeam(m.t1);
                     initTeam(m.t2);
                     
+                    // Csak ha volt eredmény
                     if (m.s1 > 0 || m.s2 > 0) { 
                         stats[m.t1].played++;
                         stats[m.t2].played++;
+                        
                         if (m.s1 > m.s2) {
                             stats[m.t1].w++;
                             stats[m.t1].pts += 3;
@@ -437,11 +465,16 @@
                             stats[m.t2].w++;
                             stats[m.t2].pts += 3;
                             stats[m.t1].l++;
+                        } else {
+                            // Döntetlen (opcionális, ha van ilyen szabály)
+                            stats[m.t1].pts += 1;
+                            stats[m.t2].pts += 1;
                         }
                     }
                 }
             });
 
+            // Rendezés: Pontszám (csökkenő), majd Győzelmek (csökkenő)
             const sortedTeams = Object.values(stats).sort((a,b) => b.pts - a.pts || b.w - a.w);
 
             if (sortedTeams.length === 0) {
@@ -451,7 +484,9 @@
 
             body.innerHTML = sortedTeams.map((t, i) => `
                 <tr class="hover:bg-white/5 transition-colors">
-                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">${i === 0 ? '👑 ' : ''}#${i+1}</td>
+                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">
+                        ${i === 0 ? '👑 ' : ''}#${i+1}
+                    </td>
                     <td class="p-4 font-medium text-white">${t.name}</td>
                     <td class="p-4 text-center text-gray-400">${t.played}</td>
                     <td class="p-4 text-center text-gray-400">${t.w}-${t.l}</td>
@@ -864,6 +899,15 @@
             });
             animate();
         }
+
+        window.onload = () => { 
+            // Safety check for Three.js
+            if(typeof THREE === 'undefined') {
+                console.error("Three.js not loaded.");
+            } else {
+                init3D(); 
+            }
+        };
     </script>
 </body>
 </html>
