@@ -11,7 +11,7 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Firebase SDKs (Realtime Database Version) -->
+    <!-- Firebase SDKs (Version 10.8.0 compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -278,10 +278,10 @@
         // --- GLOBAL STATE ---
         let matchesData = [];
         let rulesData = ["Szabály 1...", "Szabály 2...", "Szabály 3...", "Szabály 4..."];
-        let registrations = [];
+        let localRegistrations = []; // Data saved only on this device
+        let cloudRegistrations = []; // Data received from cloud
         let db = null;
         let isOnline = false;
-        let isUsingLocalStorage = false;
 
         // --- ERROR HANDLER ---
         window.onerror = function(msg, url, line, col, error) {
@@ -297,7 +297,7 @@
             const savedR = localStorage.getItem('musz_rules');
             if (savedR) rulesData = JSON.parse(savedR);
             const savedReg = localStorage.getItem('musz_registrations');
-            if (savedReg) registrations = JSON.parse(savedReg);
+            if (savedReg) localRegistrations = JSON.parse(savedReg);
             
             renderAll();
 
@@ -309,7 +309,7 @@
             if (typeof firebase !== 'undefined' && firebaseConfig.apiKey) {
                 try {
                     firebase.initializeApp(firebaseConfig);
-                    db = firebase.database(); // Use Realtime Database
+                    db = firebase.database(); 
                     
                     const auth = firebase.auth();
                     auth.signInAnonymously().then(() => {
@@ -320,12 +320,10 @@
                     }).catch(e => {
                         console.error("Auth failed", e);
                         updateStatus('🔴 Adatbázis: Hiba (Auth)', 'text-red-500');
-                        useLocalStorageFallback();
                     });
                 } catch(e) { console.error("Firebase init failed", e); alert("Init Hiba: " + e.message); }
             } else {
                 console.warn("No SDK");
-                useLocalStorageFallback();
             }
         });
 
@@ -334,22 +332,14 @@
             if(el) { el.innerHTML = msg; el.className = 'text-xs font-mono mt-2 ' + cls; }
         }
 
-        function useLocalStorageFallback() {
-            isUsingLocalStorage = true;
-            renderAdminRegistrations();
-        }
-
         // --- REALTIME LISTENERS (RTDB Syntax) ---
         function startListeners() {
             // Matches
             db.ref('matches').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // Convert object to array
                     matchesData = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-                    // Sort by timestamp if available
                     matchesData.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
-                    
                     localStorage.setItem('musz_matches', JSON.stringify(matchesData));
                     renderAll();
                 } else {
@@ -358,24 +348,19 @@
                 }
             });
 
-            // Registrations
+            // Registrations - MERGE LOGIC (CRITICAL FIX)
             db.ref('registrations').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    registrations = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-                    // Sort desc
-                    registrations.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-                    
-                    localStorage.setItem('musz_registrations', JSON.stringify(registrations));
-                    isUsingLocalStorage = false;
-                    renderAdminRegistrations();
-                    loadRegisteredTeams();
+                    cloudRegistrations = Object.keys(data).map(key => ({ id: key, ...data[key] }));
                 } else {
-                    // RTDB returns null for empty path
-                    registrations = [];
-                    renderAdminRegistrations();
-                    loadRegisteredTeams();
+                    cloudRegistrations = [];
                 }
+                
+                // Do NOT overwrite localRegistrations here. Keep them separate.
+                // We will merge them for display.
+                renderAdminRegistrations();
+                loadRegisteredTeams();
             });
 
             // Rules
@@ -385,10 +370,29 @@
                     rulesData = data;
                     renderAll();
                 } else {
-                    // Seed if empty
                     db.ref('settings/rules').set(rulesData);
                 }
             });
+        }
+
+        // --- HELPER: GET MERGED DATA ---
+        function getMergedRegistrations() {
+            // Combine cloud and local, removing duplicates based on timestamp (simple logic)
+            // Or just display all unique items
+            const all = [...cloudRegistrations, ...localRegistrations];
+            
+            // Remove duplicates by exact timestamp match (simple unique ID)
+            const unique = [];
+            const timestamps = new Set();
+            
+            all.forEach(item => {
+                if(!timestamps.has(item.timestamp)) {
+                    timestamps.add(item.timestamp);
+                    unique.push(item);
+                }
+            });
+            
+            return unique.sort((a,b) => b.timestamp - a.timestamp);
         }
 
         // --- DIAGNOSTICS (RTDB) ---
@@ -430,7 +434,6 @@
             const updateData = { t1, t2, s1, s2, status: (s1 > 0 || s2 > 0) ? 'Véget ért' : 'Hamarosan' };
             
             if(isOnline) await db.ref('matches/' + id).update(updateData);
-            else { /* local fallback */ }
         }
 
         async function addNewMatch() {
@@ -472,6 +475,11 @@
             submitBtn.disabled = true;
             submitBtn.innerText = "Küldés...";
 
+            // 1. Save Locally Immediately
+            localRegistrations.push(data);
+            localStorage.setItem('musz_registrations', JSON.stringify(localRegistrations));
+            
+            // 2. Try Push to Cloud
             try {
                 if(isOnline) {
                     await db.ref('registrations').push(data);
@@ -482,10 +490,14 @@
                 }
             } catch (err) {
                 console.error(err);
-                alertBox.textContent = "Hiba: " + err.message;
-                alertBox.className = "mb-4 p-4 rounded bg-red-500/20 border border-red-500 text-red-200 text-center block";
+                alertBox.textContent = "Hiba: " + err.message + " (Helyi mentés OK)";
+                alertBox.className = "mb-4 p-4 rounded bg-yellow-500/20 border border-yellow-500 text-yellow-200 text-center block";
             }
             
+            // Update UI anyway because we have local data
+            renderAdminRegistrations();
+            loadRegisteredTeams();
+
             alertBox.classList.remove('hidden');
             e.target.reset();
             setTimeout(() => alertBox.classList.add('hidden'), 3000);
@@ -496,7 +508,7 @@
         document.getElementById('form-solo').addEventListener('submit', (e) => handleRegistration(e, 'individual'));
         document.getElementById('form-team').addEventListener('submit', (e) => handleRegistration(e, 'team'));
 
-        // --- UI & RENDER (Same as before) ---
+        // --- UI & RENDER ---
         function renderAll() { renderMatches(); renderStandings(); renderRules(); if(!document.getElementById('admin-panel').classList.contains('hidden')) { renderAdminMatches(); renderAdminRegistrations(); renderAdminRules(); } }
         
         function renderMatches() {
@@ -549,13 +561,18 @@
         function renderAdminRegistrations() {
             const list = document.getElementById('admin-registrations-list');
             const indicator = document.getElementById('data-source-indicator');
-            if (isUsingLocalStorage) { indicator.innerText = "(Helyi)"; indicator.className = "text-yellow-500"; } 
-            else { indicator.innerText = "(Felhő)"; indicator.className = "text-green-500"; }
+            
+            // Show status
+            const totalCount = getMergedRegistrations().length;
+            indicator.innerText = `(${totalCount} db)`;
             
             if(!list) return;
-            if (registrations.length === 0) list.innerHTML = '<p class="italic">Nincs adat.</p>';
+            
+            const displayData = getMergedRegistrations();
+
+            if (displayData.length === 0) list.innerHTML = '<p class="italic">Nincs adat.</p>';
             else {
-                list.innerHTML = registrations.map(r => `
+                list.innerHTML = displayData.map(r => `
                     <div class="border-b border-white/10 py-2">
                         <span class="text-festiveGold font-bold uppercase text-xs">[${r.type === 'team' ? 'CSAPAT' : 'EGYÉNI'}]</span>
                         <span class="text-white ml-2">${r.type === 'team' ? r.teamName : r.name}</span>
@@ -596,8 +613,9 @@
         }
         function scrollToSection(id) { showPage('home'); setTimeout(() => { const el = document.getElementById(id); if(el) el.scrollIntoView({behavior: 'smooth'}); }, 100); }
         function loadRegisteredTeams() {
-            const teams = registrations.filter(r => r.type === 'team').map(r => r.teamName);
-            const individuals = registrations.filter(r => r.type === 'individual').map(r => r.name);
+            const displayData = getMergedRegistrations();
+            const teams = displayData.filter(r => r.type === 'team').map(r => r.teamName);
+            const individuals = displayData.filter(r => r.type === 'individual').map(r => r.name);
             let text = teams.join('\n'); if(individuals.length) text += '\n' + individuals.join('\n');
             document.getElementById('raffle-pool').value = text;
             document.getElementById('pool-count').innerText = (teams.length + individuals.length) + " db";
@@ -610,6 +628,7 @@
             const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000); camera.position.set(0, 15, 20); camera.lookAt(0,0,0);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); container.innerHTML = ''; container.appendChild(renderer.domElement);
             scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(10, 20, 10); scene.add(dl);
+            const spotLight = new THREE.PointLight(0xe63946, 1, 20); spotLight.position.set(0, 5, 0); scene.add(spotLight);
             const tableGroup = new THREE.Group(); scene.add(tableGroup);
             const field = new THREE.Mesh(new THREE.BoxGeometry(14, 0.2, 8), new THREE.MeshLambertMaterial({color: 0x2d6a4f})); tableGroup.add(field);
             const woodMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
