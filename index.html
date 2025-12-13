@@ -264,7 +264,7 @@
     </main>
 
     <script>
-        // --- 1. CONFIGURATION (REALTIME DB COMPATIBLE) ---
+        // --- 1. CONFIGURATION (CORRECTED URL) ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
             authDomain: "karacsonyi-csocso.firebaseapp.com",
@@ -272,7 +272,8 @@
             storageBucket: "karacsonyi-csocso.firebasestorage.app",
             messagingSenderId: "541085489834",
             appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
-            databaseURL: "https://karacsonyi-csocso-default-rtdb.europe-west1.firebasedatabase.app" 
+            // Correct URL for Europe-West1
+            databaseURL: "https://karacsonyi-csocso.europe-west1.firebasedatabase.app"
         };
 
         // --- GLOBAL STATE ---
@@ -414,13 +415,15 @@
             } else {
                 report += "2. SDK: HIBA ❌\n";
             }
+            
+            report += `3. URL: ${firebaseConfig.databaseURL}\n`;
 
             output.innerText = report + "Írás teszt...";
             try {
                 await db.ref('_diagnostics').push({ timestamp: Date.now(), user: user ? user.uid : 'anon' });
-                report += "3. RTDB ÍRÁS: OK ✅\n";
+                report += "4. RTDB ÍRÁS: OK ✅\n";
             } catch (err) {
-                report += `3. RTDB ÍRÁS: HIBA ❌ (${err.message})\n`;
+                report += `4. RTDB ÍRÁS: HIBA ❌ (${err.message})\n`;
             }
             output.innerText = report;
         }
