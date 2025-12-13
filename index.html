@@ -273,8 +273,6 @@
             messagingSenderId: "541085489834",
             appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
             databaseURL: "https://karacsonyi-csocso-default-rtdb.europe-west1.firebasedatabase.app" 
-            // Note: Added databaseURL automatically based on project ID. 
-            // If this fails, check console for specific URL.
         };
 
         // --- GLOBAL STATE ---
@@ -618,7 +616,6 @@
             const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(6, -3, -3); tableGroup.add(l2);
             const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-6, -3, 3); tableGroup.add(l3);
             const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-6, -3, -3); tableGroup.add(l4);
-            
             const rodGeo = new THREE.CylinderGeometry(0.1, 0.1, 10); const rodMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
             const pRedMat = new THREE.MeshLambertMaterial({ color: 0xe63946 }); const pBlueMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
             const playerGeo = new THREE.BoxGeometry(0.4, 1.5, 0.4);
