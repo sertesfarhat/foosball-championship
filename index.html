@@ -307,7 +307,9 @@
                 try {
                     logDebug("Firebase Init...");
                     firebase.initializeApp(firebaseConfig);
-                    db = firebase.database(); 
+                    
+                    // FORCE SPECIFIC URL
+                    db = firebase.database(firebase.app().options.databaseURL); 
                     
                     const auth = firebase.auth();
                     logDebug("Authentikáció indítása...");
