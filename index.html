@@ -13,7 +13,7 @@
     
     <!-- Firebase SDKs (Realtime Database Version) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script> <!-- Changed to Database -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <script>
@@ -404,12 +404,19 @@
             const user = firebase.auth().currentUser;
             report += `1. AUTH: ${user ? 'OK ✅' : 'Nincs belépve ❌'}\n`;
             
+            // Check SDK
+            if (typeof firebase.database === 'function') {
+                report += "2. SDK: Betöltve ✅\n";
+            } else {
+                report += "2. SDK: HIBA ❌\n";
+            }
+
             output.innerText = report + "Írás teszt...";
             try {
                 await db.ref('_diagnostics').push({ timestamp: Date.now(), user: user ? user.uid : 'anon' });
-                report += "2. RTDB ÍRÁS: OK ✅\n";
+                report += "3. RTDB ÍRÁS: OK ✅\n";
             } catch (err) {
-                report += `2. RTDB ÍRÁS: HIBA ❌ (${err.message})\n`;
+                report += `3. RTDB ÍRÁS: HIBA ❌ (${err.message})\n`;
             }
             output.innerText = report;
         }
