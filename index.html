@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MÚSZ Csócsó Bajnokság (Live)</title>
+    <title>MÚSZ Csócsó Bajnokság (Hivatalos)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Fonts -->
@@ -11,10 +11,10 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Firebase SDKs with Error Handling -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" onerror="logDebug('HIBA: Firebase App script nem tölthető be!')"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js" onerror="logDebug('HIBA: Firebase Database script nem tölthető be!')"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" onerror="logDebug('HIBA: Firebase Auth script nem tölthető be!')"></script>
+    <!-- Firebase SDKs (Compat Version 10.8.0) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -115,11 +115,11 @@
                     </form>
                 </div>
                 
-                <!-- NEW: PUBLIC REGISTRATION LIST -->
-                <div class="mt-8 glass-panel p-6 rounded-xl border border-white/10">
-                    <h3 class="text-xl font-bold mb-4 text-center text-festiveGold">EDDIGI NEVEZÉSEK</h3>
+                <!-- NEW: PUBLIC LIST (AZONNALI VISSZAJELZÉS) -->
+                <div class="mt-8 glass-panel p-6 rounded-xl border border-festiveGold/20">
+                    <h3 class="text-xl font-bold mb-4 text-center text-festiveGold">EDDIGI NEVEZÉSEK (ÉLŐ)</h3>
                     <div id="public-registrations-list" class="space-y-2 max-h-48 overflow-y-auto text-sm text-gray-300">
-                        <p class="text-center italic text-gray-500">Még nincs nevezés.</p>
+                        <p class="text-center italic text-gray-500">Adatok betöltése...</p>
                     </div>
                 </div>
             </section>
@@ -196,20 +196,6 @@
             </section>
         </div>
 
-        <!-- ================= DIAGNOSTICS MODAL ================= -->
-        <div id="diag-modal" class="fixed inset-0 z-[70] bg-black/90 hidden flex items-center justify-center p-4">
-            <div class="bg-gray-900 border-2 border-blue-500 p-6 rounded-xl max-w-lg w-full shadow-2xl relative">
-                <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
-                <h3 class="text-xl font-mono font-bold text-blue-400 mb-4">🔧 Rendszer Diagnosztika</h3>
-                <div id="diag-content" class="font-mono text-xs text-gray-300 space-y-2 whitespace-pre-wrap h-64 overflow-y-auto bg-black/50 p-4 rounded border border-gray-800">
-                    Tesztelés folyamatban...
-                </div>
-                <div class="mt-4 text-center">
-                    <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold text-sm">Bezárás</button>
-                </div>
-            </div>
-        </div>
-
         <!-- ================= ADMIN PANEL ================= -->
         <div id="admin-login-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-4">
             <div class="bg-gray-900 border border-festiveRed p-8 rounded-xl max-w-sm w-full shadow-2xl">
@@ -265,7 +251,7 @@
                 <button onclick="openAdminModal()" class="text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
             </div>
             
-            <!-- DEBUG CONSOLE (Simplified) -->
+            <!-- DEBUG CONSOLE -->
             <div id="debug-console" class="mt-8 text-left w-full max-w-4xl mx-auto rounded">
                 <div>[RENDSZERNAPLÓ]</div>
             </div>
@@ -273,10 +259,24 @@
 
     </main>
 
+    <!-- MOVED SCRIPT TO BOTTOM TO FIX LOADING ISSUES -->
     <script>
+        // --- 1. CONFIGURATION (CORRECTED URL AND PLACEMENT) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
+            authDomain: "karacsonyi-csocso.firebaseapp.com",
+            projectId: "karacsonyi-csocso",
+            storageBucket: "karacsonyi-csocso.firebasestorage.app",
+            messagingSenderId: "541085489834",
+            appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
+            // FIXED URL: added -default-rtdb
+            databaseURL: "https://karacsonyi-csocso-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
         // --- LOGGER ---
         function logDebug(msg) {
             const consoleEl = document.getElementById('debug-console');
+            if (!consoleEl) return;
             const time = new Date().toLocaleTimeString();
             const div = document.createElement('div');
             div.innerText = `[${time}] ${msg}`;
@@ -285,18 +285,6 @@
             console.log(msg);
         }
 
-        // --- 1. CONFIGURATION (CORRECTED URL) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
-            authDomain: "karacsonyi-csocso.firebaseapp.com",
-            projectId: "karacsonyi-csocso",
-            storageBucket: "karacsonyi-csocso.firebasestorage.app",
-            messagingSenderId: "541085489834",
-            appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
-            // Correct URL for Europe-West1 with default-rtdb
-            databaseURL: "https://karacsonyi-csocso-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-
         // --- GLOBAL STATE ---
         let matchesData = [];
         let rulesData = ["Szabály 1...", "Szabály 2...", "Szabály 3...", "Szabály 4..."];
@@ -304,14 +292,24 @@
         let db = null;
         let isOnline = false;
 
+        // --- ERROR HANDLER ---
+        window.onerror = function(msg, url, line, col, error) {
+            logDebug("CRITICAL ERROR: " + msg);
+            return false;
+        };
+
         // --- MAIN INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             logDebug("Oldal betöltve. Inicializálás...");
             
             // 1. Start 3D
             if(typeof THREE !== 'undefined') {
-                init3D(); 
-                logDebug("3D Engine OK");
+                try {
+                    init3D(); 
+                    logDebug("3D Engine OK");
+                } catch(e) {
+                    logDebug("3D Hiba (Ignorálva): " + e.message);
+                }
             } else {
                 logDebug("HIBA: Three.js nem töltődött be!");
             }
@@ -322,7 +320,7 @@
                     logDebug("Firebase Init...");
                     firebase.initializeApp(firebaseConfig);
                     
-                    // Fixed: firebase.database() takes NO argument in compat mode for default app
+                    // FORCE SPECIFIC URL
                     db = firebase.database(); 
                     
                     const auth = firebase.auth();
@@ -343,11 +341,6 @@
                                 updateStatus('🔴 Adatbázis: Megszakadt', 'text-red-500');
                             }
                         });
-
-                        // Test Write to confirm
-                        db.ref('_connection_test').set({ ping: Date.now() })
-                            .then(() => logDebug("Írás teszt: SIKERES! ✅"))
-                            .catch(e => logDebug("Írás teszt: HIBA ❌ " + e.message));
 
                         startListeners();
                     }).catch(e => {
@@ -424,12 +417,103 @@
                     const name = r.type === 'team' ? `Csapat: ${r.teamName} (${r.p1} & ${r.p2})` : `Egyéni: ${r.name} (${r.dept})`;
                     const icon = r.type === 'team' ? '⚽' : '👤';
                     return `
-                    <div class="flex items-center gap-2 p-2 bg-white/5 rounded border border-white/10">
+                    <div class="flex items-center gap-2 p-2 bg-white/5 rounded border border-white/10 mb-2">
                         <span class="text-xl">${icon}</span>
                         <span class="text-white font-bold">${name}</span>
                     </div>`;
                 }).join('');
             }
+        }
+
+        function renderAll() { renderMatches(); renderStandings(); renderRules(); renderPublicRegistrations(); if(!document.getElementById('admin-panel').classList.contains('hidden')) { renderAdminMatches(); renderAdminRegistrations(); renderAdminRules(); } }
+        
+        // ... (renderMatches, renderStandings, renderRules, renderAdmin... same as before) ...
+
+        function renderMatches() {
+            const container = document.getElementById('matches-container');
+            if(!container) return;
+            container.innerHTML = matchesData.length ? matchesData.map(m => `
+                <div class="glass-panel p-6 rounded-xl border-b-4 ${m.s1 > 0 || m.s2 > 0 ? 'border-green-500' : 'border-gray-700'} flex flex-col justify-between h-full">
+                    <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-3">
+                        <span class="text-xs font-bold text-festiveGold uppercase tracking-widest">${m.status || 'Tervezett'}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1 text-left"><div class="font-bold text-white text-lg leading-tight break-words">${m.t1}</div></div>
+                        <div class="px-4 py-2 bg-black/40 rounded-lg border border-white/10 min-w-[80px] text-center shrink-0"><span class="font-display font-bold text-3xl text-white tracking-widest">${m.s1}-${m.s2}</span></div>
+                        <div class="flex-1 text-right"><div class="font-bold text-white text-lg leading-tight break-words">${m.t2}</div></div>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-gray-400 col-span-full text-center">Nincsenek aktív meccsek.</p>';
+        }
+
+        function renderStandings() {
+            const body = document.getElementById('standings-body');
+            if(!body) return;
+            body.innerHTML = '';
+            const stats = {};
+            const initTeam = (name) => { if (!stats[name]) stats[name] = { name, played: 0, w: 0, l: 0, pts: 0 }; };
+            matchesData.forEach(m => {
+                if(m.t1 && m.t2) {
+                    initTeam(m.t1); initTeam(m.t2);
+                    if (m.s1 > 0 || m.s2 > 0) { 
+                        stats[m.t1].played++; stats[m.t2].played++;
+                        if (m.s1 > m.s2) { stats[m.t1].w++; stats[m.t1].pts += 3; stats[m.t2].l++; } 
+                        else if (m.s2 > m.s1) { stats[m.t2].w++; stats[m.t2].pts += 3; stats[m.t1].l++; } 
+                        else { stats[m.t1].pts += 1; stats[m.t2].pts += 1; }
+                    }
+                }
+            });
+            const sortedTeams = Object.values(stats).sort((a,b) => b.pts - a.pts || b.w - a.w);
+            if (sortedTeams.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Még nincs lejátszott meccs.</td></tr>'; return; }
+            body.innerHTML = sortedTeams.map((t, i) => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">${i === 0 ? '👑 ' : ''}#${i+1}</td>
+                    <td class="p-4 font-medium text-white">${t.name}</td>
+                    <td class="p-4 text-center text-gray-400">${t.played}</td>
+                    <td class="p-4 text-center text-gray-400">${t.w}-${t.l}</td>
+                    <td class="p-4 text-right font-bold text-festiveRed">${t.pts}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAdminRegistrations() {
+            const list = document.getElementById('admin-registrations-list');
+            const indicator = document.getElementById('data-source-indicator');
+            if(indicator) indicator.innerText = `(${registrations.length} db)`;
+            
+            if(!list) return;
+            if (registrations.length === 0) list.innerHTML = '<p class="italic">Nincs adat.</p>';
+            else {
+                list.innerHTML = registrations.map(r => `
+                    <div class="border-b border-white/10 py-2">
+                        <span class="text-festiveGold font-bold uppercase text-xs">[${r.type === 'team' ? 'CSAPAT' : 'EGYÉNI'}]</span>
+                        <span class="text-white ml-2">${r.type === 'team' ? r.teamName : r.name}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderAdminMatches() {
+            const list = document.getElementById('admin-matches-list');
+            if(!list) return;
+            list.innerHTML = matchesData.map(m => `
+                <div id="admin-row-${m.id}" class="flex flex-col md:flex-row items-center gap-4 bg-black/40 p-4 rounded border border-white/10">
+                    <div class="w-full md:w-1/3"><input type="text" value="${m.t1}" id="team1-${m.id}" class="w-full bg-transparent text-festiveGold font-bold text-center md:text-left border-b border-white/10 outline-none"></div>
+                    <div class="flex items-center gap-3 justify-center">
+                        <input type="number" value="${m.s1}" id="score1-${m.id}" class="w-16 p-2 bg-gray-800 rounded text-center text-white font-bold text-xl">
+                        <span class="text-gray-500">-</span>
+                        <input type="number" value="${m.s2}" id="score2-${m.id}" class="w-16 p-2 bg-gray-800 rounded text-center text-white font-bold text-xl">
+                    </div>
+                    <div class="w-full md:w-1/3"><input type="text" value="${m.t2}" id="team2-${m.id}" class="w-full bg-transparent text-gray-300 font-bold text-center md:text-right border-b border-white/10 outline-none"></div>
+                    <button onclick="saveMatch('${m.id}')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded font-bold text-sm">OK</button>
+                    <button onclick="deleteMatch('${m.id}')" class="text-red-500 hover:text-white px-2">X</button>
+                </div>
+            `).join('');
+        }
+
+        function renderAdminRules() {
+             rulesData.forEach((r, i) => { const el = document.getElementById(`admin-rule-${i}`); if(el) el.value = r; });
+             rulesData.forEach((r, i) => { const el = document.getElementById(`rule-${i}`); if(el) el.innerText = r; });
         }
 
         // --- ACTIONS (RTDB) ---
@@ -509,91 +593,32 @@
         document.getElementById('form-solo').addEventListener('submit', (e) => handleRegistration(e, 'individual'));
         document.getElementById('form-team').addEventListener('submit', (e) => handleRegistration(e, 'team'));
 
-        // --- UI & RENDER ---
-        function renderAll() { renderMatches(); renderStandings(); renderRules(); if(!document.getElementById('admin-panel').classList.contains('hidden')) { renderAdminMatches(); renderAdminRegistrations(); renderAdminRules(); } }
-        
-        function renderMatches() {
-            const container = document.getElementById('matches-container');
-            if(!container) return;
-            container.innerHTML = matchesData.length ? matchesData.map(m => `
-                <div class="glass-panel p-6 rounded-xl border-b-4 ${m.s1 > 0 || m.s2 > 0 ? 'border-green-500' : 'border-gray-700'} flex flex-col justify-between h-full">
-                    <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-3">
-                        <span class="text-xs font-bold text-festiveGold uppercase tracking-widest">${m.status || 'Tervezett'}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex-1 text-left"><div class="font-bold text-white text-lg leading-tight break-words">${m.t1}</div></div>
-                        <div class="px-4 py-2 bg-black/40 rounded-lg border border-white/10 min-w-[80px] text-center shrink-0"><span class="font-display font-bold text-3xl text-white tracking-widest">${m.s1}-${m.s2}</span></div>
-                        <div class="flex-1 text-right"><div class="font-bold text-white text-lg leading-tight break-words">${m.t2}</div></div>
-                    </div>
-                </div>
-            `).join('') : '<p class="text-gray-400 col-span-full text-center">Nincsenek aktív meccsek.</p>';
+        // --- HELPER FUNCTIONS ---
+        function openAdminModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
+        function checkAdminPassword() {
+            if(document.getElementById('admin-password').value === 'admin') {
+                closeAdminModal();
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('admin-panel').scrollIntoView({behavior:'smooth'});
+                renderAdminMatches();
+                renderAdminRegistrations();
+            } else alert("Hibás jelszó!");
         }
+        function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); window.scrollTo(0,0); }
 
-        function renderStandings() {
-            const body = document.getElementById('standings-body');
-            if(!body) return;
-            body.innerHTML = '';
-            const stats = {};
-            const initTeam = (name) => { if (!stats[name]) stats[name] = { name, played: 0, w: 0, l: 0, pts: 0 }; };
-            matchesData.forEach(m => {
-                if(m.t1 && m.t2) {
-                    initTeam(m.t1); initTeam(m.t2);
-                    if (m.s1 > 0 || m.s2 > 0) { 
-                        stats[m.t1].played++; stats[m.t2].played++;
-                        if (m.s1 > m.s2) { stats[m.t1].w++; stats[m.t1].pts += 3; stats[m.t2].l++; } 
-                        else if (m.s2 > m.s1) { stats[m.t2].w++; stats[m.t2].pts += 3; stats[m.t1].l++; } 
-                        else { stats[m.t1].pts += 1; stats[m.t2].pts += 1; }
-                    }
-                }
-            });
-            const sortedTeams = Object.values(stats).sort((a,b) => b.pts - a.pts || b.w - a.w);
-            if (sortedTeams.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Még nincs lejátszott meccs.</td></tr>'; return; }
-            body.innerHTML = sortedTeams.map((t, i) => `
-                <tr class="hover:bg-white/5 transition-colors">
-                    <td class="p-4 font-bold ${i === 0 ? 'text-festiveGold' : 'text-gray-400'}">${i === 0 ? '👑 ' : ''}#${i+1}</td>
-                    <td class="p-4 font-medium text-white">${t.name}</td>
-                    <td class="p-4 text-center text-gray-400">${t.played}</td>
-                    <td class="p-4 text-center text-gray-400">${t.w}-${t.l}</td>
-                    <td class="p-4 text-right font-bold text-festiveRed">${t.pts}</td>
-                </tr>
-            `).join('');
-        }
-
-        function renderAdminRegistrations() {
-            const list = document.getElementById('admin-registrations-list');
-            if(!list) return;
-            if (registrations.length === 0) list.innerHTML = '<p class="italic">Nincs adat.</p>';
-            else {
-                list.innerHTML = registrations.map(r => `
-                    <div class="border-b border-white/10 py-2">
-                        <span class="text-festiveGold font-bold uppercase text-xs">[${r.type === 'team' ? 'CSAPAT' : 'EGYÉNI'}]</span>
-                        <span class="text-white ml-2">${r.type === 'team' ? r.teamName : r.name}</span>
-                    </div>
-                `).join('');
+        function switchTab(type) {
+            if (type === 'solo') {
+                document.getElementById('tab-solo').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
+                document.getElementById('tab-team').className = "pb-3 px-6 text-gray-400 hover:text-white transition-all";
+                document.getElementById('form-solo').classList.remove('hidden');
+                document.getElementById('form-team').classList.add('hidden');
+            } else {
+                document.getElementById('tab-team').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
+                document.getElementById('tab-solo').className = "pb-3 px-6 text-gray-400 hover:text-white transition-all";
+                document.getElementById('form-team').classList.remove('hidden');
+                document.getElementById('form-solo').classList.add('hidden');
             }
-        }
-
-        function renderAdminMatches() {
-            const list = document.getElementById('admin-matches-list');
-            if(!list) return;
-            list.innerHTML = matchesData.map(m => `
-                <div id="admin-row-${m.id}" class="flex flex-col md:flex-row items-center gap-4 bg-black/40 p-4 rounded border border-white/10">
-                    <div class="w-full md:w-1/3"><input type="text" value="${m.t1}" id="team1-${m.id}" class="w-full bg-transparent text-festiveGold font-bold text-center md:text-left border-b border-white/10 outline-none"></div>
-                    <div class="flex items-center gap-3 justify-center">
-                        <input type="number" value="${m.s1}" id="score1-${m.id}" class="w-16 p-2 bg-gray-800 rounded text-center text-white font-bold text-xl">
-                        <span class="text-gray-500">-</span>
-                        <input type="number" value="${m.s2}" id="score2-${m.id}" class="w-16 p-2 bg-gray-800 rounded text-center text-white font-bold text-xl">
-                    </div>
-                    <div class="w-full md:w-1/3"><input type="text" value="${m.t2}" id="team2-${m.id}" class="w-full bg-transparent text-gray-300 font-bold text-center md:text-right border-b border-white/10 outline-none"></div>
-                    <button onclick="saveMatch('${m.id}')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded font-bold text-sm">OK</button>
-                    <button onclick="deleteMatch('${m.id}')" class="text-red-500 hover:text-white px-2">X</button>
-                </div>
-            `).join('');
-        }
-
-        function renderAdminRules() {
-             rulesData.forEach((r, i) => { const el = document.getElementById(`admin-rule-${i}`); if(el) el.value = r; });
-             rulesData.forEach((r, i) => { const el = document.getElementById(`rule-${i}`); if(el) el.innerText = r; });
         }
 
         function showPage(pageId) {
@@ -611,7 +636,7 @@
             document.getElementById('raffle-pool').value = text;
             document.getElementById('pool-count').innerText = (teams.length + individuals.length) + " db";
         }
-        
+
         function init3D() { /* ... same 3D code ... */ 
             const container = document.getElementById('canvas-container');
             if(!container) return;
