@@ -196,6 +196,20 @@
             </section>
         </div>
 
+        <!-- ================= DIAGNOSTICS MODAL ================= -->
+        <div id="diag-modal" class="fixed inset-0 z-[70] bg-black/90 hidden flex items-center justify-center p-4">
+            <div class="bg-gray-900 border-2 border-blue-500 p-6 rounded-xl max-w-lg w-full shadow-2xl relative">
+                <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+                <h3 class="text-xl font-mono font-bold text-blue-400 mb-4">🔧 Rendszer Diagnosztika</h3>
+                <div id="diag-content" class="font-mono text-xs text-gray-300 space-y-2 whitespace-pre-wrap h-64 overflow-y-auto bg-black/50 p-4 rounded border border-gray-800">
+                    Tesztelés folyamatban...
+                </div>
+                <div class="mt-4 text-center">
+                    <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold text-sm">Bezárás</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= ADMIN PANEL ================= -->
         <div id="admin-login-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-4">
             <div class="bg-gray-900 border border-festiveRed p-8 rounded-xl max-w-sm w-full shadow-2xl">
@@ -308,8 +322,8 @@
                     logDebug("Firebase Init...");
                     firebase.initializeApp(firebaseConfig);
                     
-                    // FORCE SPECIFIC URL
-                    db = firebase.database(firebase.app().options.databaseURL); 
+                    // Fixed: firebase.database() takes NO argument in compat mode for default app
+                    db = firebase.database(); 
                     
                     const auth = firebase.auth();
                     logDebug("Authentikáció indítása...");
@@ -598,72 +612,6 @@
             document.getElementById('pool-count').innerText = (teams.length + individuals.length) + " db";
         }
         
-        function startDraw() {
-            const text = document.getElementById('raffle-pool').value;
-            const pool = text.split('\n').filter(l => l.trim().length > 0 && l !== "Még nincs regisztrált csapat.");
-            if(pool.length < 2) return alert("Kevés a csapat!");
-            
-            document.getElementById('draw-btn').disabled = true;
-            let i = 0;
-            const interval = setInterval(() => {
-                document.getElementById('slot-1').innerText = pool[Math.floor(Math.random()*pool.length)];
-                document.getElementById('slot-2').innerText = pool[Math.floor(Math.random()*pool.length)];
-                i++;
-                if(i>20) {
-                    clearInterval(interval);
-                    const idx1 = Math.floor(Math.random()*pool.length);
-                    let idx2 = Math.floor(Math.random()*pool.length);
-                    while(idx1===idx2) idx2 = Math.floor(Math.random()*pool.length);
-                    const t1 = pool[idx1]; const t2 = pool[idx2];
-                    document.getElementById('slot-1').innerText = t1;
-                    document.getElementById('slot-2').innerText = t2;
-                    const overlay = document.getElementById('match-announcement');
-                    document.getElementById('announced-match').innerHTML = `${t1} <br><span class="text-festiveRed">VS</span><br> ${t2}`;
-                    overlay.classList.remove('hidden');
-                    setTimeout(() => overlay.classList.remove('scale-0'), 10);
-                    addNewMatchFromRaffle(t1, t2);
-                    setTimeout(() => {
-                        overlay.classList.add('scale-0');
-                        setTimeout(() => overlay.classList.add('hidden'), 500);
-                        document.getElementById('draw-btn').disabled = false;
-                    }, 3000);
-                }
-            }, 100);
-        }
-
-        async function addNewMatchFromRaffle(t1, t2) {
-             const newMatch = { t1, t2, s1: 0, s2: 0, status: "Kisorsolva", timestamp: Date.now() };
-             if(isOnline) await db.ref('matches').push(newMatch);
-        }
-
-        // --- ADMIN LOGIN ---
-        function openAdminModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
-        function closeAdminModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
-        function checkAdminPassword() {
-            if(document.getElementById('admin-password').value === 'admin') {
-                closeAdminModal();
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('admin-panel').scrollIntoView({behavior:'smooth'});
-                renderAdminMatches();
-                renderAdminRegistrations();
-            } else alert("Hibás jelszó!");
-        }
-        function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); window.scrollTo(0,0); }
-
-        function switchTab(type) {
-            if (type === 'solo') {
-                document.getElementById('tab-solo').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
-                document.getElementById('tab-team').className = "pb-3 px-6 text-gray-400 hover:text-white transition-all";
-                document.getElementById('form-solo').classList.remove('hidden');
-                document.getElementById('form-team').classList.add('hidden');
-            } else {
-                document.getElementById('tab-team').className = "pb-3 px-6 text-festiveRed border-b-2 border-festiveRed font-bold transition-all";
-                document.getElementById('tab-solo').className = "pb-3 px-6 text-gray-400 hover:text-white transition-all";
-                document.getElementById('form-team').classList.remove('hidden');
-                document.getElementById('form-solo').classList.add('hidden');
-            }
-        }
-
         function init3D() { /* ... same 3D code ... */ 
             const container = document.getElementById('canvas-container');
             if(!container) return;
