@@ -190,20 +190,6 @@
             </section>
         </div>
 
-        <!-- ================= DIAGNOSTICS MODAL ================= -->
-        <div id="diag-modal" class="fixed inset-0 z-[70] bg-black/90 hidden flex items-center justify-center p-4">
-            <div class="bg-gray-900 border-2 border-blue-500 p-6 rounded-xl max-w-lg w-full shadow-2xl relative">
-                <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
-                <h3 class="text-xl font-mono font-bold text-blue-400 mb-4">🔧 Rendszer Diagnosztika</h3>
-                <div id="diag-content" class="font-mono text-xs text-gray-300 space-y-2 whitespace-pre-wrap h-64 overflow-y-auto bg-black/50 p-4 rounded border border-gray-800">
-                    Tesztelés folyamatban...
-                </div>
-                <div class="mt-4 text-center">
-                    <button onclick="document.getElementById('diag-modal').classList.add('hidden')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold text-sm">Bezárás</button>
-                </div>
-            </div>
-        </div>
-
         <!-- ================= ADMIN PANEL ================= -->
         <div id="admin-login-modal" class="fixed inset-0 z-[60] bg-black/80 hidden flex items-center justify-center p-4">
             <div class="bg-gray-900 border border-festiveRed p-8 rounded-xl max-w-sm w-full shadow-2xl">
@@ -256,14 +242,12 @@
             <p>&copy; 2025 MÚSZ Csócsó Bajnokság.</p>
             <div id="db-status" class="text-xs font-mono mt-2 text-gray-600">⚪ Kapcsolódás...</div>
             <div class="flex justify-center gap-4 mt-4">
-                <button onclick="runDiagnostics()" class="text-blue-400 hover:text-blue-300 text-xs uppercase tracking-widest cursor-pointer">🔧 Rendszer Teszt</button>
                 <button onclick="openAdminModal()" class="text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
             </div>
         </footer>
 
     </main>
 
-    <!-- MOVED SCRIPT TO BOTTOM TO FIX LOADING ISSUES -->
     <script>
         // --- 1. CONFIGURATION (CORRECTED URL WITH DEFAULT-RTDB) ---
         const firebaseConfig = {
@@ -273,7 +257,7 @@
             storageBucket: "karacsonyi-csocso.firebasestorage.app",
             messagingSenderId: "541085489834",
             appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
-            // FIXED URL: added -default-rtdb
+            // FIXED URL based on your screenshot
             databaseURL: "https://karacsonyi-csocso-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
@@ -287,6 +271,7 @@
 
         // --- ERROR HANDLER ---
         window.onerror = function(msg, url, line, col, error) {
+            // Suppress minor errors, log critical ones
             console.error("Global Error:", msg);
             return false;
         };
@@ -303,9 +288,19 @@
             
             renderAll();
 
-            // 1. Start 3D
-            if(typeof THREE !== 'undefined') init3D(); 
-            else console.error("Three.js missing!");
+            // 1. Start 3D (Safety Wrapper)
+            if(typeof THREE !== 'undefined') {
+                try {
+                    init3D(); 
+                } catch(e) {
+                    console.warn("3D Engine failed to start (WebGPU/WebGL error?):", e);
+                    // Disable canvas to prevent blocking
+                    const c = document.getElementById('canvas-container');
+                    if(c) c.style.display = 'none';
+                }
+            } else {
+                console.error("Three.js missing!");
+            }
 
             // 2. Initialize Firebase Realtime Database
             if (typeof firebase !== 'undefined' && firebaseConfig.apiKey) {
@@ -317,7 +312,18 @@
                     auth.signInAnonymously().then(() => {
                         console.log("Connected to Realtime Database");
                         isOnline = true;
-                        updateStatus('🟢 Adatbázis: Kapcsolódva', 'text-green-500');
+                        
+                        // Check explicit connection state
+                        db.ref('.info/connected').on('value', function(snapshot) {
+                            if (snapshot.val() === true) {
+                                updateStatus('🟢 Adatbázis: Kapcsolódva', 'text-green-500');
+                                isOnline = true;
+                            } else {
+                                updateStatus('🔴 Adatbázis: Megszakadt', 'text-red-500');
+                                isOnline = false;
+                            }
+                        });
+
                         startListeners();
                     }).catch(e => {
                         console.error("Auth failed", e);
@@ -385,9 +391,6 @@
             const unique = [];
             const timestamps = new Set();
             
-            // Prefer cloud items if dupes exist (assuming they are confirmed)
-            // But if local has something cloud doesn't, keep it.
-            
             all.forEach(item => {
                 if(!timestamps.has(item.timestamp)) {
                     timestamps.add(item.timestamp);
@@ -396,38 +399,6 @@
             });
             
             return unique.sort((a,b) => b.timestamp - a.timestamp);
-        }
-
-        // --- DIAGNOSTICS (RTDB) ---
-        async function runDiagnostics() {
-            document.getElementById('diag-modal').classList.remove('hidden');
-            const output = document.getElementById('diag-content');
-            
-            if (!db) { output.innerText = "HIBA: Firebase nincs init."; return; }
-            
-            let report = "--- RTDB DIAGNOSZTIKA ---\n\n";
-            output.innerText = report + "Tesztelés...";
-            
-            const user = firebase.auth().currentUser;
-            report += `1. AUTH: ${user ? 'OK ✅' : 'Nincs belépve ❌'}\n`;
-            
-            // Check SDK
-            if (typeof firebase.database === 'function') {
-                report += "2. SDK: Betöltve ✅\n";
-            } else {
-                report += "2. SDK: HIBA ❌\n";
-            }
-            
-            report += `3. URL: ${firebaseConfig.databaseURL}\n`;
-
-            output.innerText = report + "Írás teszt...";
-            try {
-                await db.ref('_diagnostics').push({ timestamp: Date.now(), user: user ? user.uid : 'anon' });
-                report += "4. RTDB ÍRÁS: OK ✅\n";
-            } catch (err) {
-                report += `4. RTDB ÍRÁS: HIBA ❌ (${err.message})\n`;
-            }
-            output.innerText = report;
         }
 
         // --- ACTIONS (RTDB) ---
@@ -480,24 +451,31 @@
             submitBtn.disabled = true;
             submitBtn.innerText = "Küldés...";
 
-            // 1. Save Locally Immediately
+            // 1. Save Locally Immediately (Optimistic)
             localRegistrations.push(data);
             localStorage.setItem('musz_registrations', JSON.stringify(localRegistrations));
             
             // 2. Try Push to Cloud
+            let success = false;
+            let msg = "Sikeres regisztráció!";
             try {
                 if(isOnline) {
                     await db.ref('registrations').push(data);
-                    alertBox.textContent = "Sikeres regisztráció!";
-                    alertBox.className = "mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-center block";
+                    success = true;
+                    // If success, we don't need the local copy specifically, but we keep it until sync confirms
                 } else {
                     throw new Error("Offline");
                 }
             } catch (err) {
                 console.error(err);
-                alertBox.textContent = "Hiba: " + err.message + " (Helyi mentés OK)";
+                msg = "Hiba: " + err.message + " (Helyi mentés OK)";
                 alertBox.className = "mb-4 p-4 rounded bg-yellow-500/20 border border-yellow-500 text-yellow-200 text-center block";
             }
+
+            if(success) {
+                alertBox.className = "mb-4 p-4 rounded bg-green-500/20 border border-green-500 text-green-200 text-center block";
+            }
+            alertBox.textContent = msg;
             
             // Update UI anyway because we have local data
             renderAdminRegistrations();
@@ -567,14 +545,11 @@
             const list = document.getElementById('admin-registrations-list');
             const indicator = document.getElementById('data-source-indicator');
             
-            // Show status
-            const totalCount = getMergedRegistrations().length;
-            indicator.innerText = `(${totalCount} db)`;
+            const count = getMergedRegistrations().length;
+            if(indicator) indicator.innerText = `(${count} db)`;
             
             if(!list) return;
-            
             const displayData = getMergedRegistrations();
-
             if (displayData.length === 0) list.innerHTML = '<p class="italic">Nincs adat.</p>';
             else {
                 list.innerHTML = displayData.map(r => `
@@ -668,6 +643,21 @@
             window.addEventListener('resize', ()=>{camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);});
             animate();
         }
+
+        // ADMIN LOGIN
+        function openAdminModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
+        function checkAdminPassword() {
+            if(document.getElementById('admin-password').value === 'admin') {
+                closeAdminModal();
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('admin-panel').scrollIntoView({behavior:'smooth'});
+                renderAdminMatches();
+                renderAdminRegistrations();
+            } else alert("Hibás jelszó!");
+        }
+        function closeAdminPanel() { document.getElementById('admin-panel').classList.add('hidden'); window.scrollTo(0,0); }
+
         window.onload = () => { if(typeof THREE !== 'undefined') init3D(); };
     </script>
 </body>
