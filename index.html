@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MÚSZ Csócsó Bajnokság (Debug)</title>
+    <title>MÚSZ Csócsó Bajnokság (Live)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Fonts -->
@@ -47,7 +47,7 @@
         .slot-machine-text { font-family: 'Mountains of Christmas', cursive; text-shadow: 0 0 15px currentColor; }
         .page-section { transition: opacity 0.3s ease-in-out; }
         .hidden-page { display: none; opacity: 0; }
-        #debug-console { font-family: monospace; font-size: 10px; color: #00ff00; background: #000; padding: 10px; height: 150px; overflow-y: scroll; border-top: 1px solid #333; }
+        #debug-console { font-family: monospace; font-size: 10px; color: #00ff00; background: #000; padding: 10px; height: 100px; overflow-y: scroll; border-top: 1px solid #333; margin-top: 20px; opacity: 0.7; }
     </style>
 </head>
 <body class="antialiased selection:bg-festiveRed selection:text-white">
@@ -113,6 +113,14 @@
                         </div>
                         <button type="submit" class="w-full bg-festiveGold hover:bg-yellow-400 text-black font-bold py-4 rounded transition-all mt-4 uppercase tracking-widest shadow-lg">Csapat Regisztráció</button>
                     </form>
+                </div>
+                
+                <!-- NEW: PUBLIC REGISTRATION LIST -->
+                <div class="mt-8 glass-panel p-6 rounded-xl border border-white/10">
+                    <h3 class="text-xl font-bold mb-4 text-center text-festiveGold">EDDIGI NEVEZÉSEK</h3>
+                    <div id="public-registrations-list" class="space-y-2 max-h-48 overflow-y-auto text-sm text-gray-300">
+                        <p class="text-center italic text-gray-500">Még nincs nevezés.</p>
+                    </div>
                 </div>
             </section>
 
@@ -243,9 +251,9 @@
                 <button onclick="openAdminModal()" class="text-gray-700 hover:text-gray-500 text-xs uppercase tracking-widest cursor-pointer">Admin Belépés</button>
             </div>
             
-            <!-- DEBUG CONSOLE -->
+            <!-- DEBUG CONSOLE (Simplified) -->
             <div id="debug-console" class="mt-8 text-left w-full max-w-4xl mx-auto rounded">
-                <div>[DEBUG LOG START]</div>
+                <div>[RENDSZERNAPLÓ]</div>
             </div>
         </footer>
 
@@ -368,11 +376,13 @@
                     registrations = Object.keys(data).map(key => ({ id: key, ...data[key] }));
                     renderAdminRegistrations();
                     loadRegisteredTeams();
+                    renderPublicRegistrations(); // NEW!
                     logDebug(`Regisztrációk frissítve: ${registrations.length} db`);
                 } else {
                     registrations = [];
                     renderAdminRegistrations();
                     loadRegisteredTeams();
+                    renderPublicRegistrations(); // NEW!
                 }
             });
 
@@ -384,6 +394,26 @@
                     renderAll();
                 }
             });
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderPublicRegistrations() {
+            const list = document.getElementById('public-registrations-list');
+            if (!list) return;
+            
+            if (registrations.length === 0) {
+                list.innerHTML = '<p class="text-center italic text-gray-500">Még nincs nevezés.</p>';
+            } else {
+                list.innerHTML = registrations.map(r => {
+                    const name = r.type === 'team' ? `Csapat: ${r.teamName} (${r.p1} & ${r.p2})` : `Egyéni: ${r.name} (${r.dept})`;
+                    const icon = r.type === 'team' ? '⚽' : '👤';
+                    return `
+                    <div class="flex items-center gap-2 p-2 bg-white/5 rounded border border-white/10">
+                        <span class="text-xl">${icon}</span>
+                        <span class="text-white font-bold">${name}</span>
+                    </div>`;
+                }).join('');
+            }
         }
 
         // --- ACTIONS (RTDB) ---
