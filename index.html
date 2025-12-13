@@ -263,8 +263,9 @@
 
     </main>
 
+    <!-- MOVED SCRIPT TO BOTTOM TO FIX LOADING ISSUES -->
     <script>
-        // --- 1. CONFIGURATION (CORRECTED URL) ---
+        // --- 1. CONFIGURATION (CORRECTED URL WITH DEFAULT-RTDB) ---
         const firebaseConfig = {
             apiKey: "AIzaSyD0Ptqxehpi3_LzGPcTNMwGnAGgqyU5cro",
             authDomain: "karacsonyi-csocso.firebaseapp.com",
@@ -272,8 +273,8 @@
             storageBucket: "karacsonyi-csocso.firebasestorage.app",
             messagingSenderId: "541085489834",
             appId: "1:541085489834:web:790c95e5dff50ffd80ced3",
-            // Correct URL for Europe-West1
-            databaseURL: "https://karacsonyi-csocso.europe-west1.firebasedatabase.app"
+            // FIXED URL: added -default-rtdb
+            databaseURL: "https://karacsonyi-csocso-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
         // --- GLOBAL STATE ---
@@ -349,7 +350,7 @@
                 }
             });
 
-            // Registrations - MERGE LOGIC (CRITICAL FIX)
+            // Registrations - MERGE LOGIC
             db.ref('registrations').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -378,13 +379,14 @@
 
         // --- HELPER: GET MERGED DATA ---
         function getMergedRegistrations() {
-            // Combine cloud and local, removing duplicates based on timestamp (simple logic)
-            // Or just display all unique items
+            // Combine cloud and local, removing duplicates based on timestamp (simple unique ID)
             const all = [...cloudRegistrations, ...localRegistrations];
             
-            // Remove duplicates by exact timestamp match (simple unique ID)
             const unique = [];
             const timestamps = new Set();
+            
+            // Prefer cloud items if dupes exist (assuming they are confirmed)
+            // But if local has something cloud doesn't, keep it.
             
             all.forEach(item => {
                 if(!timestamps.has(item.timestamp)) {
