@@ -33,7 +33,7 @@
     </script>
 
     <style>
-        body { margin: 0; overflow-x: hidden; background-color: #000; color: white; }
+        body { margin: 0; overflow-x: hidden; background-color: #000; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
         /* 3D Canvas Background */
         #canvas-container {
@@ -88,18 +88,16 @@
             <button onclick="navTo('szabalyok')" class="hover:text-gold transition-colors duration-300">Szabályok</button>
         </div>
 
-        <button onclick="openAdminModal()" class="border border-gold text-gold px-4 py-1 rounded hover:bg-gold hover:text-black transition duration-300 text-xs uppercase font-bold">
-            Admin Belépés
-        </button>
+        <div class="hidden md:block w-8"></div>
     </nav>
 
-    <div class="md:hidden fixed bottom-0 w-full glass-nav z-50 flex justify-around py-3 text-xs uppercase">
+    <div class="md:hidden fixed bottom-12 w-full glass-nav z-50 flex justify-around py-3 text-xs uppercase border-t border-gold/30">
         <button onclick="navTo('tabella')" class="flex flex-col items-center gap-1 text-gold"><i class="fas fa-list-ol"></i> Tabella</button>
         <button onclick="navTo('meccsek')" class="flex flex-col items-center gap-1 text-gold"><i class="fas fa-futbol"></i> Meccsek</button>
         <button onclick="navTo('szabalyok')" class="flex flex-col items-center gap-1 text-gold"><i class="fas fa-book"></i> Szabályok</button>
     </div>
 
-    <main class="pt-24 pb-20 px-4 max-w-6xl mx-auto min-h-screen">
+    <main class="pt-24 pb-12 px-4 max-w-6xl mx-auto flex-grow w-full">
         
         <section id="welcome" class="fade-in text-center py-20">
             <h1 class="text-5xl md:text-7xl font-bold mb-4 gold-glow text-white">TÉLI CSOCSÓ KUPA</h1>
@@ -153,6 +151,17 @@
         </section>
 
     </main>
+
+    <footer class="w-full py-4 text-center relative z-40 bg-black/60 border-t border-gray-900 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center text-xs text-gray-600">
+            <span>&copy; 2024 Winter Cup</span>
+            
+            <button onclick="openAdminModal()" class="flex items-center gap-2 hover:text-gold transition-colors duration-300">
+                <i class="fas fa-user-shield"></i>
+                <span class="uppercase font-bold tracking-wider">Admin Belépés</span>
+            </button>
+        </div>
+    </footer>
 
     <div id="admin-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
         <div class="glass-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl p-6 m-4 relative">
@@ -215,7 +224,6 @@
         };
 
         // --- FIREBASE CONFIGURATION ---
-        // To enable Firebase, uncomment and fill in your details:
         /*
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -232,39 +240,32 @@
 
         // Hybrid Data Sync Engine
         function loadData() {
-            // 1. Try LocalStorage first for instant load
             const local = localStorage.getItem('foosball_data');
             if (local) {
                 state = JSON.parse(local);
                 renderAll();
             }
 
-            // 2. Try Firebase (if configured)
             if (typeof db !== 'undefined') {
                 db.ref('tournament').on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
                         state = cloudData;
-                        renderAll(); // Re-render with authoritative cloud data
-                        localStorage.setItem('foosball_data', JSON.stringify(state)); // Update local cache
+                        renderAll();
+                        localStorage.setItem('foosball_data', JSON.stringify(state));
                     }
                 });
             }
         }
 
         function saveData() {
-            // Optimistic UI Update
             renderAll();
-            
-            // Save Local
             localStorage.setItem('foosball_data', JSON.stringify(state));
 
-            // Save Cloud
             if (typeof db !== 'undefined') {
                 db.ref('tournament').set(state).catch(e => console.error("Cloud sync failed", e));
             }
 
-            // Visual Feedback
             const statusEl = document.getElementById('save-status');
             statusEl.style.opacity = '1';
             setTimeout(() => statusEl.style.opacity = '0', 2000);
@@ -278,13 +279,11 @@
 
             let players = rawText.split('\n').filter(n => n.trim().length > 0);
             
-            // Shuffle players (Fisher-Yates)
             for (let i = players.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [players[i], players[j]] = [players[j], players[i]];
             }
 
-            // Create Teams
             const teams = [];
             const shuffledNames = [...funnyNames].sort(() => 0.5 - Math.random());
             
@@ -296,7 +295,6 @@
                 let members = [];
                 
                 if (players.length - pIndex === 1) {
-                    // Handle odd number
                     members = [players[pIndex], "VÁRAKOZÓ (Gép/Beugró)"];
                     pIndex++;
                 } else {
@@ -308,12 +306,11 @@
                     id: teamId,
                     name: teamName,
                     members: members,
-                    stats: { played: 0, w: 0, d: 0, l: 0, pts: 0, gf: 0, ga: 0 } // gf: goals for, ga: goals against
+                    stats: { played: 0, w: 0, d: 0, l: 0, pts: 0, gf: 0, ga: 0 }
                 });
                 teamId++;
             }
 
-            // Generate Schedule (Round Robin)
             const matches = [];
             let matchId = 1;
 
@@ -325,13 +322,12 @@
                         t2: teams[j].id,
                         s1: null,
                         s2: null,
-                        status: 'scheduled', // scheduled, played
+                        status: 'scheduled',
                         type: 'group'
                     });
                 }
             }
 
-            // Add Final Placeholders
             matches.push({ id: 998, t1: null, t2: null, s1: null, s2: null, status: 'scheduled', type: 'bronze', label: "Bronzmeccs" });
             matches.push({ id: 999, t1: null, t2: null, s1: null, s2: null, status: 'scheduled', type: 'gold', label: "DÖNTŐ" });
 
@@ -343,45 +339,40 @@
         }
 
         function calculateStandings() {
-            // Reset stats
             state.teams.forEach(t => {
                 t.stats = { played: 0, w: 0, d: 0, l: 0, pts: 0, gf: 0, ga: 0 };
             });
 
-            // Process matches
             state.matches.filter(m => m.type === 'group' && m.status === 'played').forEach(m => {
                 const t1 = state.teams.find(t => t.id === m.t1);
                 const t2 = state.teams.find(t => t.id === m.t2);
                 
                 if(!t1 || !t2) return;
 
-                // Goals
                 t1.stats.gf += parseInt(m.s1); t1.stats.ga += parseInt(m.s2);
                 t2.stats.gf += parseInt(m.s2); t2.stats.ga += parseInt(m.s1);
                 
                 t1.stats.played++;
                 t2.stats.played++;
 
-                if (m.s1 > m.s2) { // T1 Win
+                if (m.s1 > m.s2) {
                     t1.stats.w++; t1.stats.pts += 3;
                     t2.stats.l++;
-                } else if (m.s2 > m.s1) { // T2 Win
+                } else if (m.s2 > m.s1) {
                     t2.stats.w++; t2.stats.pts += 3;
                     t1.stats.l++;
-                } else { // Draw
+                } else {
                     t1.stats.d++; t1.stats.pts += 1;
                     t2.stats.d++; t2.stats.pts += 1;
                 }
             });
 
-            // Sort: Points > Wins > Goal Difference
             state.teams.sort((a, b) => {
                 if (b.stats.pts !== a.stats.pts) return b.stats.pts - a.stats.pts;
                 if (b.stats.w !== a.stats.w) return b.stats.w - a.stats.w;
                 return (b.stats.gf - b.stats.ga) - (a.stats.gf - a.stats.ga);
             });
 
-            // Update Finals Participants based on ranking
             if (state.teams.length >= 4) {
                 const bronzeMatch = state.matches.find(m => m.type === 'bronze');
                 const goldMatch = state.matches.find(m => m.type === 'gold');
@@ -404,7 +395,7 @@
             renderStandings();
             renderMatches();
             renderRules();
-            renderAdminMatches(); // If admin is open
+            renderAdminMatches();
         }
 
         function renderStandings() {
@@ -443,7 +434,7 @@
                 const t1 = state.teams.find(t => t.id === m.t1);
                 const t2 = state.teams.find(t => t.id === m.t2);
                 
-                if (!t1 || !t2) return; // Skip incomplete placeholders
+                if (!t1 || !t2) return;
 
                 const cardHTML = `
                     <div class="glass-panel p-4 rounded flex justify-between items-center ${m.status === 'played' ? 'opacity-70' : 'border-l-4 border-gold'}">
@@ -488,7 +479,6 @@
             const list = document.getElementById('rules-list');
             list.innerHTML = state.rules.map(r => `<li>${r}</li>`).join('');
             
-            // Admin side rules
             const adminList = document.getElementById('admin-rules-list');
             adminList.innerHTML = state.rules.map((r, i) => `
                 <li class="flex justify-between items-center bg-black/40 p-2 rounded">
@@ -527,7 +517,6 @@
             const match = state.matches.find(m => m.id === matchId);
             if (match) {
                 match[field] = value;
-                // If both scores present, mark played
                 if (match.s1 !== null && match.s1 !== "" && match.s2 !== null && match.s2 !== "") {
                     match.status = 'played';
                 } else {
@@ -592,34 +581,28 @@
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
             
-            // Camera
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 15;
             camera.position.y = 10;
             camera.lookAt(0, 0, 0);
 
-            // Renderer
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
-            // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
             const pointLight = new THREE.PointLight(0xd4af37, 1);
             pointLight.position.set(10, 10, 10);
             scene.add(pointLight);
 
-            // Foosball Field (Abstract)
             const fieldGroup = new THREE.Group();
             
-            // Green Pitch
             const geometry = new THREE.BoxGeometry(16, 0.5, 10);
             const material = new THREE.MeshStandardMaterial({ color: 0x0f3b1e, roughness: 0.2 });
             const field = new THREE.Mesh(geometry, material);
             fieldGroup.add(field);
 
-            // Lines (White Planes)
             const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
             const centerLine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.51, 10), lineMat);
             fieldGroup.add(centerLine);
@@ -634,7 +617,6 @@
 
             scene.add(fieldGroup);
 
-            // Snow Particles
             const particlesGeometry = new THREE.BufferGeometry();
             const particlesCount = 1000;
             const posArray = new Float32Array(particlesCount * 3);
@@ -653,7 +635,6 @@
             const snowMesh = new THREE.Points(particlesGeometry, particlesMaterial);
             scene.add(snowMesh);
 
-            // Mouse Interaction
             let mouseX = 0;
             let mouseY = 0;
             document.addEventListener('mousemove', (event) => {
@@ -661,22 +642,17 @@
                 mouseY = (event.clientY / window.innerHeight) - 0.5;
             });
 
-            // Animation Loop
             function animate() {
                 requestAnimationFrame(animate);
-
-                // Rotate Field slowly
                 fieldGroup.rotation.y += 0.002;
 
-                // React to mouse
                 camera.position.x += (mouseX * 10 - camera.position.x) * 0.05;
                 camera.position.y += (-mouseY * 5 + 10 - camera.position.y) * 0.05;
                 camera.lookAt(0, 0, 0);
 
-                // Fall Snow
                 const positions = snowMesh.geometry.attributes.position.array;
                 for(let i = 1; i < particlesCount * 3; i+=3) {
-                    positions[i] -= 0.1; // move y down
+                    positions[i] -= 0.1;
                     if (positions[i] < -20) {
                         positions[i] = 20;
                     }
@@ -687,7 +663,6 @@
             }
             animate();
 
-            // Resize Handle
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -695,7 +670,6 @@
             });
         }
 
-        // --- INIT ---
         window.onload = function() {
             initThreeJS();
             loadData();
