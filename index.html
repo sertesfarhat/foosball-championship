@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winter Corporate Foosball</title>
+    <title>MÚSZ Karácsonyi Csocsó</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -41,17 +41,16 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: -1;
-            /* Added radial gradient for depth */
             background: radial-gradient(circle at center, #1a0505 0%, #000000 100%);
         }
 
-        /* Glassmorphism Classes - Increased blur and border contrast */
+        /* Glassmorphism Classes */
         .glass-panel {
             background: rgba(20, 20, 20, 0.7);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(212, 175, 55, 0.3); 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); /* Stronger shadow */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
         .glass-nav {
@@ -69,7 +68,7 @@
         .gold-glow { text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 25px rgba(212, 175, 55, 0.4); }
         .red-accent { color: #8B0000; }
 
-        /* Animation for subtle element entry */
+        /* Animation */
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -77,12 +76,11 @@
         #threejs-display {
             position: relative;
             width: 100%;
-            height: 400px; /* Fixed height for the 3D area */
-            margin-top: -120px; /* Pulls the canvas up under the welcome text */
+            height: 400px;
+            margin-top: -100px;
             z-index: 1;
         }
 
-        /* Ensure fixed nav doesn't cover content */
         main { padding-top: 6rem; padding-bottom: 3rem; }
     </style>
 </head>
@@ -102,14 +100,13 @@
             <a href="#meccsek-section" class="hover:text-gold transition-colors duration-300">Meccsek</a>
             <a href="#szabalyok-section" class="hover:text-gold transition-colors duration-300">Szabályok</a>
         </div>
-
-        </nav>
+    </nav>
 
     <main class="max-w-6xl mx-auto flex-grow w-full space-y-20">
         
         <section id="welcome" class="text-center fade-in pt-10">
-            <h1 class="text-6xl md:text-8xl font-black mb-4 gold-glow text-white">TÉLI CSOCSÓ KUPA</h1>
-            <p class="text-2xl text-gray-300 mb-8 font-serif italic">Üdvözlünk a vállalati bajnokságon!</p>
+            <h1 class="text-5xl md:text-7xl font-black mb-4 gold-glow text-white uppercase">MÚSZ karácsonyi csocsó</h1>
+            <p class="text-3xl text-gold mb-8 font-serif italic tracking-widest">téli kupa</p>
             
             <div class="inline-block glass-panel p-4 rounded-lg border-l-4 border-deep-red">
                 <p class="text-gold uppercase text-sm tracking-widest font-bold mb-2">Következő Meccs</p>
@@ -133,13 +130,12 @@
                             <th class="p-4">Csapat</th>
                             <th class="p-4 text-center">M</th>
                             <th class="p-4 text-center">Gy</th>
-                            <th class="p-4 text-center">D</th>
                             <th class="p-4 text-center">V</th>
                             <th class="p-4 text-right">Pont</th>
                         </tr>
                     </thead>
                     <tbody id="standings-body">
-                        <tr><td colspan="7" class="p-8 text-center text-gray-600 italic">Nincs még adat. Kérlek generálj csapatokat az admin felületen.</td></tr>
+                        <tr><td colspan="6" class="p-8 text-center text-gray-600 italic">Nincs még adat. Kérlek generálj csapatokat az admin felületen.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -155,14 +151,12 @@
             <div id="finals-container" class="mb-10">
                 <h3 class="text-2xl text-deep-red font-bold mb-4 uppercase tracking-widest border-l-4 border-deep-red pl-3">Döntők</h3>
                 <div class="grid md:grid-cols-2 gap-4" id="finals-list">
-                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Bronzmeccs (Nincs generálva)</div>
-                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">DÖNTŐ (Nincs generálva)</div>
-                </div>
+                    </div>
             </div>
 
             <h3 class="text-2xl text-gray-400 font-bold mb-4 uppercase tracking-widest border-l-4 border-gray-600 pl-3">Körmérkőzések</h3>
             <div class="grid md:grid-cols-1 gap-3" id="matches-list">
-                <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Nincs aktív menetrend. Kérlek generálj egyet az admin felületen.</div>
+                <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Nincs aktív menetrend.</div>
             </div>
         </section>
 
@@ -182,8 +176,7 @@
 
     <footer class="w-full py-4 text-center relative z-40 bg-black/60 border-t border-gold/30 mt-auto">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center text-xs text-gray-600">
-            <span>&copy; 2025 Winter Cup</span>
-            
+            <span>&copy; 2024 Winter Cup</span>
             <button onclick="openAdminModal()" class="flex items-center gap-2 hover:text-gold transition-colors duration-300">
                 <i class="fas fa-user-shield"></i>
                 <span class="uppercase font-bold tracking-wider">Admin Belépés</span>
@@ -204,7 +197,6 @@
             </div>
 
             <div id="admin-dashboard-view" class="hidden space-y-8">
-                
                 <div class="border border-gray-700 p-4 rounded bg-black/30">
                     <h3 class="text-lg font-bold text-white mb-2">1. Csapatok Generálása</h3>
                     <textarea id="player-input" rows="4" class="w-full bg-black/50 border border-gray-600 rounded p-2 text-sm text-gray-300 mb-2" placeholder="Illeszd be a neveket (soronként 1 név)..."></textarea>
@@ -214,8 +206,7 @@
 
                 <div class="border border-gray-700 p-4 rounded bg-black/30">
                     <h3 class="text-lg font-bold text-white mb-2">2. Eredmények Rögzítése</h3>
-                    <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
-                        </div>
+                    <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
                 </div>
 
                 <div class="border border-gray-700 p-4 rounded bg-black/30">
@@ -236,44 +227,34 @@
     </div>
 
     <script>
-        // --- CONFIG & STATE ---
         const funnyNames = [
             "Részeg Rénszarvasok", "Beigli Betyárok", "Csendes Éj Harcosai", 
             "Hólapátolók", "Reszkessetek Betörők", "Gingersbread Gengszterek",
             "Forralt Bor Kommandó", "Ajándékvadászok", "Grincs Gárdája", "Szaloncukor Zsoldosok"
         ];
         
-        // Initial State
+        // Updated Rules in initial state
         let state = {
             teams: [],
             matches: [],
-            rules: ["A pörgetés tilos (No spinning).", "Fair play mindenek felett.", "Gól után középkezdés.", "Az első 10 gólig tart a meccs."],
+            rules: [
+                "Nincs döntetlen (10 gólig tart a meccs).", 
+                "A pörgetés tilos (No spinning).", 
+                "Fair play mindenek felett.", 
+                "Gól után középkezdés."
+            ],
             generated: false
         };
 
-        // --- FIREBASE CONFIGURATION ---
-        /*
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-            projectId: "YOUR_PROJECT",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        */
+        // --- FIREBASE (Optional) ---
+        // const db = firebase.database(); ... (Configuration omitted for brevity)
 
-        // Hybrid Data Sync Engine
         function loadData() {
             const local = localStorage.getItem('foosball_data');
             if (local) {
                 state = JSON.parse(local);
                 renderAll();
             }
-
             if (typeof db !== 'undefined') {
                 db.ref('tournament').on('value', (snapshot) => {
                     const cloudData = snapshot.val();
@@ -289,25 +270,22 @@
         function saveData() {
             renderAll();
             localStorage.setItem('foosball_data', JSON.stringify(state));
-
             if (typeof db !== 'undefined') {
                 db.ref('tournament').set(state).catch(e => console.error("Cloud sync failed", e));
             }
-
             const statusEl = document.getElementById('save-status');
             statusEl.style.opacity = '1';
             setTimeout(() => statusEl.style.opacity = '0', 2000);
         }
 
-        // --- CORE LOGIC ---
-
+        // --- GENERATION LOGIC ---
         function generateTournament() {
             const rawText = document.getElementById('player-input').value.trim();
             if (!rawText) return alert("Kérlek adj meg neveket!");
 
             let players = rawText.split('\n').filter(n => n.trim().length > 0);
             
-            // 1. Shuffle players and create teams
+            // Shuffle players
             for (let i = players.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [players[i], players[j]] = [players[j], players[i]];
@@ -322,7 +300,6 @@
             while (pIndex < players.length) {
                 let teamName = shuffledNames[teamId - 1] || `Csapat ${teamId}`;
                 let members = [];
-                
                 if (players.length - pIndex === 1) {
                     members = [players[pIndex], "VÁRAKOZÓ (Gép/Beugró)"];
                     pIndex++;
@@ -330,17 +307,15 @@
                     members = [players[pIndex], players[pIndex + 1]];
                     pIndex += 2;
                 }
-
                 teams.push({
                     id: teamId,
                     name: teamName,
                     members: members,
-                    stats: { played: 0, w: 0, d: 0, l: 0, pts: 0, gf: 0, ga: 0 }
+                    stats: { played: 0, w: 0, l: 0, pts: 0, gf: 0, ga: 0 } // No 'd' (draw) stat
                 });
                 teamId++;
             }
 
-            // 2. Generate all matches and shuffle
             let matches = [];
             let matchId = 1;
 
@@ -358,55 +333,37 @@
                 }
             }
 
-            matches.sort(() => 0.5 - Math.random()); // Initial shuffle
-
-            // 3. Apply scheduling constraint (No team plays back-to-back)
+            // Shuffle and constraints
+            matches.sort(() => 0.5 - Math.random());
             const teamIds = teams.map(t => t.id);
-            const lastPlayed = teamIds.reduce((acc, id) => ({ ...acc, [id]: -2 }), {}); // -2 means they haven't played recently
-
-            const MIN_REST = 1; // Must skip at least 1 match slot
+            const lastPlayed = teamIds.reduce((acc, id) => ({ ...acc, [id]: -2 }), {});
+            const MIN_REST = 1;
 
             for (let i = 0; i < matches.length; i++) {
                 const currentMatch = matches[i];
                 const team1 = currentMatch.t1;
                 const team2 = currentMatch.t2;
-
                 const hasConflict = (lastPlayed[team1] >= i - MIN_REST) || (lastPlayed[team2] >= i - MIN_REST);
                 
                 if (hasConflict) {
-                    // Try to find a safe swap: a match j > i that doesn't cause a conflict
                     let swapped = false;
                     for (let j = i + 1; j < matches.length; j++) {
                         const nextMatch = matches[j];
                         const nextT1 = nextMatch.t1;
                         const nextT2 = nextMatch.t2;
-
                         const nextConflictT1 = (lastPlayed[nextT1] >= i - MIN_REST) || (lastPlayed[nextT2] >= i - MIN_REST);
-                        const currentConflictT2 = (lastPlayed[team1] >= j - MIN_REST) || (lastPlayed[team2] >= j - MIN_REST);
-                        
-                        // Check 1: Does the target match (j) fit in current slot (i)?
-                        // Check 2: Does the current match (i) fit in target slot (j)?
                         if (!nextConflictT1) {
-                             // Simple swap: current match (i) goes to slot j, target match (j) goes to slot i
                              [matches[i], matches[j]] = [matches[j], matches[i]];
                              swapped = true;
                              break;
                         }
                     }
-
-                    // If no swap was possible, we have to proceed with the conflict (rare, only with very few teams)
-                    if (!swapped) {
-                        console.warn(`Scheduling conflict unavoidable at match ${i+1}.`);
-                    }
                 }
-                
-                // Update last played indices for the match that ACTUALLY ended up in slot i
                 lastPlayed[matches[i].t1] = i;
                 lastPlayed[matches[i].t2] = i;
             }
 
-
-            // 4. Add Finals (fixed at the end)
+            // Add Finals Placeholders (Empty)
             matches.push({ id: 998, t1: null, t2: null, s1: null, s2: null, status: 'scheduled', type: 'bronze', label: "Bronzmeccs" });
             matches.push({ id: 999, t1: null, t2: null, s1: null, s2: null, status: 'scheduled', type: 'gold', label: "DÖNTŐ" });
 
@@ -417,15 +374,23 @@
             renderAdminDashboard();
         }
 
+        // --- CALCULATION LOGIC ---
         function calculateStandings() {
             state.teams.forEach(t => {
-                t.stats = { played: 0, w: 0, d: 0, l: 0, pts: 0, gf: 0, ga: 0 };
+                t.stats = { played: 0, w: 0, l: 0, pts: 0, gf: 0, ga: 0 };
             });
 
-            state.matches.filter(m => m.type === 'group' && m.status === 'played').forEach(m => {
+            const groupMatches = state.matches.filter(m => m.type === 'group');
+            let allGroupMatchesPlayed = true;
+
+            groupMatches.forEach(m => {
+                if(m.status !== 'played') {
+                    allGroupMatchesPlayed = false;
+                    return; // Skip calculation for unplayed
+                }
+
                 const t1 = state.teams.find(t => t.id === m.t1);
                 const t2 = state.teams.find(t => t.id === m.t2);
-                
                 if(!t1 || !t2) return;
 
                 t1.stats.gf += parseInt(m.s1); t1.stats.ga += parseInt(m.s2);
@@ -434,41 +399,48 @@
                 t1.stats.played++;
                 t2.stats.played++;
 
+                // No Draws allowed logic
                 if (m.s1 > m.s2) {
                     t1.stats.w++; t1.stats.pts += 3;
                     t2.stats.l++;
                 } else if (m.s2 > m.s1) {
                     t2.stats.w++; t2.stats.pts += 3;
                     t1.stats.l++;
-                } else {
-                    t1.stats.d++; t1.stats.pts += 1;
-                    t2.stats.d++; t2.stats.pts += 1;
-                }
+                } 
+                // If equal, no points awarded based on new rules
             });
 
+            // Sort
             state.teams.sort((a, b) => {
                 if (b.stats.pts !== a.stats.pts) return b.stats.pts - a.stats.pts;
                 if (b.stats.w !== a.stats.w) return b.stats.w - a.stats.w;
                 return (b.stats.gf - b.stats.ga) - (a.stats.gf - a.stats.ga);
             });
 
+            // Populate Finals ONLY if group stage is done
             if (state.teams.length >= 4) {
                 const bronzeMatch = state.matches.find(m => m.type === 'bronze');
                 const goldMatch = state.matches.find(m => m.type === 'gold');
                 
-                if (bronzeMatch && bronzeMatch.status !== 'played') {
-                    bronzeMatch.t1 = state.teams[2].id;
-                    bronzeMatch.t2 = state.teams[3].id;
-                }
-                if (goldMatch && goldMatch.status !== 'played') {
-                    goldMatch.t1 = state.teams[0].id;
-                    goldMatch.t2 = state.teams[1].id;
+                if (allGroupMatchesPlayed && groupMatches.length > 0) {
+                    // Lock in participants
+                    if (bronzeMatch && bronzeMatch.status !== 'played') {
+                        bronzeMatch.t1 = state.teams[2].id;
+                        bronzeMatch.t2 = state.teams[3].id;
+                    }
+                    if (goldMatch && goldMatch.status !== 'played') {
+                        goldMatch.t1 = state.teams[0].id;
+                        goldMatch.t2 = state.teams[1].id;
+                    }
+                } else {
+                    // Reset to null if group stage not finished (or data cleared)
+                    if (bronzeMatch) { bronzeMatch.t1 = null; bronzeMatch.t2 = null; }
+                    if (goldMatch) { goldMatch.t1 = null; goldMatch.t2 = null; }
                 }
             }
         }
 
-        // --- RENDERING ---
-
+        // --- RENDER ---
         function renderAll() {
             calculateStandings();
             renderStandings();
@@ -480,135 +452,104 @@
         function renderStandings() {
             const tbody = document.getElementById('standings-body');
             tbody.innerHTML = '';
-
             if (state.teams.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-600 italic">Nincs még adat. Kérlek generálj csapatokat az admin felületen.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-600 italic">Nincs még adat. Kérlek generálj csapatokat az admin felületen.</td></tr>';
                 return;
             }
-            
             state.teams.forEach((t, index) => {
-                const tr = document.createElement('tr');
-                // Apply a distinct background to the top three teams
                 let rowClass = 'border-b border-gray-800 hover:bg-white/5 transition';
                 if (index === 0) rowClass = 'bg-gold/20 border-b border-gold';
                 else if (index === 1) rowClass = 'bg-gray-400/10 border-b border-gray-500';
                 else if (index === 2) rowClass = 'bg-deep-red/10 border-b border-deep-red';
                 
-                tr.className = rowClass;
-                tr.innerHTML = `
-                    <td class="p-4 font-bold ${index === 0 ? 'text-gold' : 'text-gray-400'}">${index + 1}.</td>
-                    <td class="p-4">
-                        <div class="font-bold text-white">${t.name}</div>
-                        <div class="text-xs text-gray-500">${t.members.join(' & ')}</div>
-                    </td>
-                    <td class="p-4 text-center text-gray-400">${t.stats.played}</td>
-                    <td class="p-4 text-center text-green-400">${t.stats.w}</td>
-                    <td class="p-4 text-center text-gray-400">${t.stats.d}</td>
-                    <td class="p-4 text-center text-red-400">${t.stats.l}</td>
-                    <td class="p-4 text-right font-bold text-gold text-xl">${t.stats.pts}</td>
-                `;
-                tbody.appendChild(tr);
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td class="p-4 font-bold ${index === 0 ? 'text-gold' : 'text-gray-400'}">${index + 1}.</td>
+                        <td class="p-4"><div class="font-bold text-white">${t.name}</div><div class="text-xs text-gray-500">${t.members.join(' & ')}</div></td>
+                        <td class="p-4 text-center text-gray-400">${t.stats.played}</td>
+                        <td class="p-4 text-center text-green-400">${t.stats.w}</td>
+                        <td class="p-4 text-center text-red-400">${t.stats.l}</td>
+                        <td class="p-4 text-right font-bold text-gold text-xl">${t.stats.pts}</td>
+                    </tr>`;
             });
         }
 
         function renderMatches() {
             const list = document.getElementById('matches-list');
             const finalsList = document.getElementById('finals-list');
-            list.innerHTML = '';
-            finalsList.innerHTML = '';
+            list.innerHTML = ''; finalsList.innerHTML = '';
 
             const finals = state.matches.filter(m => m.type !== 'group');
             const groups = state.matches.filter(m => m.type === 'group');
 
-            // --- Finals ---
-            if (state.teams.length >= 4 && finals.length > 0) {
-                finals.sort((a, b) => (b.type === 'gold' ? 1 : -1)); // Gold first
+            // Render Finals
+            if (finals.length > 0) {
+                finals.sort((a, b) => (b.type === 'gold' ? 1 : -1));
                 finals.forEach(m => {
                     const t1 = state.teams.find(t => t.id === m.t1);
                     const t2 = state.teams.find(t => t.id === m.t2);
-                    
                     const borderStyle = m.type === 'gold' ? 'border-gold' : 'border-gray-500';
                     const titleColor = m.type === 'gold' ? 'text-gold' : 'text-gray-400';
-                    
-                    if (!t1 || !t2) {
-                        finalsList.innerHTML += `<div class="glass-panel p-4 rounded text-center text-gray-500 italic border border-dashed ${borderStyle}">${m.label} (Csapatok meghatározása folyamatban)</div>`;
-                        return;
-                    }
 
-                    finalsList.innerHTML += `
-                        <div class="glass-panel p-4 rounded border-l-4 ${borderStyle} relative">
-                            <div class="text-xs uppercase font-bold ${titleColor} mb-2">${m.label}</div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-white text-lg truncate">${t1.name}</span>
-                                ${m.status === 'played' 
-                                    ? `<span class="font-black text-deep-red text-2xl mx-3">${m.s1} - ${m.s2}</span>` 
-                                    : `<span class="text-xs text-gray-500 mx-3 font-mono">VS</span>`}
-                                <span class="font-bold text-white text-lg truncate">${t2.name}</span>
-                            </div>
-                        </div>
-                    `;
+                    if (!t1 || !t2) {
+                        finalsList.innerHTML += `<div class="glass-panel p-4 rounded text-center text-gray-500 italic border border-dashed ${borderStyle}">${m.label}<br><span class="text-xs">A résztvevők a csoportkör után derülnek ki</span></div>`;
+                    } else {
+                        finalsList.innerHTML += `
+                            <div class="glass-panel p-4 rounded border-l-4 ${borderStyle} relative">
+                                <div class="text-xs uppercase font-bold ${titleColor} mb-2">${m.label}</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-white text-lg truncate">${t1.name}</span>
+                                    ${m.status === 'played' ? `<span class="font-black text-deep-red text-2xl mx-3">${m.s1} - ${m.s2}</span>` : `<span class="text-xs text-gray-500 mx-3 font-mono">VS</span>`}
+                                    <span class="font-bold text-white text-lg truncate">${t2.name}</span>
+                                </div>
+                            </div>`;
+                    }
                 });
-            } else {
-                finalsList.innerHTML = `
-                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Bronzmeccs (Nincs generálva)</div>
-                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">DÖNTŐ (Nincs generálva)</div>
-                `;
             }
 
-            // --- Group Stage ---
+            // Render Groups
             if (groups.length === 0) {
                  list.innerHTML = `<div class="glass-panel p-4 rounded text-center text-gray-500 italic">Nincs aktív menetrend. Kérlek generálj egyet az admin felületen.</div>`;
                  return;
             }
-
             groups.forEach(m => {
                 const t1 = state.teams.find(t => t.id === m.t1);
                 const t2 = state.teams.find(t => t.id === m.t2);
-                
                 if (!t1 || !t2) return; 
-
                 const statusColor = m.status === 'played' ? 'opacity-80 border-gray-700' : 'border-l-4 border-gold';
-
                 list.innerHTML += `
                     <div class="glass-panel p-4 rounded flex justify-between items-center ${statusColor}">
-                        <div class="flex-1 text-right pr-4">
-                            <div class="font-bold text-gray-200">${t1.name}</div>
-                        </div>
+                        <div class="flex-1 text-right pr-4"><div class="font-bold text-gray-200">${t1.name}</div></div>
                         <div class="flex flex-col items-center min-w-[80px]">
-                             ${m.status === 'played' 
-                                ? `<span class="text-2xl font-black text-deep-red">${m.s1} - ${m.s2}</span>`
-                                : `<span class="text-xs uppercase bg-gold/20 text-gold px-2 py-1 rounded">Tervezett</span>`
-                            }
+                             ${m.status === 'played' ? `<span class="text-2xl font-black text-deep-red">${m.s1} - ${m.s2}</span>` : `<span class="text-xs uppercase bg-gold/20 text-gold px-2 py-1 rounded">Tervezett</span>`}
                         </div>
-                        <div class="flex-1 text-left pl-4">
-                            <div class="font-bold text-gray-200">${t2.name}</div>
-                        </div>
-                    </div>
-                `;
+                        <div class="flex-1 text-left pl-4"><div class="font-bold text-gray-200">${t2.name}</div></div>
+                    </div>`;
             });
         }
 
         function renderRules() {
-            const list = document.getElementById('rules-list');
-            list.innerHTML = state.rules.map(r => `<li>${r}</li>`).join('');
-            
-            const adminList = document.getElementById('admin-rules-list');
-            adminList.innerHTML = state.rules.map((r, i) => `
+            document.getElementById('rules-list').innerHTML = state.rules.map(r => `<li>${r}</li>`).join('');
+            document.getElementById('admin-rules-list').innerHTML = state.rules.map((r, i) => `
                 <li class="flex justify-between items-center bg-black/40 p-2 rounded">
                     <span>${r}</span>
                     <button onclick="deleteRule(${i})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
-                </li>
-            `).join('');
+                </li>`).join('');
         }
 
         function renderAdminMatches() {
             const list = document.getElementById('admin-match-list');
             list.innerHTML = '';
-            
             state.matches.forEach(m => {
                 const t1 = state.teams.find(t => t.id === m.t1);
                 const t2 = state.teams.find(t => t.id === m.t2);
-                if (!t1 || !t2) return;
+                
+                // For finals, allow entry only if teams are set
+                if (!t1 && m.type !== 'group') {
+                    // Only show placeholder if finals
+                    return; 
+                }
+                if(m.type !== 'group' && (!t1 || !t2)) return;
 
                 const div = document.createElement('div');
                 div.className = "flex items-center gap-2 bg-black/40 p-2 rounded text-sm";
@@ -625,14 +566,11 @@
         }
 
         // --- INTERACTION ---
-
         function updateScore(matchId, field, value) {
             const match = state.matches.find(m => m.id === matchId);
             if (match) {
-                // Ensure value is treated as number and handle empty string gracefully
                 const score = value === "" ? null : parseInt(value);
                 match[field] = score;
-                
                 if (match.s1 !== null && match.s2 !== null) {
                     match.status = 'played';
                 } else {
@@ -640,187 +578,99 @@
                 }
             }
         }
-
-        function forceSave() {
-            saveData();
-        }
-
+        function forceSave() { saveData(); }
         function addRule() {
             const input = document.getElementById('new-rule-input');
-            if (input.value.trim()) {
-                state.rules.push(input.value.trim());
-                input.value = '';
-                saveData();
-            }
+            if (input.value.trim()) { state.rules.push(input.value.trim()); input.value = ''; saveData(); }
         }
-
-        function deleteRule(index) {
-            state.rules.splice(index, 1);
-            saveData();
-        }
-
-        // Admin Auth
-        function openAdminModal() {
-            document.getElementById('admin-modal').classList.remove('hidden');
-            document.getElementById('admin-modal').classList.add('flex');
-        }
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.add('hidden');
-            document.getElementById('admin-modal').classList.remove('flex');
-        }
+        function deleteRule(index) { state.rules.splice(index, 1); saveData(); }
+        
+        // Admin
+        function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); document.getElementById('admin-modal').classList.add('flex'); }
+        function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); document.getElementById('admin-modal').classList.remove('flex'); }
         function adminLogin() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === 'Jimmy92') {
+            if (document.getElementById('admin-pass').value === 'Jimmy92') {
                 document.getElementById('admin-login-view').classList.add('hidden');
                 document.getElementById('admin-dashboard-view').classList.remove('hidden');
                 renderAdminDashboard();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
+            } else document.getElementById('login-error').classList.remove('hidden');
         }
+        function renderAdminDashboard() { renderAdminMatches(); renderRules(); }
 
-        function renderAdminDashboard() {
-            renderAdminMatches();
-            renderRules();
-        }
-
-        // --- THREE.JS BACKGROUND ---
-        
+        // --- THREE.JS ---
         function initThreeJS() {
-            const container = document.getElementById('threejs-display'); // Attaching to the main display area
+            const container = document.getElementById('threejs-display');
             const scene = new THREE.Scene();
-            
-            // Camera (moved back slightly to better frame the object)
             const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.z = 15;
-            camera.position.y = 8; // Slightly lower angle
-            camera.lookAt(0, 0, 0);
+            camera.position.z = 15; camera.position.y = 8; camera.lookAt(0, 0, 0);
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.domElement.style.position = 'absolute';
-            renderer.domElement.style.top = '0';
-            renderer.domElement.style.left = '0';
+            renderer.domElement.style.position = 'absolute'; renderer.domElement.style.top = '0'; renderer.domElement.style.left = '0';
             container.appendChild(renderer.domElement);
 
-            // Lighting (Gold and Red accents)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-            scene.add(ambientLight);
-            const goldLight = new THREE.PointLight(0xd4af37, 1.5, 100);
-            goldLight.position.set(10, 10, 10);
-            scene.add(goldLight);
-            const redLight = new THREE.PointLight(0x8B0000, 1.0, 100);
-            redLight.position.set(-10, 5, -5);
-            scene.add(redLight);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); scene.add(ambientLight);
+            const goldLight = new THREE.PointLight(0xd4af37, 1.5, 100); goldLight.position.set(10, 10, 10); scene.add(goldLight);
+            const redLight = new THREE.PointLight(0x8B0000, 1.0, 100); redLight.position.set(-10, 5, -5); scene.add(redLight);
 
-            // Foosball Field (Abstract)
             const fieldGroup = new THREE.Group();
-            
-            // Green Pitch
             const geometry = new THREE.BoxGeometry(16, 0.5, 10);
             const material = new THREE.MeshStandardMaterial({ color: 0x0f3b1e, roughness: 0.3, metalness: 0.1 });
-            const field = new THREE.Mesh(geometry, material);
-            fieldGroup.add(field);
+            const field = new THREE.Mesh(geometry, material); fieldGroup.add(field);
 
-            // Lines (White Planes)
             const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
-            const centerLine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.51, 10), lineMat);
-            fieldGroup.add(centerLine);
+            const centerLine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.51, 10), lineMat); fieldGroup.add(centerLine);
 
-            // Goals - Highlighted with Red/Deep Red
             const goalMat = new THREE.MeshBasicMaterial({ color: 0x8B0000 });
-            const goal1 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), goalMat);
-            goal1.position.x = -8;
-            fieldGroup.add(goal1);
-            
-            const goal2 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), goalMat);
-            goal2.position.x = 8;
-            fieldGroup.add(goal2);
+            const goal1 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), goalMat); goal1.position.x = -8; fieldGroup.add(goal1);
+            const goal2 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), goalMat); goal2.position.x = 8; fieldGroup.add(goal2);
+            fieldGroup.rotation.y = 0.5; scene.add(fieldGroup);
 
-            fieldGroup.rotation.y = 0.5;
-            scene.add(fieldGroup);
-
-            // Snow Particles (Attached to fixed background canvas, not the floating field)
-            const backgroundCanvas = document.getElementById('canvas-container'); // Need a separate canvas for the snow
+            // Background Snow (Separate Canvas)
+            const backgroundCanvas = document.getElementById('canvas-container');
             const snowScene = new THREE.Scene();
             const snowRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             snowRenderer.setSize(window.innerWidth, window.innerHeight);
-            snowRenderer.domElement.style.position = 'absolute';
-            snowRenderer.domElement.style.top = '0';
-            snowRenderer.domElement.style.left = '0';
+            snowRenderer.domElement.style.position = 'absolute'; snowRenderer.domElement.style.top = '0'; snowRenderer.domElement.style.left = '0';
             backgroundCanvas.appendChild(snowRenderer.domElement);
 
             const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 2000; // More snow
+            const particlesCount = 2000;
             const posArray = new Float32Array(particlesCount * 3);
-
-            for(let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 100; // Wider spread
-            }
-
+            for(let i = 0; i < particlesCount * 3; i++) posArray[i] = (Math.random() - 0.5) * 100;
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.2,
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.7
-            });
-            const snowMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-            snowScene.add(snowMesh);
+            const particlesMaterial = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff, transparent: true, opacity: 0.7 });
+            const snowMesh = new THREE.Points(particlesGeometry, particlesMaterial); snowScene.add(snowMesh);
 
-            // Mouse Interaction (Affecting the field camera)
-            let mouseX = 0;
-            let mouseY = 0;
-            document.addEventListener('mousemove', (event) => {
-                mouseX = (event.clientX / window.innerWidth) - 0.5;
-                mouseY = (event.clientY / window.innerHeight) - 0.5;
+            let mouseX = 0, mouseY = 0;
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth) - 0.5;
+                mouseY = (e.clientY / window.innerHeight) - 0.5;
             });
 
-            // Animation Loop
             function animate() {
                 requestAnimationFrame(animate);
-
-                // Field Animation
-                fieldGroup.rotation.y += 0.002;
-                fieldGroup.rotation.x = Math.sin(Date.now() * 0.0001) * 0.1;
-
-                // Field Camera Reaction
+                fieldGroup.rotation.y += 0.002; fieldGroup.rotation.x = Math.sin(Date.now() * 0.0001) * 0.1;
                 camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
                 camera.position.y += (-mouseY * 3 + 8 - camera.position.y) * 0.05;
                 camera.lookAt(0, 0, 0);
                 renderer.render(scene, camera);
 
-
-                // Snow Animation
                 const positions = snowMesh.geometry.attributes.position.array;
                 for(let i = 1; i < particlesCount * 3; i+=3) {
-                    positions[i] -= 0.05; // slower, gentle fall
-                    if (positions[i] < -50) { // reset from above
-                        positions[i] = 50;
-                    }
+                    positions[i] -= 0.05; if (positions[i] < -50) positions[i] = 50;
                 }
                 snowMesh.geometry.attributes.position.needsUpdate = true;
                 snowRenderer.render(snowScene, camera);
             }
             animate();
-
-            // Resize Handle
             window.addEventListener('resize', () => {
-                // Field Renderer Resize
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-
-                // Snow Renderer Resize
+                camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight);
                 snowRenderer.setSize(window.innerWidth, window.innerHeight);
             });
         }
 
-        window.onload = function() {
-            initThreeJS();
-            loadData();
-        };
-
+        window.onload = function() { initThreeJS(); loadData(); };
     </script>
 </body>
 </html>
