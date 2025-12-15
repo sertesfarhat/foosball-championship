@@ -182,7 +182,7 @@
 
     <footer class="w-full py-4 text-center relative z-40 bg-black/60 border-t border-gold/30 mt-auto">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center text-xs text-gray-600">
-            <span>&copy; 2024 Winter Cup</span>
+            <span>&copy; 2025 Winter Cup</span>
             
             <button onclick="openAdminModal()" class="flex items-center gap-2 hover:text-gold transition-colors duration-300">
                 <i class="fas fa-user-shield"></i>
@@ -307,6 +307,7 @@
 
             let players = rawText.split('\n').filter(n => n.trim().length > 0);
             
+            // 1. Shuffle players and create teams
             for (let i = players.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [players[i], players[j]] = [players[j], players[i]];
@@ -339,7 +340,8 @@
                 teamId++;
             }
 
-            const matches = [];
+            // 2. Generate all matches and shuffle
+            let matches = [];
             let matchId = 1;
 
             for (let i = 0; i < teams.length; i++) {
@@ -356,6 +358,55 @@
                 }
             }
 
+            matches.sort(() => 0.5 - Math.random()); // Initial shuffle
+
+            // 3. Apply scheduling constraint (No team plays back-to-back)
+            const teamIds = teams.map(t => t.id);
+            const lastPlayed = teamIds.reduce((acc, id) => ({ ...acc, [id]: -2 }), {}); // -2 means they haven't played recently
+
+            const MIN_REST = 1; // Must skip at least 1 match slot
+
+            for (let i = 0; i < matches.length; i++) {
+                const currentMatch = matches[i];
+                const team1 = currentMatch.t1;
+                const team2 = currentMatch.t2;
+
+                const hasConflict = (lastPlayed[team1] >= i - MIN_REST) || (lastPlayed[team2] >= i - MIN_REST);
+                
+                if (hasConflict) {
+                    // Try to find a safe swap: a match j > i that doesn't cause a conflict
+                    let swapped = false;
+                    for (let j = i + 1; j < matches.length; j++) {
+                        const nextMatch = matches[j];
+                        const nextT1 = nextMatch.t1;
+                        const nextT2 = nextMatch.t2;
+
+                        const nextConflictT1 = (lastPlayed[nextT1] >= i - MIN_REST) || (lastPlayed[nextT2] >= i - MIN_REST);
+                        const currentConflictT2 = (lastPlayed[team1] >= j - MIN_REST) || (lastPlayed[team2] >= j - MIN_REST);
+                        
+                        // Check 1: Does the target match (j) fit in current slot (i)?
+                        // Check 2: Does the current match (i) fit in target slot (j)?
+                        if (!nextConflictT1) {
+                             // Simple swap: current match (i) goes to slot j, target match (j) goes to slot i
+                             [matches[i], matches[j]] = [matches[j], matches[i]];
+                             swapped = true;
+                             break;
+                        }
+                    }
+
+                    // If no swap was possible, we have to proceed with the conflict (rare, only with very few teams)
+                    if (!swapped) {
+                        console.warn(`Scheduling conflict unavoidable at match ${i+1}.`);
+                    }
+                }
+                
+                // Update last played indices for the match that ACTUALLY ended up in slot i
+                lastPlayed[matches[i].t1] = i;
+                lastPlayed[matches[i].t2] = i;
+            }
+
+
+            // 4. Add Finals (fixed at the end)
             matches.push({ id: 998, t1: null, t2: null, s1: null, s2: null, status: 'scheduled', type: 'bronze', label: "Bronzmeccs" });
             matches.push({ id: 999, t1: null, t2: null, s1: null, s2: null, status: 'scheduled', type: 'gold', label: "DÖNTŐ" });
 
