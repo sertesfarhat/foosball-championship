@@ -41,22 +41,23 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: -1;
+            /* Added radial gradient for depth */
             background: radial-gradient(circle at center, #1a0505 0%, #000000 100%);
         }
 
-        /* Glassmorphism Classes */
+        /* Glassmorphism Classes - Increased blur and border contrast */
         .glass-panel {
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.2); /* Gold border */
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); /* Stronger shadow */
         }
 
         .glass-nav {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.5);
         }
 
         /* Scrollbar */
@@ -64,56 +65,70 @@
         ::-webkit-scrollbar-track { background: #111; }
         ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 4px; }
 
-        /* Animations */
+        /* Festive Glowing Effects */
+        .gold-glow { text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 25px rgba(212, 175, 55, 0.4); }
+        .red-accent { color: #8B0000; }
+
+        /* Animation for subtle element entry */
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .gold-glow { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        /* Custom styles for 3D field placement */
+        #threejs-display {
+            position: relative;
+            width: 100%;
+            height: 400px; /* Fixed height for the 3D area */
+            margin-top: -120px; /* Pulls the canvas up under the welcome text */
+            z-index: 1;
+        }
+
+        /* Ensure fixed nav doesn't cover content */
+        main { padding-top: 6rem; padding-bottom: 3rem; }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-200">
 
     <div id="canvas-container"></div>
 
-    <nav class="fixed top-0 w-full z-50 glass-nav h-16 flex items-center justify-between px-4 lg:px-8">
-        <div class="flex items-center gap-2">
+    <nav class="fixed top-0 w-full z-50 glass-nav h-16 flex items-center justify-center px-4 lg:px-8">
+        <div class="absolute left-4 flex items-center gap-2">
             <i class="fas fa-snowflake text-gold animate-pulse"></i>
             <span class="font-bold text-xl tracking-wider text-white">WINTER <span class="text-gold">CUP</span></span>
         </div>
         
-        <div class="hidden md:flex gap-6 text-sm uppercase tracking-widest">
-            <button onclick="navTo('welcome')" class="hover:text-gold transition-colors duration-300">Home</button>
-            <button onclick="navTo('tabella')" class="hover:text-gold transition-colors duration-300">Tabella</button>
-            <button onclick="navTo('meccsek')" class="hover:text-gold transition-colors duration-300">Meccsek</button>
-            <button onclick="navTo('szabalyok')" class="hover:text-gold transition-colors duration-300">Szabályok</button>
+        <div class="flex gap-8 text-sm uppercase tracking-widest font-bold">
+            <a href="#welcome" class="hover:text-gold transition-colors duration-300">Home</a>
+            <a href="#tabella-section" class="hover:text-gold transition-colors duration-300">Tabella</a>
+            <a href="#meccsek-section" class="hover:text-gold transition-colors duration-300">Meccsek</a>
+            <a href="#szabalyok-section" class="hover:text-gold transition-colors duration-300">Szabályok</a>
         </div>
 
-        <div class="hidden md:block w-8"></div>
-    </nav>
+        </nav>
 
-    <div class="md:hidden fixed bottom-12 w-full glass-nav z-50 flex justify-around py-3 text-xs uppercase border-t border-gold/30">
-        <button onclick="navTo('tabella')" class="flex flex-col items-center gap-1 text-gold"><i class="fas fa-list-ol"></i> Tabella</button>
-        <button onclick="navTo('meccsek')" class="flex flex-col items-center gap-1 text-gold"><i class="fas fa-futbol"></i> Meccsek</button>
-        <button onclick="navTo('szabalyok')" class="flex flex-col items-center gap-1 text-gold"><i class="fas fa-book"></i> Szabályok</button>
-    </div>
-
-    <main class="pt-24 pb-12 px-4 max-w-6xl mx-auto flex-grow w-full">
+    <main class="max-w-6xl mx-auto flex-grow w-full space-y-20">
         
-        <section id="welcome" class="fade-in text-center py-20">
-            <h1 class="text-5xl md:text-7xl font-bold mb-4 gold-glow text-white">TÉLI CSOCSÓ KUPA</h1>
-            <p class="text-xl text-gray-300 mb-8">Üdvözlünk a vállalati bajnokságon!</p>
-            <div class="inline-block glass-panel p-6 rounded-lg">
-                <p class="text-gold uppercase text-sm tracking-widest mb-2">Következő Meccs</p>
-                <div id="next-match-display" class="text-2xl font-bold">Jelenleg nincs aktív meccs</div>
+        <section id="welcome" class="text-center fade-in pt-10">
+            <h1 class="text-6xl md:text-8xl font-black mb-4 gold-glow text-white">TÉLI CSOCSÓ KUPA</h1>
+            <p class="text-2xl text-gray-300 mb-8 font-serif italic">Üdvözlünk a vállalati bajnokságon!</p>
+            
+            <div class="inline-block glass-panel p-4 rounded-lg border-l-4 border-deep-red">
+                <p class="text-gold uppercase text-sm tracking-widest font-bold mb-2">Következő Meccs</p>
+                <div id="next-match-display" class="text-xl font-bold">Jelenleg nincs aktív meccs</div>
             </div>
+            
+            <div id="threejs-display"></div>
         </section>
 
-        <section id="tabella" class="hidden fade-in">
-            <h2 class="text-3xl font-bold text-gold mb-6 border-b border-gray-700 pb-2">Tabella</h2>
-            <div class="glass-panel rounded-xl overflow-hidden">
-                <table class="w-full text-left border-collapse">
+        <div class="border-t-2 border-dashed border-gold/50 mx-10"></div>
+
+        <section id="tabella-section" class="fade-in scroll-mt-24">
+            <h2 class="text-4xl font-bold text-gold mb-6 border-b-2 border-deep-red pb-2 flex items-center gap-3">
+                <i class="fas fa-trophy red-accent"></i> Tabella
+            </h2>
+            <div class="glass-panel rounded-xl overflow-hidden min-h-[200px] flex items-center justify-center">
+                <table class="w-full text-left border-collapse" id="standings-table">
                     <thead>
-                        <tr class="bg-black/40 text-gold uppercase text-xs tracking-wider">
+                        <tr class="bg-black/50 text-gold uppercase text-sm tracking-wider">
                             <th class="p-4">#</th>
                             <th class="p-4">Csapat</th>
                             <th class="p-4 text-center">M</th>
@@ -124,27 +139,40 @@
                         </tr>
                     </thead>
                     <tbody id="standings-body">
-                        </tbody>
+                        <tr><td colspan="7" class="p-8 text-center text-gray-600 italic">Nincs még adat. Kérlek generálj csapatokat az admin felületen.</td></tr>
+                    </tbody>
                 </table>
             </div>
         </section>
 
-        <section id="meccsek" class="hidden fade-in">
-            <h2 class="text-3xl font-bold text-gold mb-6 border-b border-gray-700 pb-2">Mérkőzések</h2>
+        <div class="border-t-2 border-dashed border-gold/50 mx-10"></div>
+
+        <section id="meccsek-section" class="fade-in scroll-mt-24">
+            <h2 class="text-4xl font-bold text-gold mb-6 border-b-2 border-deep-red pb-2 flex items-center gap-3">
+                <i class="fas fa-futbol red-accent"></i> Mérkőzések
+            </h2>
             
-            <div id="finals-container" class="mb-8 hidden">
-                <h3 class="text-xl text-deep-red font-bold mb-4 uppercase tracking-widest">Döntők</h3>
-                <div class="grid md:grid-cols-2 gap-4" id="finals-list"></div>
+            <div id="finals-container" class="mb-10">
+                <h3 class="text-2xl text-deep-red font-bold mb-4 uppercase tracking-widest border-l-4 border-deep-red pl-3">Döntők</h3>
+                <div class="grid md:grid-cols-2 gap-4" id="finals-list">
+                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Bronzmeccs (Nincs generálva)</div>
+                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">DÖNTŐ (Nincs generálva)</div>
+                </div>
             </div>
 
-            <h3 class="text-xl text-gray-400 font-bold mb-4 uppercase tracking-widest">Körmérkőzések</h3>
+            <h3 class="text-2xl text-gray-400 font-bold mb-4 uppercase tracking-widest border-l-4 border-gray-600 pl-3">Körmérkőzések</h3>
             <div class="grid md:grid-cols-1 gap-3" id="matches-list">
-                </div>
+                <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Nincs aktív menetrend. Kérlek generálj egyet az admin felületen.</div>
+            </div>
         </section>
 
-        <section id="szabalyok" class="hidden fade-in">
-            <h2 class="text-3xl font-bold text-gold mb-6 border-b border-gray-700 pb-2">Szabályok</h2>
-            <div class="glass-panel p-8 rounded-xl">
+        <div class="border-t-2 border-dashed border-gold/50 mx-10"></div>
+
+        <section id="szabalyok-section" class="fade-in scroll-mt-24">
+            <h2 class="text-4xl font-bold text-gold mb-6 border-b-2 border-deep-red pb-2 flex items-center gap-3">
+                <i class="fas fa-book-open red-accent"></i> Szabályok
+            </h2>
+            <div class="glass-panel p-8 rounded-xl min-h-[150px]">
                 <ul id="rules-list" class="space-y-4 list-disc list-inside text-lg text-gray-300">
                     </ul>
             </div>
@@ -152,7 +180,7 @@
 
     </main>
 
-    <footer class="w-full py-4 text-center relative z-40 bg-black/60 border-t border-gray-900 mt-auto">
+    <footer class="w-full py-4 text-center relative z-40 bg-black/60 border-t border-gold/30 mt-auto">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center text-xs text-gray-600">
             <span>&copy; 2024 Winter Cup</span>
             
@@ -401,10 +429,21 @@
         function renderStandings() {
             const tbody = document.getElementById('standings-body');
             tbody.innerHTML = '';
+
+            if (state.teams.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-600 italic">Nincs még adat. Kérlek generálj csapatokat az admin felületen.</td></tr>';
+                return;
+            }
             
             state.teams.forEach((t, index) => {
                 const tr = document.createElement('tr');
-                tr.className = index < 3 ? 'bg-gold/10 border-b border-gray-800' : 'border-b border-gray-800 hover:bg-white/5 transition';
+                // Apply a distinct background to the top three teams
+                let rowClass = 'border-b border-gray-800 hover:bg-white/5 transition';
+                if (index === 0) rowClass = 'bg-gold/20 border-b border-gold';
+                else if (index === 1) rowClass = 'bg-gray-400/10 border-b border-gray-500';
+                else if (index === 2) rowClass = 'bg-deep-red/10 border-b border-deep-red';
+                
+                tr.className = rowClass;
                 tr.innerHTML = `
                     <td class="p-4 font-bold ${index === 0 ? 'text-gold' : 'text-gray-400'}">${index + 1}.</td>
                     <td class="p-4">
@@ -415,7 +454,7 @@
                     <td class="p-4 text-center text-green-400">${t.stats.w}</td>
                     <td class="p-4 text-center text-gray-400">${t.stats.d}</td>
                     <td class="p-4 text-center text-red-400">${t.stats.l}</td>
-                    <td class="p-4 text-right font-bold text-gold text-lg">${t.stats.pts}</td>
+                    <td class="p-4 text-right font-bold text-gold text-xl">${t.stats.pts}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -424,27 +463,70 @@
         function renderMatches() {
             const list = document.getElementById('matches-list');
             const finalsList = document.getElementById('finals-list');
-            const finalsContainer = document.getElementById('finals-container');
             list.innerHTML = '';
             finalsList.innerHTML = '';
 
-            let hasFinals = false;
+            const finals = state.matches.filter(m => m.type !== 'group');
+            const groups = state.matches.filter(m => m.type === 'group');
 
-            state.matches.forEach(m => {
+            // --- Finals ---
+            if (state.teams.length >= 4 && finals.length > 0) {
+                finals.sort((a, b) => (b.type === 'gold' ? 1 : -1)); // Gold first
+                finals.forEach(m => {
+                    const t1 = state.teams.find(t => t.id === m.t1);
+                    const t2 = state.teams.find(t => t.id === m.t2);
+                    
+                    const borderStyle = m.type === 'gold' ? 'border-gold' : 'border-gray-500';
+                    const titleColor = m.type === 'gold' ? 'text-gold' : 'text-gray-400';
+                    
+                    if (!t1 || !t2) {
+                        finalsList.innerHTML += `<div class="glass-panel p-4 rounded text-center text-gray-500 italic border border-dashed ${borderStyle}">${m.label} (Csapatok meghatározása folyamatban)</div>`;
+                        return;
+                    }
+
+                    finalsList.innerHTML += `
+                        <div class="glass-panel p-4 rounded border-l-4 ${borderStyle} relative">
+                            <div class="text-xs uppercase font-bold ${titleColor} mb-2">${m.label}</div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-white text-lg truncate">${t1.name}</span>
+                                ${m.status === 'played' 
+                                    ? `<span class="font-black text-deep-red text-2xl mx-3">${m.s1} - ${m.s2}</span>` 
+                                    : `<span class="text-xs text-gray-500 mx-3 font-mono">VS</span>`}
+                                <span class="font-bold text-white text-lg truncate">${t2.name}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                finalsList.innerHTML = `
+                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">Bronzmeccs (Nincs generálva)</div>
+                    <div class="glass-panel p-4 rounded text-center text-gray-500 italic">DÖNTŐ (Nincs generálva)</div>
+                `;
+            }
+
+            // --- Group Stage ---
+            if (groups.length === 0) {
+                 list.innerHTML = `<div class="glass-panel p-4 rounded text-center text-gray-500 italic">Nincs aktív menetrend. Kérlek generálj egyet az admin felületen.</div>`;
+                 return;
+            }
+
+            groups.forEach(m => {
                 const t1 = state.teams.find(t => t.id === m.t1);
                 const t2 = state.teams.find(t => t.id === m.t2);
                 
-                if (!t1 || !t2) return;
+                if (!t1 || !t2) return; 
 
-                const cardHTML = `
-                    <div class="glass-panel p-4 rounded flex justify-between items-center ${m.status === 'played' ? 'opacity-70' : 'border-l-4 border-gold'}">
+                const statusColor = m.status === 'played' ? 'opacity-80 border-gray-700' : 'border-l-4 border-gold';
+
+                list.innerHTML += `
+                    <div class="glass-panel p-4 rounded flex justify-between items-center ${statusColor}">
                         <div class="flex-1 text-right pr-4">
                             <div class="font-bold text-gray-200">${t1.name}</div>
                         </div>
                         <div class="flex flex-col items-center min-w-[80px]">
                              ${m.status === 'played' 
-                                ? `<span class="text-2xl font-bold text-gold">${m.s1} - ${m.s2}</span>`
-                                : `<span class="text-xs uppercase bg-gray-800 px-2 py-1 rounded">VS</span>`
+                                ? `<span class="text-2xl font-black text-deep-red">${m.s1} - ${m.s2}</span>`
+                                : `<span class="text-xs uppercase bg-gold/20 text-gold px-2 py-1 rounded">Tervezett</span>`
                             }
                         </div>
                         <div class="flex-1 text-left pl-4">
@@ -452,27 +534,7 @@
                         </div>
                     </div>
                 `;
-
-                if (m.type === 'group') {
-                    list.innerHTML += cardHTML;
-                } else {
-                    hasFinals = true;
-                    finalsList.innerHTML += `
-                        <div class="glass-panel p-4 rounded border border-${m.type === 'gold' ? 'gold' : 'orange-700'} relative overflow-hidden">
-                            <div class="absolute top-0 right-0 bg-${m.type === 'gold' ? 'gold' : 'orange-700'} text-black text-xs font-bold px-2 py-1">${m.label}</div>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="font-bold text-white">${t1.name}</span>
-                                ${m.status === 'played' 
-                                    ? `<span class="font-bold text-gold text-xl mx-2">${m.s1} - ${m.s2}</span>` 
-                                    : `<span class="text-xs text-gray-500 mx-2">vs</span>`}
-                                <span class="font-bold text-white">${t2.name}</span>
-                            </div>
-                        </div>
-                    `;
-                }
             });
-
-            if(hasFinals) finalsContainer.classList.remove('hidden');
         }
 
         function renderRules() {
@@ -516,8 +578,11 @@
         function updateScore(matchId, field, value) {
             const match = state.matches.find(m => m.id === matchId);
             if (match) {
-                match[field] = value;
-                if (match.s1 !== null && match.s1 !== "" && match.s2 !== null && match.s2 !== "") {
+                // Ensure value is treated as number and handle empty string gracefully
+                const score = value === "" ? null : parseInt(value);
+                match[field] = score;
+                
+                if (match.s1 !== null && match.s2 !== null) {
                     match.status = 'played';
                 } else {
                     match.status = 'scheduled';
@@ -541,13 +606,6 @@
         function deleteRule(index) {
             state.rules.splice(index, 1);
             saveData();
-        }
-
-        function navTo(sectionId) {
-            ['welcome', 'tabella', 'meccsek', 'szabalyok'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(sectionId).classList.remove('hidden');
         }
 
         // Admin Auth
@@ -578,63 +636,88 @@
         // --- THREE.JS BACKGROUND ---
         
         function initThreeJS() {
-            const container = document.getElementById('canvas-container');
+            const container = document.getElementById('threejs-display'); // Attaching to the main display area
             const scene = new THREE.Scene();
             
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            // Camera (moved back slightly to better frame the object)
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
             camera.position.z = 15;
-            camera.position.y = 10;
+            camera.position.y = 8; // Slightly lower angle
             camera.lookAt(0, 0, 0);
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.domElement.style.position = 'absolute';
+            renderer.domElement.style.top = '0';
+            renderer.domElement.style.left = '0';
             container.appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            // Lighting (Gold and Red accents)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xd4af37, 1);
-            pointLight.position.set(10, 10, 10);
-            scene.add(pointLight);
+            const goldLight = new THREE.PointLight(0xd4af37, 1.5, 100);
+            goldLight.position.set(10, 10, 10);
+            scene.add(goldLight);
+            const redLight = new THREE.PointLight(0x8B0000, 1.0, 100);
+            redLight.position.set(-10, 5, -5);
+            scene.add(redLight);
 
+            // Foosball Field (Abstract)
             const fieldGroup = new THREE.Group();
             
+            // Green Pitch
             const geometry = new THREE.BoxGeometry(16, 0.5, 10);
-            const material = new THREE.MeshStandardMaterial({ color: 0x0f3b1e, roughness: 0.2 });
+            const material = new THREE.MeshStandardMaterial({ color: 0x0f3b1e, roughness: 0.3, metalness: 0.1 });
             const field = new THREE.Mesh(geometry, material);
             fieldGroup.add(field);
 
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+            // Lines (White Planes)
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
             const centerLine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.51, 10), lineMat);
             fieldGroup.add(centerLine);
 
-            const goal1 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+            // Goals - Highlighted with Red/Deep Red
+            const goalMat = new THREE.MeshBasicMaterial({ color: 0x8B0000 });
+            const goal1 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), goalMat);
             goal1.position.x = -8;
             fieldGroup.add(goal1);
             
-            const goal2 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+            const goal2 = new THREE.Mesh(new THREE.BoxGeometry(1, 0.51, 4), goalMat);
             goal2.position.x = 8;
             fieldGroup.add(goal2);
 
+            fieldGroup.rotation.y = 0.5;
             scene.add(fieldGroup);
 
+            // Snow Particles (Attached to fixed background canvas, not the floating field)
+            const backgroundCanvas = document.getElementById('canvas-container'); // Need a separate canvas for the snow
+            const snowScene = new THREE.Scene();
+            const snowRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            snowRenderer.setSize(window.innerWidth, window.innerHeight);
+            snowRenderer.domElement.style.position = 'absolute';
+            snowRenderer.domElement.style.top = '0';
+            snowRenderer.domElement.style.left = '0';
+            backgroundCanvas.appendChild(snowRenderer.domElement);
+
             const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 1000;
+            const particlesCount = 2000; // More snow
             const posArray = new Float32Array(particlesCount * 3);
 
             for(let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 50;
+                posArray[i] = (Math.random() - 0.5) * 100; // Wider spread
             }
 
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
             const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.1,
+                size: 0.2,
                 color: 0xffffff,
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.7
             });
             const snowMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-            scene.add(snowMesh);
+            snowScene.add(snowMesh);
 
+            // Mouse Interaction (Affecting the field camera)
             let mouseX = 0;
             let mouseY = 0;
             document.addEventListener('mousemove', (event) => {
@@ -642,31 +725,43 @@
                 mouseY = (event.clientY / window.innerHeight) - 0.5;
             });
 
+            // Animation Loop
             function animate() {
                 requestAnimationFrame(animate);
+
+                // Field Animation
                 fieldGroup.rotation.y += 0.002;
+                fieldGroup.rotation.x = Math.sin(Date.now() * 0.0001) * 0.1;
 
-                camera.position.x += (mouseX * 10 - camera.position.x) * 0.05;
-                camera.position.y += (-mouseY * 5 + 10 - camera.position.y) * 0.05;
+                // Field Camera Reaction
+                camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY * 3 + 8 - camera.position.y) * 0.05;
                 camera.lookAt(0, 0, 0);
+                renderer.render(scene, camera);
 
+
+                // Snow Animation
                 const positions = snowMesh.geometry.attributes.position.array;
                 for(let i = 1; i < particlesCount * 3; i+=3) {
-                    positions[i] -= 0.1;
-                    if (positions[i] < -20) {
-                        positions[i] = 20;
+                    positions[i] -= 0.05; // slower, gentle fall
+                    if (positions[i] < -50) { // reset from above
+                        positions[i] = 50;
                     }
                 }
                 snowMesh.geometry.attributes.position.needsUpdate = true;
-
-                renderer.render(scene, camera);
+                snowRenderer.render(snowScene, camera);
             }
             animate();
 
+            // Resize Handle
             window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
+                // Field Renderer Resize
+                camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setSize(container.clientWidth, container.clientHeight);
+
+                // Snow Renderer Resize
+                snowRenderer.setSize(window.innerWidth, window.innerHeight);
             });
         }
 
