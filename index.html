@@ -50,29 +50,42 @@
             background: radial-gradient(circle at center, #1a202c 0%, #0f131a 100%);
         }
 
-        /* FIXED GARLAND DECORATION */
+        /* === FIXED REALISTIC GARLAND DECORATION === */
         .nav-garland {
             position: relative;
+            /* Ensure nav is on top */
+            z-index: 50;
         }
+
         .nav-garland::after {
             content: '';
             position: absolute;
-            bottom: -12px; /* Hangs immediately below the nav */
+            /* Align to the bottom of the nav bar */
+            top: 100%; 
             left: 0;
             width: 100%;
-            height: 12px;
-            /* Creates the scalloped pine effect */
-            background-color: transparent;
-            background-image: 
-                radial-gradient(circle at 50% 0, #15803d 70%, transparent 71%), /* Green Boughs */
-                radial-gradient(circle at 50% 80%, #ee3e38 2px, transparent 3px), /* Red lights */
-                radial-gradient(circle at 20% 60%, #facc15 1px, transparent 2px); /* Gold lights */
-            background-size: 24px 12px, 24px 12px, 24px 12px; /* Repeat size */
+            /* Set a height appropriate for a realistic garland image (adjust as needed based on your image) */
+            height: 60px; 
+            
+            /* --- IMPORTANT: REPLACE URL BELOW WITH YOUR ACTUAL GARLAND IMAGE IMAGE --- */
+            /* Use a seamless horizontal PNG image with a transparent background */
+            background-image: url('https://placehold.co/1200x60/15803d/ffffff?text=REPLACE+WITH+REALISTIC+GARLAND+IMAGE.png'); 
+            
             background-repeat: repeat-x;
-            z-index: 60;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+            background-size: auto 100%; /* Keep aspect ratio, fit height */
+            background-position: center top;
+            
+            /* Pull it up slightly to overlap the bottom border of the nav */
+            transform: translateY(-5px);
+            
+            /* Ensure it sits on top of the background but below nav content if needed */
+            z-index: 60; 
             pointer-events: none;
+            /* Add a shadow for realism and depth */
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.6));
         }
+        /* ========================================== */
+
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
@@ -105,7 +118,7 @@
 
     <div id="canvas-container"></div>
 
-    <nav class="fixed top-0 w-full z-50 bg-brand-dark/95 border-b border-brand-green/30 h-20 flex items-center justify-between px-6 lg:px-12 nav-garland shadow-2xl">
+    <nav class="fixed top-0 w-full bg-brand-dark/95 h-20 flex items-center justify-between px-6 lg:px-12 nav-garland shadow-xl">
         
         <div class="flex items-center gap-3 z-50">
             <i class="fas fa-tree text-brand-green text-2xl drop-shadow-lg"></i>
