@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MÚSZ Bajnokság - Téli Szezon</title>
+    <title>MÚSZ Karácsonyi Csocsó Kupa</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -26,6 +26,7 @@
                         'brand-dark': '#0f131a',
                         'brand-red': '#ee3e38',
                         'brand-gold': '#facc15',
+                        'brand-green': '#15803d',
                         'glass': 'rgba(255, 255, 255, 0.05)'
                     },
                     fontFamily: {
@@ -40,33 +41,36 @@
     <style>
         body { margin: 0; overflow-x: hidden; background-color: #0f131a; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 3D Canvas Background - UPDATED COLOR */
+        /* 3D Canvas Background */
         #canvas-container {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 0;
-            /* Lighter center for better contrast */
             background: radial-gradient(circle at center, #1a202c 0%, #0f131a 100%);
         }
 
-        /* Garland Decoration via CSS */
+        /* FIXED GARLAND DECORATION */
+        .nav-garland {
+            position: relative;
+        }
         .nav-garland::after {
             content: '';
             position: absolute;
-            top: 45px;
+            bottom: -12px; /* Hangs immediately below the nav */
             left: 0;
             width: 100%;
-            height: 40px;
-            background: 
-                radial-gradient(circle at 50% 0, #006400 12px, transparent 13px),
-                radial-gradient(circle at 50% 0, #006400 12px, transparent 13px),
-                radial-gradient(circle at 50% 100%, #8b0000 4px, transparent 5px),
-                radial-gradient(circle at 60% 80%, #ffd700 3px, transparent 4px);
-            background-size: 50px 40px;
+            height: 12px;
+            /* Creates the scalloped pine effect */
+            background-color: transparent;
+            background-image: 
+                radial-gradient(circle at 50% 0, #15803d 70%, transparent 71%), /* Green Boughs */
+                radial-gradient(circle at 50% 80%, #ee3e38 2px, transparent 3px), /* Red lights */
+                radial-gradient(circle at 20% 60%, #facc15 1px, transparent 2px); /* Gold lights */
+            background-size: 24px 12px, 24px 12px, 24px 12px; /* Repeat size */
             background-repeat: repeat-x;
             z-index: 60;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
             pointer-events: none;
         }
 
@@ -76,15 +80,14 @@
         ::-webkit-scrollbar-thumb { background: #ee3e38; border-radius: 4px; }
 
         /* Typography & Effects */
-        .text-shadow-custom { text-shadow: 2px 2px 0px rgba(0,0,0,0.5); }
-        .title-glow { text-shadow: 0 0 20px rgba(238, 62, 56, 0.6); }
+        .title-glow { text-shadow: 0 0 20px rgba(250, 204, 21, 0.6); } /* Gold glow */
 
         /* Animations */
         .fade-in { animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Section Spacing */
-        section { scroll-margin-top: 150px; } /* Increased for fixed header */
+        section { scroll-margin-top: 150px; }
 
         /* Glass Panels */
         .glass-panel {
@@ -94,22 +97,18 @@
         }
 
         /* Layout Fix for Hero Section */
-        main {
-            padding-top: 8rem; /* Increased padding to push content down */
-        }
-        #welcome {
-            margin-top: 2rem; /* Additional margin for the hero section */
-        }
+        main { padding-top: 8rem; }
+        #welcome { margin-top: 2rem; }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-200">
 
     <div id="canvas-container"></div>
 
-    <nav class="fixed top-0 w-full z-50 bg-brand-dark/90 border-b border-gray-800 h-20 flex items-center justify-between px-6 lg:px-12 nav-garland shadow-2xl">
+    <nav class="fixed top-0 w-full z-50 bg-brand-dark/95 border-b border-brand-green/30 h-20 flex items-center justify-between px-6 lg:px-12 nav-garland shadow-2xl">
         
         <div class="flex items-center gap-3 z-50">
-            <i class="fas fa-tree text-green-500 text-2xl"></i>
+            <i class="fas fa-tree text-brand-green text-2xl drop-shadow-lg"></i>
             <span class="font-festive text-2xl text-white tracking-widest"><span class="text-white">MÚSZ</span> <span class="text-brand-red">BAJNOKSÁG</span></span>
         </div>
         
@@ -129,24 +128,19 @@
 
     <main class="w-full flex-grow relative z-10 pb-20">
         
-        <section id="welcome" class="min-h-[80vh] flex flex-col items-center justify-start pt-10 text-center px-4 relative">
+        <section id="welcome" class="min-h-[80vh] flex flex-col items-center justify-start pt-6 text-center px-4 relative">
             
-            <div class="inline-flex items-center gap-2 bg-gray-800/80 border border-brand-gold/30 rounded-full px-4 py-1 mb-6 fade-in z-20">
-                <i class="fas fa-snowflake text-blue-400 text-xs"></i>
-                <span class="text-brand-gold text-xs font-bold uppercase tracking-wider">Téli Szezon 2025</span>
-            </div>
-
             <div class="relative z-20 mb-6 fade-in" style="animation-delay: 0.1s;">
-                <h1 class="font-festive text-6xl md:text-8xl text-white leading-tight drop-shadow-xl transform -rotate-2">
-                    KARÁCSONYI
+                <h1 class="font-festive text-4xl md:text-5xl text-white leading-tight drop-shadow-xl mb-1">
+                    MÚSZ KARÁCSONYI
                 </h1>
-                <h1 class="font-festive text-6xl md:text-8xl text-brand-red title-glow leading-tight drop-shadow-xl transform rotate-1">
+                <h1 class="font-festive text-6xl md:text-8xl text-brand-gold title-glow leading-tight drop-shadow-xl transform -rotate-1">
                     CSOCSÓ KUPA
                 </h1>
             </div>
 
             <div class="z-20 fade-in" style="animation-delay: 0.2s;">
-                <p class="text-gray-300 text-sm md:text-base max-w-lg mb-10 leading-relaxed bg-black/40 p-4 rounded-xl backdrop-blur-sm">
+                <p class="text-gray-300 text-sm md:text-base max-w-lg mb-10 leading-relaxed bg-black/40 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                     A hivatalos MÚSZ csocsó bajnokság visszatért! Regisztráljatok, pörgessétek fel az ünnepi hangulatot!
                 </p>
             </div>
@@ -159,7 +153,7 @@
 
             <div class="mt-12 fade-in z-20" style="animation-delay: 0.4s;">
                 <p class="text-gray-500 text-xs uppercase tracking-widest mb-2">Következő Mérkőzés</p>
-                <div id="next-match-display" class="text-xl font-bold text-white bg-black/50 px-6 py-2 rounded border border-gray-700">
+                <div id="next-match-display" class="text-xl font-bold text-white bg-black/50 px-6 py-2 rounded border border-gray-700 backdrop-blur-md">
                     Jelenleg nincs aktív meccs
                 </div>
             </div>
