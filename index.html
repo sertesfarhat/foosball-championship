@@ -41,7 +41,6 @@
     <style>
         body { margin: 0; overflow-x: hidden; background-color: #0f131a; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 3D Canvas Background */
         #canvas-container {
             position: fixed;
             top: 0; left: 0;
@@ -50,30 +49,9 @@
             background: radial-gradient(circle at center, #1a202c 0%, #0f131a 100%);
         }
 
-        /* Nav gradient */
-        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0.8)); }
-        
-        /* === RESTORED CSS GARLAND === */
+        /* Transparent Nav to let 3D garland show through */
+        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0)); }
         .nav-garland { position: relative; z-index: 50; }
-        .nav-garland::after {
-            content: '';
-            position: absolute;
-            top: 100%; /* Hangs exactly at bottom of nav */
-            left: 0;
-            width: 100%;
-            height: 16px;
-            background-color: transparent;
-            /* The pattern: Green semi-circles + Red/Gold dots */
-            background-image: 
-                radial-gradient(circle at 50% 0, #166534 70%, transparent 71%),
-                radial-gradient(circle at 20% 70%, #ee3e38 2px, transparent 3px),
-                radial-gradient(circle at 80% 70%, #facc15 2px, transparent 3px);
-            background-size: 32px 16px; /* Size of one "swag" */
-            background-repeat: repeat-x;
-            z-index: 60;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
-            pointer-events: none;
-        }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
@@ -225,7 +203,7 @@
             const scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0f131a, 0.02);
 
-            // Camera setup
+            // Camera setup - 45 degree angle looking at table
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 16, 18); 
             camera.lookAt(0, 0, 0);
@@ -247,7 +225,65 @@
             const redLight = new THREE.PointLight(0xee3e38, 0.6, 25); redLight.position.set(-10, 8, 2); scene.add(redLight);
             const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25); goldLight.position.set(10, 8, 2); scene.add(goldLight);
 
-            // Note: 3D Garland removed in favor of CSS implementation as requested
+            // === 3D GARLAND ===
+            // This constructs a pine garland from thousands of cones + sphere ornaments
+            const garlandGroup = new THREE.Group();
+            function createGarland() {
+                // CURVE: Spans width (-20 to 20), Height 11-13, Depth -3
+                // This places it above the table, visually aligned with the HTML nav
+                const curve = new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(-20, 13, -3), 
+                    new THREE.Vector3(-10, 11, -3),
+                    new THREE.Vector3(0, 12.5, -3),
+                    new THREE.Vector3(10, 11, -3),
+                    new THREE.Vector3(20, 13, -3)
+                ]);
+
+                // Needles (Pine cones)
+                const needleGeo = new THREE.ConeGeometry(0.12, 0.9, 5);
+                const needleMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.8 });
+                const count = 3500;
+                const needles = new THREE.InstancedMesh(needleGeo, needleMat, count);
+                const dummy = new THREE.Object3D();
+                
+                for(let i=0; i<count; i++) {
+                    const t = i / count;
+                    const pos = curve.getPoint(t);
+                    // Add thickness/randomness
+                    pos.x += (Math.random() - 0.5) * 1.5;
+                    pos.y += (Math.random() - 0.5) * 1.5;
+                    pos.z += (Math.random() - 0.5) * 1.5;
+                    dummy.position.copy(pos);
+                    // Random rotation for natural look
+                    dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+                    dummy.scale.setScalar(0.5 + Math.random() * 0.5);
+                    dummy.updateMatrix();
+                    needles.setMatrixAt(i, dummy.matrix);
+                }
+                garlandGroup.add(needles);
+
+                // Ornaments
+                const ballGeo = new THREE.SphereGeometry(0.35, 16, 16);
+                const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.6, roughness: 0.3 });
+                const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.2 });
+                const ornCount = 60;
+                const redBalls = new THREE.InstancedMesh(ballGeo, redMat, ornCount/2);
+                const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, ornCount/2);
+                let r=0, g=0;
+                const dummyOrn = new THREE.Object3D();
+                for(let i=0; i<ornCount; i++) {
+                    const t = Math.random();
+                    const pos = curve.getPoint(t);
+                    pos.y -= 0.6; // Hang below greenery
+                    pos.z += 0.6; // Hang forward
+                    dummyOrn.position.copy(pos); dummyOrn.scale.setScalar(1); dummyOrn.updateMatrix();
+                    if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix);
+                    else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
+                }
+                garlandGroup.add(redBalls); garlandGroup.add(goldBalls);
+            }
+            createGarland();
+            scene.add(garlandGroup);
 
             // === TABLE ===
             const tableGroup = new THREE.Group();
@@ -332,7 +368,7 @@
             tableGroup.rotation.x = 0.35; tableGroup.rotation.y = 0.1;
             scene.add(tableGroup);
 
-            // Canvas Snowflake Generator (Crash Fix)
+            // Snow
             function createSnowTexture() {
                 const cvs = document.createElement('canvas'); cvs.width = 32; cvs.height = 32;
                 const ctx = cvs.getContext('2d');
@@ -340,8 +376,6 @@
                 return new THREE.CanvasTexture(cvs);
             }
             const snowTex = createSnowTexture();
-
-            // Standard Snow
             const snowGeo = new THREE.BufferGeometry();
             const snowCount = 1000; const posArray = new Float32Array(snowCount * 3);
             for(let i=0; i<snowCount*3; i++) posArray[i] = (Math.random() - 0.5) * 60;
