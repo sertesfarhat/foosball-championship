@@ -247,14 +247,14 @@
     </div>
 
     <script>
-        // --- 3D SCENE: FULL FOOSBALL TABLE & DECORATION ---
+        // --- 3D SCENE: TABLE + GARLAND + PARTICLES ---
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0f131a, 0.025);
 
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 18, 15); // High angle shot of the table
+            camera.position.set(0, 20, 18); // High angle, clearer view
             camera.lookAt(0, 0, 0);
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -267,37 +267,36 @@
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(ambientLight);
             
-            // Main field light
             const mainSpot = new THREE.SpotLight(0xffffff, 1.2);
-            mainSpot.position.set(0, 20, 0);
+            mainSpot.position.set(0, 25, 0);
             mainSpot.castShadow = true;
-            mainSpot.shadow.mapSize.width = 1024;
-            mainSpot.shadow.mapSize.height = 1024;
+            mainSpot.shadow.mapSize.width = 2048;
+            mainSpot.shadow.mapSize.height = 2048;
             scene.add(mainSpot);
 
-            // Festive colored accents
-            const redLight = new THREE.PointLight(0xee3e38, 0.5, 20);
+            const redLight = new THREE.PointLight(0xee3e38, 0.6, 20);
             redLight.position.set(-10, 5, 5);
             scene.add(redLight);
-            const goldLight = new THREE.PointLight(0xfacc15, 0.5, 20);
+            const goldLight = new THREE.PointLight(0xfacc15, 0.6, 20);
             goldLight.position.set(10, 5, 5);
             scene.add(goldLight);
 
 
-            // === 3D GARLAND (Background) ===
+            // === 3D GARLAND ===
             const garlandGroup = new THREE.Group();
             function createGarland() {
                 const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(-18, 10, -8),
-                    new THREE.Vector3(-9, 7, -8),
-                    new THREE.Vector3(0, 9, -8),
-                    new THREE.Vector3(9, 7, -8),
-                    new THREE.Vector3(18, 10, -8)
+                    new THREE.Vector3(-18, 10, -5),
+                    new THREE.Vector3(-9, 7, -5),
+                    new THREE.Vector3(0, 9, -5),
+                    new THREE.Vector3(9, 7, -5),
+                    new THREE.Vector3(18, 10, -5)
                 ]);
 
+                // Needles
                 const needleGeo = new THREE.ConeGeometry(0.1, 0.8, 5);
                 const needleMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.8 });
-                const count = 2500;
+                const count = 3000;
                 const needles = new THREE.InstancedMesh(needleGeo, needleMat, count);
                 const dummy = new THREE.Object3D();
                 
@@ -315,10 +314,10 @@
                 }
                 garlandGroup.add(needles);
 
+                // Ornaments
                 const ballGeo = new THREE.SphereGeometry(0.35, 16, 16);
                 const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.6, roughness: 0.3 });
                 const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.2 });
-                
                 const ornCount = 50;
                 const redBalls = new THREE.InstancedMesh(ballGeo, redMat, ornCount/2);
                 const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, ornCount/2);
@@ -327,7 +326,7 @@
                 for(let i=0; i<ornCount; i++) {
                     const t = Math.random();
                     const pos = curve.getPoint(t);
-                    pos.y -= 0.5; pos.z += 0.5;
+                    pos.y -= 0.6; pos.z += 0.5;
                     dummyOrn.position.copy(pos); dummyOrn.scale.setScalar(1); dummyOrn.updateMatrix();
                     if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix);
                     else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
@@ -335,63 +334,77 @@
                 garlandGroup.add(redBalls); garlandGroup.add(goldBalls);
             }
             createGarland();
+            // Position garland high up in the back
+            garlandGroup.position.z = -5;
+            garlandGroup.position.y = 2;
             scene.add(garlandGroup);
 
 
-            // === FULL FOOSBALL TABLE CONSTRUCTION ===
+            // === IMPROVED FOOSBALL TABLE ===
             const tableGroup = new THREE.Group();
             
             // Materials
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.6 });
             const fieldMat = new THREE.MeshStandardMaterial({ color: 0x388E3C, roughness: 0.9 });
             const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.6, transparent: true });
-            const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+            const metalMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.3 });
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
             const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
             const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
-            // 1. Cabinet
-            const wallLongGeo = new THREE.BoxGeometry(16, 2, 0.5);
-            const wallShortGeo = new THREE.BoxGeometry(0.5, 2, 10);
+            // 1. Cabinet (Thicker, more substantial)
+            const wallLongGeo = new THREE.BoxGeometry(16, 2.5, 0.8);
+            const wallShortGeo = new THREE.BoxGeometry(0.8, 2.5, 10.6);
             
-            const wallN = new THREE.Mesh(wallLongGeo, woodMat); wallN.position.set(0, 1, -4.75); wallN.receiveShadow = true;
-            const wallS = new THREE.Mesh(wallLongGeo, woodMat); wallS.position.set(0, 1, 4.75); wallS.receiveShadow = true;
-            const wallE = new THREE.Mesh(wallShortGeo, woodMat); wallE.position.set(7.75, 1, 0); wallE.receiveShadow = true;
-            const wallW = new THREE.Mesh(wallShortGeo, woodMat); wallW.position.set(-7.75, 1, 0); wallW.receiveShadow = true;
+            const wallN = new THREE.Mesh(wallLongGeo, woodMat); wallN.position.set(0, 1, -5); wallN.receiveShadow = true;
+            const wallS = new THREE.Mesh(wallLongGeo, woodMat); wallS.position.set(0, 1, 5); wallS.receiveShadow = true;
+            const wallE = new THREE.Mesh(wallShortGeo, woodMat); wallE.position.set(8, 1, 0); wallE.receiveShadow = true;
+            const wallW = new THREE.Mesh(wallShortGeo, woodMat); wallW.position.set(-8, 1, 0); wallW.receiveShadow = true;
             tableGroup.add(wallN, wallS, wallE, wallW);
 
             // 2. Field
-            const field = new THREE.Mesh(new THREE.BoxGeometry(15, 0.2, 9), fieldMat);
+            const field = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.5, 9.5), fieldMat);
             field.receiveShadow = true;
             tableGroup.add(field);
 
             // Field Lines
-            const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 9), lineMat);
-            centerLine.rotation.x = -Math.PI/2; centerLine.position.y = 0.11; tableGroup.add(centerLine);
-            const centerCircle = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.6, 32), lineMat);
-            centerCircle.rotation.x = -Math.PI/2; centerCircle.position.y = 0.11; tableGroup.add(centerCircle);
+            const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 9.5), lineMat);
+            centerLine.rotation.x = -Math.PI/2; centerLine.position.y = 0.26; tableGroup.add(centerLine);
+            const centerCircle = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.65, 32), lineMat);
+            centerCircle.rotation.x = -Math.PI/2; centerCircle.position.y = 0.26; tableGroup.add(centerCircle);
 
             // 3. Legs
-            const legGeo = new THREE.BoxGeometry(1, 6, 1);
-            const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(7, -3, 4); tableGroup.add(l1);
-            const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(7, -3, -4); tableGroup.add(l2);
-            const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-7, -3, 4); tableGroup.add(l3);
-            const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-7, -3, -4); tableGroup.add(l4);
+            const legGeo = new THREE.BoxGeometry(1.2, 7, 1.2);
+            const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(7, -3.5, 4); tableGroup.add(l1);
+            const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(7, -3.5, -4); tableGroup.add(l2);
+            const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-7, -3.5, 4); tableGroup.add(l3);
+            const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-7, -3.5, -4); tableGroup.add(l4);
 
             // 4. Rods & Players
-            const activeRods = []; // Store for animation
-            const playerGeo = new THREE.BoxGeometry(0.5, 1.2, 0.4); 
-            const headGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+            const activeRods = []; 
+            // Geometries reused
+            const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 12); // Thinner rods
+            const playerBodyGeo = new THREE.BoxGeometry(0.6, 1.4, 0.4); 
+            const playerHeadGeo = new THREE.SphereGeometry(0.35, 16, 16);
+            const handleGeo = new THREE.CylinderGeometry(0.15, 0.15, 1);
 
             function createRodRow(x, teamColor, count) {
                 const rodGroup = new THREE.Group();
                 rodGroup.position.set(x, 1.5, 0);
                 
                 // The Metal Rod
-                const rodMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 11), metalMat);
+                const rodMesh = new THREE.Mesh(rodGeo, metalMat);
                 rodMesh.rotation.x = Math.PI/2;
                 rodMesh.castShadow = true;
                 rodGroup.add(rodMesh);
+
+                // Handles (Visual detail)
+                const handle = new THREE.Mesh(handleGeo, handleMat);
+                handle.rotation.x = Math.PI/2;
+                // Alternate handle side based on team/rod
+                handle.position.z = (teamColor === 'red' ? 6.2 : -6.2);
+                rodGroup.add(handle);
 
                 // Players
                 const spacing = 8 / (count + 1);
@@ -400,12 +413,12 @@
                     const playerGroup = new THREE.Group();
                     playerGroup.position.z = z;
                     
-                    const body = new THREE.Mesh(playerGeo, teamColor === 'red' ? redTeamMat : blueTeamMat);
+                    const body = new THREE.Mesh(playerBodyGeo, teamColor === 'red' ? redTeamMat : blueTeamMat);
                     body.position.y = -0.6; // Hang down
                     body.castShadow = true;
                     
-                    const head = new THREE.Mesh(headGeo, skinMat);
-                    head.position.y = 0.2; // Above body
+                    const head = new THREE.Mesh(playerHeadGeo, skinMat);
+                    head.position.y = 0.3; // Above body
                     
                     playerGroup.add(body);
                     playerGroup.add(head);
@@ -413,10 +426,10 @@
                 }
                 tableGroup.add(rodGroup);
                 
-                // Store for animation: { object, baseZ, range }
+                // Animation data
                 activeRods.push({ 
                     mesh: rodGroup, 
-                    initialX: x, // Rods slide along Z relative to table, but in world space it's confusing. Let's animate rotation (X) and slide (Z)
+                    initialX: x,
                     slideSpeed: Math.random() * 0.02 + 0.01,
                     slideOffset: Math.random() * 100,
                     kickSpeed: Math.random() * 0.05,
@@ -424,39 +437,31 @@
                 });
             }
 
-            // Setup (Left to Right)
-            // Goalie Red
-            createRodRow(-6.5, 'red', 1);
-            // Defenders Red
-            createRodRow(-4.5, 'red', 2);
-            // Attackers Blue
-            createRodRow(-2.5, 'blue', 3);
-            // Mid Red
-            createRodRow(-0.5, 'red', 5);
-            // Mid Blue
-            createRodRow(1.5, 'blue', 5);
-            // Attackers Red
-            createRodRow(3.5, 'red', 3);
-            // Defenders Blue
-            createRodRow(5.5, 'blue', 2);
-            // Goalie Blue
-            createRodRow(7.5, 'blue', 1);
+            // Setup Rows (Standard Foosball Config)
+            createRodRow(-6.5, 'red', 1);  // G
+            createRodRow(-4.5, 'red', 2);  // D
+            createRodRow(-2.5, 'blue', 3); // F
+            createRodRow(-0.5, 'red', 5);  // M
+            createRodRow(1.5, 'blue', 5);  // M
+            createRodRow(3.5, 'red', 3);   // F
+            createRodRow(5.5, 'blue', 2);  // D
+            createRodRow(7.5, 'blue', 1);  // G
 
             // 5. The Ball
-            const ballGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            const ballGeo = new THREE.SphereGeometry(0.18, 16, 16);
             const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
             const ball = new THREE.Mesh(ballGeo, ballMat);
-            ball.position.set(0, 0.3, 0);
+            ball.position.set(0, 0.45, 0);
             ball.castShadow = true;
             tableGroup.add(ball);
 
-            // Angle the table slightly
-            tableGroup.rotation.x = 0.2;
+            // Angle table for better view
+            tableGroup.rotation.x = 0.35;
             tableGroup.rotation.y = 0.1;
             scene.add(tableGroup);
 
 
-            // === PARTICLES: STANDARD SNOW ===
+            // === PARTICLES ===
             const snowGeo = new THREE.BufferGeometry();
             const snowCount = 800;
             const posArray = new Float32Array(snowCount * 3);
@@ -466,7 +471,7 @@
             const snowMesh = new THREE.Points(snowGeo, snowMat);
             scene.add(snowMesh);
 
-            // === PARTICLES: LOGO SNOW ===
+            // === LOGO SNOW ===
             const logoTextureBtn = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAn1BMVEUAAAA5WIs5WIo5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIrM3/49AAAAM3RSTlMAECBgMFAwQCCAcGCAgHCAgICA/4CAgID/gID/gP//gP//gID/gID/gICA/4CAgICAbN+4gAAAAe5JREFUeNrtl9magjAMhRULKqCgqKjd6v//wG07d30c26mDM/F98yVpQ5M2TRfL/kM4v9v0gP4z+CqgD1cAPgvgjQAeCyDmAaQYgDQDQAIAlQBgIQBQAAD3/wH81zF44wE4o78D/G554IsAwE8BvBMAjAGkFgBaCQCXAEg/APAaQFYAOADgAwDgA0C+B8D3AcDvAYA/AOA3AWAiAAABgC8A8DkAAAEA2ABgGQA+A+AnAeCTAHAdgPcD4BMA8BoA/gSAtwAgEAB8GgD+AgDnAeCnAGAXAIADAHAAAM4CwAUA2AUA+A4AAAD+AIAfAIBDAPA1AHwFAD4FAK4DAF8AgK8AwI8A4EMAcA0AtgAAlgAAPgYArwIA3wUArgD4MgB4GQAsBYCtAIB/AoCPAsC2AMCfAcDHAOA1APglALgBALcCAHYBANYDAB8EgIsAwEUAeCkAOAwAXQcAdwAAqwEArAEA6wAAiwHAZQD4IABwGQA4DgB+A4C/AQAbAwDvAMAmAOALAHgPAD4IAJYBwEYA+CIAcBoAdgkAOAMAmwEAnwGAWwDwDgC8BwDbAQCfBoCdAgDvAYB3AOAbAPARAFgIADsGAH4DAD4AANcAgM0BgA8BgE0BwHcAgH8BAJcAgJ0B/jW+ACF3Gf/F7Y1QAAAAAElFTkSuQmCC';
             const textureLoader = new THREE.TextureLoader();
             const logoTexture = textureLoader.load(logoTextureBtn);
@@ -482,59 +487,55 @@
 
             // === ANIMATION LOOP ===
             let mouseX = 0, mouseY = 0;
-            
-            // Ball Physics State (Simplified)
-            let ballVelocity = new THREE.Vector3(0.08, 0, 0.05); // Initial kick
+            let ballVelocity = new THREE.Vector3(0.08, 0, 0.05);
             
             const animate = () => {
                 requestAnimationFrame(animate);
-
                 const time = Date.now() * 0.001;
 
                 // 1. Table Parallax
-                tableGroup.rotation.y = 0.1 + (mouseX * 0.1);
-                tableGroup.rotation.x = 0.2 + (mouseY * 0.05);
+                tableGroup.rotation.y = 0.1 + (mouseX * 0.15);
+                tableGroup.rotation.x = 0.35 + (mouseY * 0.05);
 
-                // 2. Animate Rods (Random sliding and kicking)
-                activeRods.forEach((rod, index) => {
+                // 2. Garland Sway
+                garlandGroup.rotation.z = Math.sin(time * 0.5) * 0.02;
+
+                // 3. Rods Animation
+                activeRods.forEach((rod) => {
                     // Slide Z
                     const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 0.5;
                     rod.mesh.position.z = slide;
 
-                    // Random Kick or Track Ball
-                    // Check if ball is close to this rod's X
+                    // Ball tracking (Simple AI)
                     if (Math.abs(ball.position.x - rod.initialX) < 1.0) {
-                        // Kick!
+                        // Kick if close
                         rod.mesh.rotation.x += 0.2; 
-                        // Slide towards ball
+                        // Move slightly towards ball
                         rod.mesh.position.z += (ball.position.z - rod.mesh.position.z) * 0.05;
                     } else {
-                        // Idle rotate back to flat
+                        // Reset kick
                         rod.mesh.rotation.x += (Math.PI/2 - rod.mesh.rotation.x) * 0.1;
                     }
                 });
 
-                // 3. Animate Ball (Bounce)
+                // 4. Ball Physics
                 ball.position.add(ballVelocity);
                 
-                // Wall collisions (approximate boundaries)
-                if(ball.position.x > 7 || ball.position.x < -7) {
-                    ballVelocity.x *= -1; // Bounce X
-                    // Add some randomness on bounce
-                    ballVelocity.z += (Math.random() - 0.5) * 0.02;
+                // Walls
+                if(ball.position.x > 7.5 || ball.position.x < -7.5) {
+                    ballVelocity.x *= -1;
+                    ballVelocity.z += (Math.random() - 0.5) * 0.02; // Randomize bounce
                 }
-                if(ball.position.z > 4 || ball.position.z < -4) {
-                    ballVelocity.z *= -1; // Bounce Z
+                if(ball.position.z > 4.5 || ball.position.z < -4.5) {
+                    ballVelocity.z *= -1;
                 }
-                
-                // Randomly change speed slightly to simulate friction/kicks
+                // Random speed change
                 if(Math.random() > 0.98) {
-                    ballVelocity.x *= 1.1;
-                    ballVelocity.z *= 1.1;
+                    ballVelocity.x *= 1.1; ballVelocity.z *= 1.1;
                 }
-                ballVelocity.clampLength(0.05, 0.15); // Keep speed reasonable
+                ballVelocity.clampLength(0.05, 0.18);
 
-                // 4. Update Snow
+                // 5. Snow
                 const snowPositions = snowMesh.geometry.attributes.position.array;
                 for(let i=1; i<snowCount*3; i+=3) {
                     snowPositions[i] -= 0.05; if(snowPositions[i] < -25) snowPositions[i] = 25;
@@ -567,7 +568,7 @@
             });
         }
 
-        // --- APP LOGIC (Preserved) ---
+        // --- APP LOGIC ---
         const funnyNames = ["Részeg Rénszarvasok", "Beigli Betyárok", "Grincs Gárdája", "Forralt Bor FC", "Hólapátolók", "Kevinék", "Reszkessetek", "Jéghercegnők", "Krampusz United", "Diós Bejgli"];
         let state = { teams: [], matches: [], rules: ["Nincs döntetlen (10 gólig tart a meccs).", "A pörgetés tilos.", "Fair play mindenek felett.", "Gól után középkezdés."], generated: false };
 
