@@ -247,15 +247,15 @@
     </div>
 
     <script>
-        // --- 3D SCENE: TWO PLAYERS KICKING A BALL + GARLAND + LOGO SNOW ---
+        // --- 3D SCENE: FULL FOOSBALL TABLE & DECORATION ---
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x0f131a, 0.04);
+            scene.fog = new THREE.FogExp2(0x0f131a, 0.025);
 
-            const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 2, 14); 
-            camera.lookAt(0, 1, 0);
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 18, 15); // High angle shot of the table
+            camera.lookAt(0, 0, 0);
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -267,28 +267,32 @@
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(ambientLight);
             
-            const mainSpot = new THREE.SpotLight(0xffffff, 1.5);
-            mainSpot.position.set(0, 10, 10);
+            // Main field light
+            const mainSpot = new THREE.SpotLight(0xffffff, 1.2);
+            mainSpot.position.set(0, 20, 0);
             mainSpot.castShadow = true;
+            mainSpot.shadow.mapSize.width = 1024;
+            mainSpot.shadow.mapSize.height = 1024;
             scene.add(mainSpot);
 
-            const redLight = new THREE.PointLight(0xee3e38, 0.8);
-            redLight.position.set(-10, 5, 0);
+            // Festive colored accents
+            const redLight = new THREE.PointLight(0xee3e38, 0.5, 20);
+            redLight.position.set(-10, 5, 5);
             scene.add(redLight);
-            const goldLight = new THREE.PointLight(0xfacc15, 0.8);
-            goldLight.position.set(10, 5, 0);
+            const goldLight = new THREE.PointLight(0xfacc15, 0.5, 20);
+            goldLight.position.set(10, 5, 5);
             scene.add(goldLight);
 
 
             // === 3D GARLAND (Background) ===
+            const garlandGroup = new THREE.Group();
             function createGarland() {
-                const garlandGroup = new THREE.Group();
                 const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(-16, 8, -4),
-                    new THREE.Vector3(-8, 6, -4),
-                    new THREE.Vector3(0, 7.5, -4),
-                    new THREE.Vector3(8, 6, -4),
-                    new THREE.Vector3(16, 8, -4)
+                    new THREE.Vector3(-18, 10, -8),
+                    new THREE.Vector3(-9, 7, -8),
+                    new THREE.Vector3(0, 9, -8),
+                    new THREE.Vector3(9, 7, -8),
+                    new THREE.Vector3(18, 10, -8)
                 ]);
 
                 const needleGeo = new THREE.ConeGeometry(0.1, 0.8, 5);
@@ -300,9 +304,9 @@
                 for(let i=0; i<count; i++) {
                     const t = i / count;
                     const pos = curve.getPoint(t);
-                    pos.x += (Math.random() - 0.5) * 1.2;
-                    pos.y += (Math.random() - 0.5) * 1.2;
-                    pos.z += (Math.random() - 0.5) * 1.2;
+                    pos.x += (Math.random() - 0.5) * 1.5;
+                    pos.y += (Math.random() - 0.5) * 1.5;
+                    pos.z += (Math.random() - 0.5) * 1.5;
                     dummy.position.copy(pos);
                     dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
                     dummy.scale.setScalar(0.5 + Math.random() * 0.5);
@@ -311,7 +315,7 @@
                 }
                 garlandGroup.add(needles);
 
-                const ballGeo = new THREE.SphereGeometry(0.3, 16, 16);
+                const ballGeo = new THREE.SphereGeometry(0.35, 16, 16);
                 const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.6, roughness: 0.3 });
                 const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.2 });
                 
@@ -319,56 +323,140 @@
                 const redBalls = new THREE.InstancedMesh(ballGeo, redMat, ornCount/2);
                 const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, ornCount/2);
                 let r=0, g=0;
+                const dummyOrn = new THREE.Object3D();
                 for(let i=0; i<ornCount; i++) {
                     const t = Math.random();
                     const pos = curve.getPoint(t);
-                    pos.y -= 0.4; pos.z += 0.4;
-                    dummy.position.copy(pos); dummy.scale.setScalar(1); dummy.updateMatrix();
-                    if(i%2==0) redBalls.setMatrixAt(r++, dummy.matrix);
-                    else goldBalls.setMatrixAt(g++, dummy.matrix);
+                    pos.y -= 0.5; pos.z += 0.5;
+                    dummyOrn.position.copy(pos); dummyOrn.scale.setScalar(1); dummyOrn.updateMatrix();
+                    if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix);
+                    else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
                 }
                 garlandGroup.add(redBalls); garlandGroup.add(goldBalls);
-                return garlandGroup;
             }
-            const garland = createGarland();
-            scene.add(garland);
+            createGarland();
+            scene.add(garlandGroup);
 
 
-            // === PLAYERS & BALL ===
-            const playersGroup = new THREE.Group();
-            const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, roughness: 0.5 });
-            const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
-            const goldAccentMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.3 });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0ac69, roughness: 0.6 });
-            const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+            // === FULL FOOSBALL TABLE CONSTRUCTION ===
+            const tableGroup = new THREE.Group();
+            
+            // Materials
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.6 });
+            const fieldMat = new THREE.MeshStandardMaterial({ color: 0x388E3C, roughness: 0.9 });
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.6, transparent: true });
+            const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+            const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
+            const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
-            const torsoGeo = new THREE.BoxGeometry(1, 1.5, 0.7);
-            const headGeo = new THREE.SphereGeometry(0.6, 16, 16);
-            const legGeo = new THREE.BoxGeometry(0.7, 1.8, 0.6);
+            // 1. Cabinet
+            const wallLongGeo = new THREE.BoxGeometry(16, 2, 0.5);
+            const wallShortGeo = new THREE.BoxGeometry(0.5, 2, 10);
+            
+            const wallN = new THREE.Mesh(wallLongGeo, woodMat); wallN.position.set(0, 1, -4.75); wallN.receiveShadow = true;
+            const wallS = new THREE.Mesh(wallLongGeo, woodMat); wallS.position.set(0, 1, 4.75); wallS.receiveShadow = true;
+            const wallE = new THREE.Mesh(wallShortGeo, woodMat); wallE.position.set(7.75, 1, 0); wallE.receiveShadow = true;
+            const wallW = new THREE.Mesh(wallShortGeo, woodMat); wallW.position.set(-7.75, 1, 0); wallW.receiveShadow = true;
+            tableGroup.add(wallN, wallS, wallE, wallW);
 
-            function createPlayer(teamMat) {
-                const group = new THREE.Group();
-                const torso = new THREE.Mesh(torsoGeo, teamMat); torso.position.y = 0.75; torso.castShadow = true; group.add(torso);
-                const head = new THREE.Mesh(headGeo, skinMat); head.position.y = 1.8; head.castShadow = true; group.add(head);
-                const legPivot = new THREE.Group(); legPivot.position.y = 0;
-                const legs = new THREE.Mesh(legGeo, teamMat); legs.position.y = -0.9; legs.castShadow = true; legPivot.add(legs);
-                group.add(legPivot);
-                const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.2, 0.75), goldAccentMat); stripe.position.y = 0.5; group.add(stripe);
-                return { mesh: group, legAnimator: legPivot };
+            // 2. Field
+            const field = new THREE.Mesh(new THREE.BoxGeometry(15, 0.2, 9), fieldMat);
+            field.receiveShadow = true;
+            tableGroup.add(field);
+
+            // Field Lines
+            const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 9), lineMat);
+            centerLine.rotation.x = -Math.PI/2; centerLine.position.y = 0.11; tableGroup.add(centerLine);
+            const centerCircle = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.6, 32), lineMat);
+            centerCircle.rotation.x = -Math.PI/2; centerCircle.position.y = 0.11; tableGroup.add(centerCircle);
+
+            // 3. Legs
+            const legGeo = new THREE.BoxGeometry(1, 6, 1);
+            const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(7, -3, 4); tableGroup.add(l1);
+            const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(7, -3, -4); tableGroup.add(l2);
+            const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-7, -3, 4); tableGroup.add(l3);
+            const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-7, -3, -4); tableGroup.add(l4);
+
+            // 4. Rods & Players
+            const activeRods = []; // Store for animation
+            const playerGeo = new THREE.BoxGeometry(0.5, 1.2, 0.4); 
+            const headGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+
+            function createRodRow(x, teamColor, count) {
+                const rodGroup = new THREE.Group();
+                rodGroup.position.set(x, 1.5, 0);
+                
+                // The Metal Rod
+                const rodMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 11), metalMat);
+                rodMesh.rotation.x = Math.PI/2;
+                rodMesh.castShadow = true;
+                rodGroup.add(rodMesh);
+
+                // Players
+                const spacing = 8 / (count + 1);
+                for(let i=1; i<=count; i++) {
+                    const z = -4 + (i * spacing);
+                    const playerGroup = new THREE.Group();
+                    playerGroup.position.z = z;
+                    
+                    const body = new THREE.Mesh(playerGeo, teamColor === 'red' ? redTeamMat : blueTeamMat);
+                    body.position.y = -0.6; // Hang down
+                    body.castShadow = true;
+                    
+                    const head = new THREE.Mesh(headGeo, skinMat);
+                    head.position.y = 0.2; // Above body
+                    
+                    playerGroup.add(body);
+                    playerGroup.add(head);
+                    rodGroup.add(playerGroup);
+                }
+                tableGroup.add(rodGroup);
+                
+                // Store for animation: { object, baseZ, range }
+                activeRods.push({ 
+                    mesh: rodGroup, 
+                    initialX: x, // Rods slide along Z relative to table, but in world space it's confusing. Let's animate rotation (X) and slide (Z)
+                    slideSpeed: Math.random() * 0.02 + 0.01,
+                    slideOffset: Math.random() * 100,
+                    kickSpeed: Math.random() * 0.05,
+                    team: teamColor
+                });
             }
 
-            const player1 = createPlayer(redTeamMat);
-            player1.mesh.position.set(-4.5, -1, 0); player1.mesh.rotation.y = Math.PI / 2; playersGroup.add(player1.mesh);
+            // Setup (Left to Right)
+            // Goalie Red
+            createRodRow(-6.5, 'red', 1);
+            // Defenders Red
+            createRodRow(-4.5, 'red', 2);
+            // Attackers Blue
+            createRodRow(-2.5, 'blue', 3);
+            // Mid Red
+            createRodRow(-0.5, 'red', 5);
+            // Mid Blue
+            createRodRow(1.5, 'blue', 5);
+            // Attackers Red
+            createRodRow(3.5, 'red', 3);
+            // Defenders Blue
+            createRodRow(5.5, 'blue', 2);
+            // Goalie Blue
+            createRodRow(7.5, 'blue', 1);
 
-            const player2 = createPlayer(blueTeamMat);
-            player2.mesh.position.set(4.5, -1, 0); player2.mesh.rotation.y = -Math.PI / 2; playersGroup.add(player2.mesh);
+            // 5. The Ball
+            const ballGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const ball = new THREE.Mesh(ballGeo, ballMat);
+            ball.position.set(0, 0.3, 0);
+            ball.castShadow = true;
+            tableGroup.add(ball);
 
-            const ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), ballMat);
-            ball.position.set(0, -2.3, 0); ball.castShadow = true;
-            playersGroup.add(ball);
-            scene.add(playersGroup);
+            // Angle the table slightly
+            tableGroup.rotation.x = 0.2;
+            tableGroup.rotation.y = 0.1;
+            scene.add(tableGroup);
 
-            // === PARTICLES (Standard Snow) ===
+
+            // === PARTICLES: STANDARD SNOW ===
             const snowGeo = new THREE.BufferGeometry();
             const snowCount = 800;
             const posArray = new Float32Array(snowCount * 3);
@@ -378,88 +466,88 @@
             const snowMesh = new THREE.Points(snowGeo, snowMat);
             scene.add(snowMesh);
 
-            // === PARTICLES (Logo Snow) ===
-            // Load the logo texture defined in the data URI below
+            // === PARTICLES: LOGO SNOW ===
             const logoTextureBtn = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAn1BMVEUAAAA5WIs5WIo5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIrM3/49AAAAM3RSTlMAECBgMFAwQCCAcGCAgHCAgICA/4CAgID/gID/gP//gP//gID/gID/gICA/4CAgICAbN+4gAAAAe5JREFUeNrtl9magjAMhRULKqCgqKjd6v//wG07d30c26mDM/F98yVpQ5M2TRfL/kM4v9v0gP4z+CqgD1cAPgvgjQAeCyDmAaQYgDQDQAIAlQBgIQBQAAD3/wH81zF44wE4o78D/G554IsAwE8BvBMAjAGkFgBaCQCXAEg/APAaQFYAOADgAwDgA0C+B8D3AcDvAYA/AOA3AWAiAAABgC8A8DkAAAEA2ABgGQA+A+AnAeCTAHAdgPcD4BMA8BoA/gSAtwAgEAB8GgD+AgDnAeCnAGAXAIADAHAAAM4CwAUA2AUA+A4AAAD+AIAfAIBDAPA1AHwFAD4FAK4DAF8AgK8AwI8A4EMAcA0AtgAAlgAAPgYArwIA3wUArgD4MgB4GQAsBYCtAIB/AoCPAsC2AMCfAcDHAOA1APglALgBALcCAHYBANYDAB8EgIsAwEUAeCkAOAwAXQcAdwAAqwEArAEA6wAAiwHAZQD4IABwGQA4DgB+A4C/AQAbAwDvAMAmAOALAHgPAD4IAJYBwEYA+CIAcBoAdgkAOAMAmwEAnwGAWwDwDgC8BwDbAQCfBoCdAgDvAYB3AOAbAPARAFgIADsGAH4DAD4AANcAgM0BgA8BgE0BwHcAgH8BAJcAgJ0B/jW+ACF3Gf/F7Y1QAAAAAElFTkSuQmCC';
             const textureLoader = new THREE.TextureLoader();
             const logoTexture = textureLoader.load(logoTextureBtn);
-
             const logoSnowGeo = new THREE.BufferGeometry();
-            const logoSnowCount = 100; // Fewer logo flakes than regular snow
+            const logoSnowCount = 100; 
             const logoPosArray = new Float32Array(logoSnowCount * 3);
             for(let i=0; i<logoSnowCount*3; i++) logoPosArray[i] = (Math.random() - 0.5) * 50;
             logoSnowGeo.setAttribute('position', new THREE.BufferAttribute(logoPosArray, 3));
-            // Use PointsMaterial with the texture, set transparent to true so the alpha channel works
             const logoSnowMat = new THREE.PointsMaterial({ size: 1.5, map: logoTexture, transparent: true, opacity: 0.9, depthWrite: false });
             const logoSnowMesh = new THREE.Points(logoSnowGeo, logoSnowMat);
             scene.add(logoSnowMesh);
 
 
-            // === ANIMATION VARIABLES & LOOP ===
+            // === ANIMATION LOOP ===
             let mouseX = 0, mouseY = 0;
             
-            // Ball Animation State
-            let ballTargetX = -3.8; // Initial target (Player 1's side)
-            let ballCurrentSpeed = 0.05;
-
+            // Ball Physics State (Simplified)
+            let ballVelocity = new THREE.Vector3(0.08, 0, 0.05); // Initial kick
+            
             const animate = () => {
                 requestAnimationFrame(animate);
 
-                // Sway garland
-                garland.rotation.z = Math.sin(Date.now() * 0.0005) * 0.02;
+                const time = Date.now() * 0.001;
 
-                // --- RANDOMIZED BALL MOVEMENT ---
-                // Move ball towards current target
-                const targetVec = new THREE.Vector3(ballTargetX, -2.3, 0);
-                ball.position.lerp(targetVec, ballCurrentSpeed);
-                // Add slight random vertical bounce
-                ball.position.y = -2.3 + Math.abs(Math.sin(Date.now() * 0.005)) * 0.2;
+                // 1. Table Parallax
+                tableGroup.rotation.y = 0.1 + (mouseX * 0.1);
+                tableGroup.rotation.x = 0.2 + (mouseY * 0.05);
 
-                // Check distance to target to trigger kick and new target
-                if (ball.position.distanceTo(targetVec) < 0.3) {
-                    // Ball arrived at a player
-                    if (ballTargetX < 0) {
-                        // Player 1 (Left) kicks
-                        player1.legAnimator.rotation.x = -1; // kick forward
-                        // Set new random target for Player 2 (Right side)
-                        ballTargetX = 3.5 + Math.random() * 1.0; 
+                // 2. Animate Rods (Random sliding and kicking)
+                activeRods.forEach((rod, index) => {
+                    // Slide Z
+                    const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 0.5;
+                    rod.mesh.position.z = slide;
+
+                    // Random Kick or Track Ball
+                    // Check if ball is close to this rod's X
+                    if (Math.abs(ball.position.x - rod.initialX) < 1.0) {
+                        // Kick!
+                        rod.mesh.rotation.x += 0.2; 
+                        // Slide towards ball
+                        rod.mesh.position.z += (ball.position.z - rod.mesh.position.z) * 0.05;
                     } else {
-                        // Player 2 (Right) kicks
-                        player2.legAnimator.rotation.x = 1; // kick forward
-                        // Set new random target for Player 1 (Left side)
-                        ballTargetX = -3.5 - Math.random() * 1.0;
+                        // Idle rotate back to flat
+                        rod.mesh.rotation.x += (Math.PI/2 - rod.mesh.rotation.x) * 0.1;
                     }
-                    // Randomize speed for next pass
-                    ballCurrentSpeed = 0.03 + Math.random() * 0.05;
+                });
+
+                // 3. Animate Ball (Bounce)
+                ball.position.add(ballVelocity);
+                
+                // Wall collisions (approximate boundaries)
+                if(ball.position.x > 7 || ball.position.x < -7) {
+                    ballVelocity.x *= -1; // Bounce X
+                    // Add some randomness on bounce
+                    ballVelocity.z += (Math.random() - 0.5) * 0.02;
                 }
+                if(ball.position.z > 4 || ball.position.z < -4) {
+                    ballVelocity.z *= -1; // Bounce Z
+                }
+                
+                // Randomly change speed slightly to simulate friction/kicks
+                if(Math.random() > 0.98) {
+                    ballVelocity.x *= 1.1;
+                    ballVelocity.z *= 1.1;
+                }
+                ballVelocity.clampLength(0.05, 0.15); // Keep speed reasonable
 
-                // Smoothly retract legs back to neutral position
-                player1.legAnimator.rotation.x *= 0.9;
-                player2.legAnimator.rotation.x *= 0.9;
-
-
-                // Camera Parallax
-                camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
-                camera.position.y += (-mouseY * 2 + 2 - camera.position.y) * 0.05;
-                camera.lookAt(0, 0, 0);
-
-                // --- UPDATE SNOW (Standard) ---
+                // 4. Update Snow
                 const snowPositions = snowMesh.geometry.attributes.position.array;
                 for(let i=1; i<snowCount*3; i+=3) {
-                    snowPositions[i] -= 0.05; // Fall down
-                    if(snowPositions[i] < -25) snowPositions[i] = 25; // Reset to top
+                    snowPositions[i] -= 0.05; if(snowPositions[i] < -25) snowPositions[i] = 25;
                 }
                 snowMesh.geometry.attributes.position.needsUpdate = true;
 
-                // --- UPDATE SNOW (Logo) ---
                 const logoPositions = logoSnowMesh.geometry.attributes.position.array;
                 for(let i=1; i<logoSnowCount*3; i+=3) {
-                    logoPositions[i] -= 0.07; // Fall slightly faster/differently
-                    // Add slight horizontal drift for variance
-                    logoPositions[i-1] += Math.sin(Date.now()*0.001 + i)*0.01; 
+                    logoPositions[i] -= 0.07; 
+                    logoPositions[i-1] += Math.sin(time + i)*0.01; 
                     if(logoPositions[i] < -25) {
                         logoPositions[i] = 25;
-                        logoPositions[i-1] = (Math.random() - 0.5) * 50; // Reset X randomly
+                        logoPositions[i-1] = (Math.random() - 0.5) * 50; 
                     }
                 }
                 logoSnowMesh.geometry.attributes.position.needsUpdate = true;
