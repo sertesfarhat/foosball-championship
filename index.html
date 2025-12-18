@@ -41,6 +41,7 @@
     <style>
         body { margin: 0; overflow-x: hidden; background-color: #0f131a; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
+        /* 3D Canvas Background */
         #canvas-container {
             position: fixed;
             top: 0; left: 0;
@@ -50,8 +51,30 @@
         }
 
         /* Nav gradient */
-        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0.5)); }
+        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0.8)); }
         
+        /* === RESTORED CSS GARLAND === */
+        .nav-garland { position: relative; z-index: 50; }
+        .nav-garland::after {
+            content: '';
+            position: absolute;
+            top: 100%; /* Hangs exactly at bottom of nav */
+            left: 0;
+            width: 100%;
+            height: 16px;
+            background-color: transparent;
+            /* The pattern: Green semi-circles + Red/Gold dots */
+            background-image: 
+                radial-gradient(circle at 50% 0, #166534 70%, transparent 71%),
+                radial-gradient(circle at 20% 70%, #ee3e38 2px, transparent 3px),
+                radial-gradient(circle at 80% 70%, #facc15 2px, transparent 3px);
+            background-size: 32px 16px; /* Size of one "swag" */
+            background-repeat: repeat-x;
+            z-index: 60;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+            pointer-events: none;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f131a; }
@@ -72,7 +95,7 @@
 
     <div id="canvas-container"></div>
 
-    <nav class="fixed top-0 w-full z-50 h-24 flex items-start pt-4 justify-between px-6 lg:px-12">
+    <nav class="fixed top-0 w-full z-50 h-24 flex items-start pt-4 justify-between px-6 lg:px-12 nav-garland">
         <div class="flex items-center gap-3 z-50">
             <i class="fas fa-tree text-brand-green text-2xl drop-shadow-lg filter shadow-black"></i>
             <span class="font-festive text-2xl text-white tracking-widest drop-shadow-md"><span class="text-white">MÚSZ</span> <span class="text-brand-red">BAJNOKSÁG</span></span>
@@ -202,7 +225,7 @@
             const scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0f131a, 0.02);
 
-            // Camera
+            // Camera setup
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 16, 18); 
             camera.lookAt(0, 0, 0);
@@ -224,58 +247,7 @@
             const redLight = new THREE.PointLight(0xee3e38, 0.6, 25); redLight.position.set(-10, 8, 2); scene.add(redLight);
             const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25); goldLight.position.set(10, 8, 2); scene.add(goldLight);
 
-            // === 3D GARLAND (ADJUSTED POSITION) ===
-            const garlandGroup = new THREE.Group();
-            function createGarland() {
-                // FIXED COORDINATES: Y=12 (Lower), Z=-10 (Background), Wide X
-                const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(-22, 14, -10), 
-                    new THREE.Vector3(-11, 12, -10),
-                    new THREE.Vector3(0, 13, -10),
-                    new THREE.Vector3(11, 12, -10),
-                    new THREE.Vector3(22, 14, -10)
-                ]);
-
-                const needleGeo = new THREE.ConeGeometry(0.12, 0.9, 5);
-                const needleMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.8 });
-                const count = 3000;
-                const needles = new THREE.InstancedMesh(needleGeo, needleMat, count);
-                const dummy = new THREE.Object3D();
-                
-                for(let i=0; i<count; i++) {
-                    const t = i / count;
-                    const pos = curve.getPoint(t);
-                    pos.x += (Math.random() - 0.5) * 1.5;
-                    pos.y += (Math.random() - 0.5) * 1.5;
-                    pos.z += (Math.random() - 0.5) * 1.5;
-                    dummy.position.copy(pos);
-                    dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
-                    dummy.scale.setScalar(0.5 + Math.random() * 0.5);
-                    dummy.updateMatrix();
-                    needles.setMatrixAt(i, dummy.matrix);
-                }
-                garlandGroup.add(needles);
-
-                const ballGeo = new THREE.SphereGeometry(0.35, 16, 16);
-                const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.6, roughness: 0.3 });
-                const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.2 });
-                const ornCount = 60;
-                const redBalls = new THREE.InstancedMesh(ballGeo, redMat, ornCount/2);
-                const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, ornCount/2);
-                let r=0, g=0;
-                const dummyOrn = new THREE.Object3D();
-                for(let i=0; i<ornCount; i++) {
-                    const t = Math.random();
-                    const pos = curve.getPoint(t);
-                    pos.y -= 0.6; pos.z += 0.6; 
-                    dummyOrn.position.copy(pos); dummyOrn.scale.setScalar(1); dummyOrn.updateMatrix();
-                    if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix);
-                    else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
-                }
-                garlandGroup.add(redBalls); garlandGroup.add(goldBalls);
-            }
-            createGarland();
-            scene.add(garlandGroup);
+            // Note: 3D Garland removed in favor of CSS implementation as requested
 
             // === TABLE ===
             const tableGroup = new THREE.Group();
@@ -288,6 +260,7 @@
             const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
+            // Cabinet
             const wallLongGeo = new THREE.BoxGeometry(16, 2.5, 0.8);
             const wallShortGeo = new THREE.BoxGeometry(0.8, 2.5, 10.6);
             const wN = new THREE.Mesh(wallLongGeo, woodMat); wN.position.set(0, 1, -5); wN.receiveShadow=true;
@@ -296,6 +269,7 @@
             const wW = new THREE.Mesh(wallShortGeo, woodMat); wW.position.set(-8, 1, 0); wW.receiveShadow=true;
             tableGroup.add(wN, wS, wE, wW);
 
+            // Field
             const field = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.5, 9.5), fieldMat);
             field.receiveShadow = true; tableGroup.add(field);
             const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 9.5), lineMat);
@@ -303,12 +277,14 @@
             const centerCircle = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.65, 32), lineMat);
             centerCircle.rotation.x = -Math.PI/2; centerCircle.position.y = 0.26; tableGroup.add(centerCircle);
 
+            // Legs
             const legGeo = new THREE.BoxGeometry(1.2, 7, 1.2);
             const l1=new THREE.Mesh(legGeo, woodMat); l1.position.set(7,-3.5,4); tableGroup.add(l1);
             const l2=new THREE.Mesh(legGeo, woodMat); l2.position.set(7,-3.5,-4); tableGroup.add(l2);
             const l3=new THREE.Mesh(legGeo, woodMat); l3.position.set(-7,-3.5,4); tableGroup.add(l3);
             const l4=new THREE.Mesh(legGeo, woodMat); l4.position.set(-7,-3.5,-4); tableGroup.add(l4);
 
+            // RODS
             const activeRods = [];
             const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 18);
             const playerBodyGeo = new THREE.BoxGeometry(0.6, 1.4, 0.4);
@@ -349,13 +325,14 @@
             createRodRow(-6.5, 'red', 1); createRodRow(-4.5, 'red', 2); createRodRow(-2.5, 'blue', 3); createRodRow(-0.5, 'red', 5);
             createRodRow(1.5, 'blue', 5); createRodRow(3.5, 'red', 3); createRodRow(5.5, 'blue', 2); createRodRow(7.5, 'blue', 1);
 
+            // Ball
             const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18,16,16), new THREE.MeshStandardMaterial({color:0xffffff}));
             ball.position.set(0, 0.45, 0); ball.castShadow = true; tableGroup.add(ball);
 
             tableGroup.rotation.x = 0.35; tableGroup.rotation.y = 0.1;
             scene.add(tableGroup);
 
-            // Snow
+            // Canvas Snowflake Generator (Crash Fix)
             function createSnowTexture() {
                 const cvs = document.createElement('canvas'); cvs.width = 32; cvs.height = 32;
                 const ctx = cvs.getContext('2d');
@@ -363,6 +340,8 @@
                 return new THREE.CanvasTexture(cvs);
             }
             const snowTex = createSnowTexture();
+
+            // Standard Snow
             const snowGeo = new THREE.BufferGeometry();
             const snowCount = 1000; const posArray = new Float32Array(snowCount * 3);
             for(let i=0; i<snowCount*3; i++) posArray[i] = (Math.random() - 0.5) * 60;
@@ -381,9 +360,6 @@
 
                 tableGroup.rotation.y = 0.15 + (mouseX * 0.15);
                 tableGroup.rotation.x = 0.35 + (mouseY * 0.05);
-
-                // Garland Sway
-                garlandGroup.rotation.z = Math.sin(time * 0.5) * 0.02;
 
                 // Rods
                 activeRods.forEach(rod => {
