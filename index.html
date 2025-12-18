@@ -41,7 +41,6 @@
     <style>
         body { margin: 0; overflow-x: hidden; background-color: #0f131a; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 3D Canvas Background */
         #canvas-container {
             position: fixed;
             top: 0; left: 0;
@@ -50,35 +49,24 @@
             background: radial-gradient(circle at center, #1a202c 0%, #0f131a 100%);
         }
 
-        /* Nav gradient to blend with 3D scene */
+        /* Nav gradient */
         nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0)); }
-        
-        /* Custom Scrollbar */
+        .nav-garland { position: relative; z-index: 50; }
+
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f131a; }
         ::-webkit-scrollbar-thumb { background: #ee3e38; border-radius: 4px; }
 
-        /* Typography & Effects */
-        .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.5); }
-
-        /* Animations */
+        .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.6); }
         .fade-in { animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Section Spacing */
+        
         section { scroll-margin-top: 150px; }
-
-        /* Glass Panels */
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Layout Fixes */
-        main { padding-top: 6rem; }
-        /* Push the welcome text down slightly so it clears the 3D garland */
-        #welcome { margin-top: 3rem; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        main { padding-top: 8rem; }
+        #welcome { margin-top: 2rem; }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-200">
@@ -90,95 +78,63 @@
             <i class="fas fa-tree text-brand-green text-2xl drop-shadow-lg filter shadow-black"></i>
             <span class="font-festive text-2xl text-white tracking-widest drop-shadow-md"><span class="text-white">MÚSZ</span> <span class="text-brand-red">BAJNOKSÁG</span></span>
         </div>
-        
         <div class="hidden md:flex gap-10 text-xs font-bold uppercase tracking-widest text-gray-300 z-50 mx-auto mt-2">
             <a href="#welcome" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Kezdőlap</a>
             <a href="#welcome" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Sorsolás</a>
             <a href="#meccsek-section" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Meccsek</a>
             <a href="#tabella-section" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Tabella</a>
         </div>
-        
         <div class="w-8"></div>
     </nav>
 
     <main class="w-full flex-grow relative z-10 pb-20">
-        
         <section id="welcome" class="min-h-[85vh] flex flex-col items-center justify-start pt-6 text-center px-4 relative">
-            
-            <div class="relative z-20 mb-8 fade-in" style="animation-delay: 0.1s;">
-                <h1 class="font-festive text-4xl md:text-5xl text-white leading-tight drop-shadow-xl mb-2">
-                    MÚSZ KARÁCSONYI
-                </h1>
-                <h1 class="font-festive text-6xl md:text-8xl text-brand-gold title-glow leading-tight drop-shadow-xl transform -rotate-1">
-                    CSOCSÓ KUPA
-                </h1>
+            <div class="relative z-20 mb-8 fade-in">
+                <h1 class="font-festive text-4xl md:text-5xl text-white leading-tight drop-shadow-xl mb-2">MÚSZ KARÁCSONYI</h1>
+                <h1 class="font-festive text-6xl md:text-8xl text-brand-gold title-glow leading-tight drop-shadow-xl transform -rotate-1">CSOCSÓ KUPA</h1>
             </div>
-
             <div class="z-20 fade-in" style="animation-delay: 0.2s;">
                 <p class="text-gray-300 text-sm md:text-base max-w-lg mb-10 leading-relaxed bg-black/40 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                     A hivatalos MÚSZ csocsó bajnokság visszatért! Regisztráljatok, pörgessétek fel az ünnepi hangulatot!
                 </p>
             </div>
-
             <div class="z-20 fade-in" style="animation-delay: 0.3s;">
                 <button onclick="document.getElementById('matches-list').scrollIntoView({behavior: 'smooth'})" class="bg-brand-red hover:bg-red-600 text-white font-bold uppercase tracking-wide text-sm px-8 py-4 rounded shadow-lg transition transform hover:scale-105 border border-red-400">
                     Meccsek Megtekintése
                 </button>
             </div>
-
-            <div class="mt-12 fade-in z-20" style="animation-delay: 0.4s;">
+            <div class="mt-16 fade-in z-20" style="animation-delay: 0.4s;">
                 <p class="text-gray-500 text-xs uppercase tracking-widest mb-2">Következő Mérkőzés</p>
-                <div id="next-match-display" class="text-xl font-bold text-white bg-black/50 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg">
-                    Jelenleg nincs aktív meccs
-                </div>
+                <div id="next-match-display" class="text-xl font-bold text-white bg-black/50 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg">Jelenleg nincs aktív meccs</div>
             </div>
-
         </section>
 
         <div class="max-w-6xl mx-auto px-4 space-y-24 z-20 relative mt-20">
-
             <section id="meccsek-section">
                 <div class="flex items-center gap-4 mb-8">
                     <h2 class="text-3xl font-bold text-white uppercase tracking-wider">Mérkőzések</h2>
                     <div class="h-1 flex-grow bg-gray-800 rounded"></div>
                 </div>
-
-                <div id="finals-container" class="mb-12 grid md:grid-cols-2 gap-6">
-                    </div>
-
+                <div id="finals-container" class="mb-12 grid md:grid-cols-2 gap-6"></div>
                 <h3 class="text-brand-gold text-sm font-bold uppercase tracking-widest mb-4">Csoportkör</h3>
-                <div id="matches-list" class="grid md:grid-cols-1 gap-3">
-                    <div class="glass-panel p-6 rounded text-center text-gray-500 italic">
-                        Nincs aktív menetrend. Generálj egyet az admin felületen.
-                    </div>
-                </div>
+                <div id="matches-list" class="grid md:grid-cols-1 gap-3"></div>
             </section>
-
             <section id="tabella-section">
                 <div class="flex items-center gap-4 mb-8">
                     <h2 class="text-3xl font-bold text-white uppercase tracking-wider">Tabella</h2>
                     <div class="h-1 flex-grow bg-gray-800 rounded"></div>
                 </div>
-                
                 <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
                     <table class="w-full text-left">
                         <thead class="bg-black/40 text-gray-400 text-xs uppercase tracking-wider font-bold">
                             <tr>
-                                <th class="p-4">#</th>
-                                <th class="p-4">Csapat</th>
-                                <th class="p-4 text-center">M</th>
-                                <th class="p-4 text-center">Gy</th>
-                                <th class="p-4 text-center">V</th>
-                                <th class="p-4 text-right">Pont</th>
+                                <th class="p-4">#</th><th class="p-4">Csapat</th><th class="p-4 text-center">M</th><th class="p-4 text-center">Gy</th><th class="p-4 text-center">V</th><th class="p-4 text-right">Pont</th>
                             </tr>
                         </thead>
-                        <tbody id="standings-body" class="divide-y divide-gray-800 text-sm">
-                            <tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Nincs adat.</td></tr>
-                        </tbody>
+                        <tbody id="standings-body" class="divide-y divide-gray-800 text-sm"></tbody>
                     </table>
                 </div>
             </section>
-
             <section id="szabalyok-section">
                 <div class="flex items-center gap-4 mb-8">
                     <h2 class="text-3xl font-bold text-white uppercase tracking-wider">Szabályzat</h2>
@@ -188,17 +144,14 @@
                     <ul id="rules-list" class="space-y-3 text-gray-300 list-disc list-inside"></ul>
                 </div>
             </section>
-
         </div>
     </main>
 
     <footer class="bg-black/80 border-t border-gray-800 py-8 mt-auto text-center relative z-20">
         <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-gray-500 text-xs">
             <p>&copy; 2025 MÚSZ Bajnokság. Minden jog fenntartva.</p>
-            
             <button onclick="openAdminModal()" class="mt-4 md:mt-0 hover:text-brand-gold transition flex items-center gap-2 group">
-                <i class="fas fa-lock group-hover:text-brand-red"></i> 
-                <span class="uppercase tracking-wider font-bold">Admin Belépés</span>
+                <i class="fas fa-lock group-hover:text-brand-red"></i> <span class="uppercase tracking-wider font-bold">Admin Belépés</span>
             </button>
         </div>
     </footer>
@@ -206,37 +159,30 @@
     <div id="admin-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-md">
         <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl p-8 relative shadow-2xl">
             <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fas fa-times fa-lg"></i></button>
-            
             <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-2">Adminisztráció</h2>
-
             <div id="admin-login-view">
-                <label class="block text-xs uppercase text-gray-500 mb-2">Jelszó</label>
-                <input type="password" id="admin-pass" class="w-full bg-black/50 border border-gray-700 rounded p-3 text-white mb-4 focus:border-brand-red focus:outline-none transition">
-                <button onclick="adminLogin()" class="w-full bg-brand-red text-white font-bold py-3 rounded hover:bg-red-600 transition">Belépés</button>
+                <input type="password" id="admin-pass" class="w-full bg-black/50 border border-gray-700 rounded p-3 text-white mb-4 focus:border-brand-red outline-none" placeholder="Jelszó">
+                <button onclick="adminLogin()" class="w-full bg-brand-red text-white font-bold py-3 rounded hover:bg-red-600">Belépés</button>
                 <p id="login-error" class="text-brand-red mt-2 text-sm hidden">Helytelen jelszó!</p>
             </div>
-
             <div id="admin-dashboard-view" class="hidden space-y-8">
                 <div class="bg-black/30 p-4 rounded border border-gray-800">
                     <h3 class="text-white font-bold mb-3">1. Csapatok Generálása</h3>
-                    <textarea id="player-input" rows="4" class="w-full bg-black/50 border border-gray-700 rounded p-2 text-sm text-gray-300 mb-3 focus:outline-none" placeholder="Illeszd be a neveket (soronként 1 név)..."></textarea>
-                    <button onclick="generateTournament()" class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold transition">Sorsolás Indítása</button>
+                    <textarea id="player-input" rows="4" class="w-full bg-black/50 border border-gray-700 rounded p-2 text-sm text-gray-300 mb-3 outline-none" placeholder="Nevek..."></textarea>
+                    <button onclick="generateTournament()" class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold">Indítás</button>
                 </div>
-
                 <div class="bg-black/30 p-4 rounded border border-gray-800">
                     <h3 class="text-white font-bold mb-3">2. Eredmények</h3>
                     <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
-
-                <div class="bg-black/30 p-4 rounded border border-gray-800">
+                 <div class="bg-black/30 p-4 rounded border border-gray-800">
                     <h3 class="text-white font-bold mb-3">3. Szabályok</h3>
-                    <div class="flex gap-2 mb-2">
+                     <div class="flex gap-2 mb-2">
                         <input type="text" id="new-rule-input" class="flex-1 bg-black/50 border border-gray-700 rounded p-2 text-sm text-white focus:outline-none" placeholder="Új szabály...">
                         <button onclick="addRule()" class="bg-brand-red px-3 rounded text-white hover:bg-red-600"><i class="fas fa-plus"></i></button>
                     </div>
                     <ul id="admin-rules-list" class="space-y-1 text-sm text-gray-400"></ul>
-                </div>
-
+                 </div>
                 <div class="flex justify-end pt-4">
                     <span id="save-status" class="text-green-500 text-sm self-center mr-3 opacity-0 transition-opacity">Mentve!</span>
                     <button onclick="forceSave()" class="bg-brand-red text-white px-6 py-2 rounded font-bold hover:bg-red-600 transition">Mentés</button>
@@ -246,15 +192,14 @@
     </div>
 
     <script>
-        // --- 3D SCENE: TABLE + GARLAND + PARTICLES ---
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0f131a, 0.02);
 
-            // ADJUSTED CAMERA: Improved angle to see the table better
+            // Angle for best visibility
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 16, 18); 
+            camera.position.set(0, 15, 16); 
             camera.lookAt(0, 0, 0);
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -263,298 +208,212 @@
             renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
 
-            // === LIGHTING ===
+            // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
-            
             const mainSpot = new THREE.SpotLight(0xffffff, 1.3);
-            mainSpot.position.set(0, 25, 5);
+            mainSpot.position.set(5, 25, 5);
             mainSpot.castShadow = true;
-            mainSpot.shadow.mapSize.width = 2048;
-            mainSpot.shadow.mapSize.height = 2048;
+            mainSpot.shadow.mapSize.width = 2048; mainSpot.shadow.mapSize.height = 2048;
             scene.add(mainSpot);
+            const redLight = new THREE.PointLight(0xee3e38, 0.6, 25); redLight.position.set(-10, 8, 2); scene.add(redLight);
+            const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25); goldLight.position.set(10, 8, 2); scene.add(goldLight);
 
-            const redLight = new THREE.PointLight(0xee3e38, 0.6, 25);
-            redLight.position.set(-10, 8, 2);
-            scene.add(redLight);
-            
-            const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25);
-            goldLight.position.set(10, 8, 2);
-            scene.add(goldLight);
-
-
-            // === 3D GARLAND (Positioned at TOP of screen) ===
+            // === GARLAND ===
             const garlandGroup = new THREE.Group();
             function createGarland() {
-                // Wide U-shape curve, higher up (y=10 to 12)
                 const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(-20, 12, -2), 
-                    new THREE.Vector3(-10, 10, -2),
-                    new THREE.Vector3(0, 11.5, -2),
-                    new THREE.Vector3(10, 10, -2),
-                    new THREE.Vector3(20, 12, -2)
+                    new THREE.Vector3(-14, 8, 8), new THREE.Vector3(-7, 6, 8), new THREE.Vector3(0, 7.5, 8), new THREE.Vector3(7, 6, 8), new THREE.Vector3(14, 8, 8)
                 ]);
-
                 const needleGeo = new THREE.ConeGeometry(0.12, 0.9, 5);
                 const needleMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.8 });
-                const count = 3000;
-                const needles = new THREE.InstancedMesh(needleGeo, needleMat, count);
+                const needles = new THREE.InstancedMesh(needleGeo, needleMat, 3000);
                 const dummy = new THREE.Object3D();
-                
-                for(let i=0; i<count; i++) {
-                    const t = i / count;
-                    const pos = curve.getPoint(t);
-                    pos.x += (Math.random() - 0.5) * 1.5;
-                    pos.y += (Math.random() - 0.5) * 1.5;
-                    pos.z += (Math.random() - 0.5) * 1.5;
-                    dummy.position.copy(pos);
-                    dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
-                    dummy.scale.setScalar(0.5 + Math.random() * 0.5);
-                    dummy.updateMatrix();
+                for(let i=0; i<3000; i++) {
+                    const t = i/3000; const pos = curve.getPoint(t);
+                    pos.x += (Math.random()-0.5)*1.5; pos.y += (Math.random()-0.5)*1.5; pos.z += (Math.random()-0.5)*1.5;
+                    dummy.position.copy(pos); dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI); dummy.scale.setScalar(0.5+Math.random()*0.5); dummy.updateMatrix();
                     needles.setMatrixAt(i, dummy.matrix);
                 }
                 garlandGroup.add(needles);
-
-                // Ornaments
-                const ballGeo = new THREE.SphereGeometry(0.3, 16, 16);
+                
+                const ballGeo = new THREE.SphereGeometry(0.25, 16, 16);
                 const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.6, roughness: 0.3 });
                 const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.2 });
-                const ornCount = 60;
-                const redBalls = new THREE.InstancedMesh(ballGeo, redMat, ornCount/2);
-                const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, ornCount/2);
-                let r=0, g=0;
-                const dummyOrn = new THREE.Object3D();
-                for(let i=0; i<ornCount; i++) {
-                    const t = Math.random();
-                    const pos = curve.getPoint(t);
-                    pos.y -= 0.6; 
-                    pos.z += 0.6; 
+                const redBalls = new THREE.InstancedMesh(ballGeo, redMat, 30);
+                const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, 30);
+                let r=0, g=0; const dummyOrn = new THREE.Object3D();
+                for(let i=0; i<60; i++) {
+                    const t = Math.random(); const pos = curve.getPoint(t);
+                    pos.y -= 0.5; pos.z += 0.5;
                     dummyOrn.position.copy(pos); dummyOrn.scale.setScalar(1); dummyOrn.updateMatrix();
-                    if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix);
-                    else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
+                    if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix); else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
                 }
                 garlandGroup.add(redBalls); garlandGroup.add(goldBalls);
             }
             createGarland();
-            // Position: Keep it fixed relative to world
             scene.add(garlandGroup);
 
-
-            // === IMPROVED FOOSBALL TABLE ===
+            // === TABLE ===
             const tableGroup = new THREE.Group();
-            
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.6 });
             const fieldMat = new THREE.MeshStandardMaterial({ color: 0x388E3C, roughness: 0.9 });
             const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.6, transparent: true });
             const metalMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.2 });
-            const handleMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
             const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
             const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
-            // 1. Cabinet
+            // Cabinet
             const wallLongGeo = new THREE.BoxGeometry(16, 2.5, 0.8);
             const wallShortGeo = new THREE.BoxGeometry(0.8, 2.5, 10.6);
-            
-            const wallN = new THREE.Mesh(wallLongGeo, woodMat); wallN.position.set(0, 1, -5); wallN.receiveShadow = true;
-            const wallS = new THREE.Mesh(wallLongGeo, woodMat); wallS.position.set(0, 1, 5); wallS.receiveShadow = true;
-            const wallE = new THREE.Mesh(wallShortGeo, woodMat); wallE.position.set(8, 1, 0); wallE.receiveShadow = true;
-            const wallW = new THREE.Mesh(wallShortGeo, woodMat); wallW.position.set(-8, 1, 0); wallW.receiveShadow = true;
-            tableGroup.add(wallN, wallS, wallE, wallW);
+            const wN = new THREE.Mesh(wallLongGeo, woodMat); wN.position.set(0, 1, -5); wN.receiveShadow=true;
+            const wS = new THREE.Mesh(wallLongGeo, woodMat); wS.position.set(0, 1, 5); wS.receiveShadow=true;
+            const wE = new THREE.Mesh(wallShortGeo, woodMat); wE.position.set(8, 1, 0); wE.receiveShadow=true;
+            const wW = new THREE.Mesh(wallShortGeo, woodMat); wW.position.set(-8, 1, 0); wW.receiveShadow=true;
+            tableGroup.add(wN, wS, wE, wW);
 
-            // 2. Field
+            // Field
             const field = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.5, 9.5), fieldMat);
-            field.receiveShadow = true;
-            tableGroup.add(field);
-
-            // Field Lines
+            field.receiveShadow = true; tableGroup.add(field);
             const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 9.5), lineMat);
             centerLine.rotation.x = -Math.PI/2; centerLine.position.y = 0.26; tableGroup.add(centerLine);
-            const centerCircle = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.65, 32), lineMat);
-            centerCircle.rotation.x = -Math.PI/2; centerCircle.position.y = 0.26; tableGroup.add(centerCircle);
+            
+            // Legs
+            const l1=new THREE.Mesh(new THREE.BoxGeometry(1.2,7,1.2), woodMat); l1.position.set(7,-3.5,4); tableGroup.add(l1);
+            const l2=new THREE.Mesh(new THREE.BoxGeometry(1.2,7,1.2), woodMat); l2.position.set(7,-3.5,-4); tableGroup.add(l2);
+            const l3=new THREE.Mesh(new THREE.BoxGeometry(1.2,7,1.2), woodMat); l3.position.set(-7,-3.5,4); tableGroup.add(l3);
+            const l4=new THREE.Mesh(new THREE.BoxGeometry(1.2,7,1.2), woodMat); l4.position.set(-7,-3.5,-4); tableGroup.add(l4);
 
-            // 3. Legs
-            const legGeo = new THREE.BoxGeometry(1.2, 7, 1.2);
-            const l1 = new THREE.Mesh(legGeo, woodMat); l1.position.set(7, -3.5, 4); tableGroup.add(l1);
-            const l2 = new THREE.Mesh(legGeo, woodMat); l2.position.set(7, -3.5, -4); tableGroup.add(l2);
-            const l3 = new THREE.Mesh(legGeo, woodMat); l3.position.set(-7, -3.5, 4); tableGroup.add(l3);
-            const l4 = new THREE.Mesh(legGeo, woodMat); l4.position.set(-7, -3.5, -4); tableGroup.add(l4);
+            // RODS & PLAYERS
+            const activeRods = [];
+            const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 11); 
+            const playerBodyGeo = new THREE.BoxGeometry(0.5, 1.2, 0.3);
+            const playerHeadGeo = new THREE.SphereGeometry(0.3, 16, 16);
 
-            // 4. Rods & Players
-            const activeRods = []; 
-            const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 18); // Made rods LONG enough to stay in walls
-            const playerBodyGeo = new THREE.BoxGeometry(0.6, 1.4, 0.4); 
-            const playerHeadGeo = new THREE.SphereGeometry(0.35, 16, 16);
-            const handleGeo = new THREE.CylinderGeometry(0.15, 0.15, 1.2);
-
-            function createRodRow(x, teamColor, count) {
-                const rodGroup = new THREE.Group();
-                rodGroup.position.set(x, 1.5, 0);
+            function createRodRow(x, team, count) {
+                // SlideGroup handles Z-movement (sliding)
+                const slideGroup = new THREE.Group();
+                slideGroup.position.set(x, 1.5, 0); // Base position
                 
-                // The Metal Rod
+                // RotateGroup handles rotation around the rod's axis (Z-axis in table space)
+                const rotateGroup = new THREE.Group();
+                slideGroup.add(rotateGroup);
+
+                // Rod Mesh (Rotated to lie along Z)
                 const rodMesh = new THREE.Mesh(rodGeo, metalMat);
-                rodMesh.rotation.x = Math.PI/2;
+                rodMesh.rotation.x = Math.PI / 2;
                 rodMesh.castShadow = true;
-                rodGroup.add(rodMesh);
+                rotateGroup.add(rodMesh);
 
-                // Handles
-                const handle = new THREE.Mesh(handleGeo, handleMat);
-                handle.rotation.x = Math.PI/2;
-                // Alternate handles left/right
-                const handleZ = (activeRods.length % 2 === 0) ? 9 : -9;
-                handle.position.z = handleZ;
-                rodGroup.add(handle);
-
+                // Players
                 const spacing = 8 / (count + 1);
                 for(let i=1; i<=count; i++) {
                     const z = -4 + (i * spacing);
                     const playerGroup = new THREE.Group();
-                    playerGroup.position.z = z;
+                    playerGroup.position.z = z; // Position along the rod
                     
-                    const body = new THREE.Mesh(playerBodyGeo, teamColor === 'red' ? redTeamMat : blueTeamMat);
-                    body.position.y = -0.6; // Hang down
+                    // Player hangs down (Y-axis negative)
+                    const body = new THREE.Mesh(playerBodyGeo, team==='red'?redTeamMat:blueTeamMat);
+                    body.position.y = -0.5;
                     body.castShadow = true;
                     
                     const head = new THREE.Mesh(playerHeadGeo, skinMat);
-                    head.position.y = 0.3; // Above body
+                    head.position.y = 0.3;
                     
-                    playerGroup.add(body);
-                    playerGroup.add(head);
-                    rodGroup.add(playerGroup);
+                    playerGroup.add(body); playerGroup.add(head);
+                    rotateGroup.add(playerGroup); // Add to rotateGroup so they spin
                 }
-                tableGroup.add(rodGroup);
+                tableGroup.add(slideGroup);
                 
-                // Animation data
-                activeRods.push({ 
-                    mesh: rodGroup, 
+                activeRods.push({
+                    slideGroup: slideGroup,
+                    rotateGroup: rotateGroup,
                     initialX: x,
-                    slideSpeed: Math.random() * 0.01 + 0.005,
+                    team: team,
                     slideOffset: Math.random() * 100,
-                    team: teamColor
+                    slideSpeed: Math.random() * 0.01 + 0.005
                 });
             }
 
-            createRodRow(-6.5, 'red', 1);
-            createRodRow(-4.5, 'red', 2);
-            createRodRow(-2.5, 'blue', 3);
-            createRodRow(-0.5, 'red', 5);
-            createRodRow(1.5, 'blue', 5);
-            createRodRow(3.5, 'red', 3);
-            createRodRow(5.5, 'blue', 2);
-            createRodRow(7.5, 'blue', 1);
+            createRodRow(-6.5, 'red', 1); createRodRow(-4.5, 'red', 2); createRodRow(-2.5, 'blue', 3); createRodRow(-0.5, 'red', 5);
+            createRodRow(1.5, 'blue', 5); createRodRow(3.5, 'red', 3); createRodRow(5.5, 'blue', 2); createRodRow(7.5, 'blue', 1);
 
-            // 5. The Ball
-            const ballGeo = new THREE.SphereGeometry(0.18, 16, 16);
-            const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-            const ball = new THREE.Mesh(ballGeo, ballMat);
-            ball.position.set(0, 0.45, 0);
-            ball.castShadow = true;
-            tableGroup.add(ball);
+            // Ball
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18,16,16), new THREE.MeshStandardMaterial({color:0xffffff}));
+            ball.position.set(0, 0.45, 0); ball.castShadow = true; tableGroup.add(ball);
 
-            // Angle table
-            tableGroup.rotation.x = 0.3;
-            tableGroup.rotation.y = 0.15;
+            tableGroup.rotation.x = 0.35; tableGroup.rotation.y = 0.1;
             scene.add(tableGroup);
 
-
-            // === PARTICLES ===
+            // Particles
             const snowGeo = new THREE.BufferGeometry();
-            const snowCount = 800;
-            const posArray = new Float32Array(snowCount * 3);
-            for(let i=0; i<snowCount*3; i++) posArray[i] = (Math.random() - 0.5) * 50;
-            snowGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            const snowMat = new THREE.PointsMaterial({ size: 0.15, color: 0xffffff, transparent: true, opacity: 0.8 });
-            const snowMesh = new THREE.Points(snowGeo, snowMat);
-            scene.add(snowMesh);
+            const snowCount = 800; const posArray = new Float32Array(snowCount * 3);
+            for(let i=0; i<snowCount*3; i++) posArray[i]=(Math.random()-0.5)*50;
+            snowGeo.setAttribute('position', new THREE.BufferAttribute(posArray,3));
+            const snowMat = new THREE.PointsMaterial({size:0.15, color:0xffffff, transparent:true, opacity:0.8});
+            const snowMesh = new THREE.Points(snowGeo, snowMat); scene.add(snowMesh);
 
-            // === LOGO SNOW ===
-            const logoTextureBtn = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAn1BMVEUAAAA5WIs5WIo5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIrM3/49AAAAM3RSTlMAECBgMFAwQCCAcGCAgHCAgICA/4CAgID/gID/gP//gP//gID/gID/gICA/4CAgICAbN+4gAAAAe5JREFUeNrtl9magjAMhRULKqCgqKjd6v//wG07d30c26mDM/F98yVpQ5M2TRfL/kM4v9v0gP4z+CqgD1cAPgvgjQAeCyDmAaQYgDQDQAIAlQBgIQBQAAD3/wH81zF44wE4o78D/G554IsAwE8BvBMAjAGkFgBaCQCXAEg/APAaQFYAOADgAwDgA0C+B8D3AcDvAYA/AOA3AWAiAAABgC8A8DkAAAEA2ABgGQA+A+AnAeCTAHAdgPcD4BMA8BoA/gSAtwAgEAB8GgD+AgDnAeCnAGAXAIADAHAAAM4CwAUA2AUA+A4AAAD+AIAfAIBDAPA1AHwFAD4FAK4DAF8AgK8AwI8A4EMAcA0AtgAAlgAAPgYArwIA3wUArgD4MgB4GQAsBYCtAIB/AoCPAsC2AMCfAcDHAOA1APglALgBALcCAHYBANYDAB8EgIsAwEUAeCkAOAwAXQcAdwAAqwEArAEA6wAAiwHAZQD4IABwGQA4DgB+A4C/AQAbAwDvAMAmAOALAHgPAD4IAJYBwEYA+CIAcBoAdgkAOAMAmwEAnwGAWwDwDgC8BwDbAQCfBoCdAgDvAYB3AOAbAPARAFgIADsGAH4DAD4AANcAgM0BgA8BgE0BwHcAgH8BAJcAgJ0B/jW+ACF3Gf/F7Y1QAAAAAElFTkSuQmCC';
-            const textureLoader = new THREE.TextureLoader();
-            const logoTexture = textureLoader.load(logoTextureBtn);
+            const logoTexture = new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAn1BMVEUAAAA5WIs5WIo5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIs5WIrM3/49AAAAM3RSTlMAECBgMFAwQCCAcGCAgHCAgICA/4CAgID/gID/gP//gP//gID/gID/gICA/4CAgICAbN+4gAAAAe5JREFUeNrtl9magjAMhRULKqCgqKjd6v//wG07d30c26mDM/F98yVpQ5M2TRfL/kM4v9v0gP4z+CqgD1cAPgvgjQAeCyDmAaQYgDQDQAIAlQBgIQBQAAD3/wH81zF44wE4o78D/G554IsAwE8BvBMAjAGkFgBaCQCXAEg/APAaQFYAOADgAwDgA0C+B8D3AcDvAYA/AOA3AWAiAAABgC8A8DkAAAEA2ABgGQA+A+AnAeCTAHAdgPcD4BMA8BoA/gSAtwAgEAB8GgD+AgDnAeCnAGAXAIADAHAAAM4CwAUA2AUA+A4AAAD+AIAfAIBDAPA1AHwFAD4FAK4DAF8AgK8AwI8A4EMAcA0AtgAAlgAAPgYArwIA3wUArgD4MgB4GQAsBYCtAIB/AoCPAsC2AMCfAcDHAOA1APglALgBALcCAHYBANYDAB8EgIsAwEUAeCkAOAwAXQcAdwAAqwEArAEA6wAAiwHAZQD4IABwGQA4DgB+A4C/AQAbAwDvAMAmAOALAHgPAD4IAJYBwEYA+CIAcBoAdgkAOAMAmwEAnwGAWwDwDgC8BwDbAQCfBoCdAgDvAYB3AOAbAPARAFgIADsGAH4DAD4AANcAgM0BgA8BgE0BwHcAgH8BAJcAgJ0B/jW+ACF3Gf/F7Y1QAAAAAElFTkSuQmCC');
             const logoSnowGeo = new THREE.BufferGeometry();
-            const logoSnowCount = 100; 
-            const logoPosArray = new Float32Array(logoSnowCount * 3);
-            for(let i=0; i<logoSnowCount*3; i++) logoPosArray[i] = (Math.random() - 0.5) * 50;
-            logoSnowGeo.setAttribute('position', new THREE.BufferAttribute(logoPosArray, 3));
-            const logoSnowMat = new THREE.PointsMaterial({ size: 1.5, map: logoTexture, transparent: true, opacity: 0.9, depthWrite: false });
-            const logoSnowMesh = new THREE.Points(logoSnowGeo, logoSnowMat);
-            scene.add(logoSnowMesh);
+            const logoPos = new Float32Array(100*3); for(let i=0; i<300; i++) logoPos[i]=(Math.random()-0.5)*50;
+            logoSnowGeo.setAttribute('position', new THREE.BufferAttribute(logoPos,3));
+            const logoSnowMat = new THREE.PointsMaterial({size:1.5, map:logoTexture, transparent:true, opacity:0.9, depthWrite:false});
+            const logoSnowMesh = new THREE.Points(logoSnowGeo, logoSnowMat); scene.add(logoSnowMesh);
 
-
-            // === ANIMATION LOOP ===
-            let mouseX = 0, mouseY = 0;
+            // ANIMATION
+            let mouseX=0, mouseY=0;
             let ballVelocity = new THREE.Vector3(0.08, 0, 0.05);
-            
-            const animate = () => {
+
+            function animate() {
                 requestAnimationFrame(animate);
                 const time = Date.now() * 0.001;
 
-                // 1. Table Parallax
-                tableGroup.rotation.y = 0.15 + (mouseX * 0.1);
-                tableGroup.rotation.x = 0.3 + (mouseY * 0.05);
+                tableGroup.rotation.y = 0.15 + (mouseX * 0.15);
+                tableGroup.rotation.x = 0.35 + (mouseY * 0.05);
 
-                // 2. Rods Animation (FIXED SLIDE RANGE)
-                activeRods.forEach((rod) => {
-                    // Slide Z constrained to 0.3 units so it stays in table
-                    const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 0.3;
-                    rod.mesh.position.z = slide;
+                // Rod Movement
+                activeRods.forEach(rod => {
+                    // Slide (Z-axis relative to table)
+                    const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 0.3; // Limits sliding to avoid detachment
+                    rod.slideGroup.position.z = slide;
 
-                    // Ball tracking (Simple AI)
+                    // Ball tracking/Kick logic
+                    // Correct rotational axis for kicking is Z in this setup
                     if (Math.abs(ball.position.x - rod.initialX) < 0.8) {
-                        rod.mesh.rotation.x += 0.3; 
+                        // Kick! (Rotate around Z)
+                        rod.rotateGroup.rotation.z += 0.3;
                     } else {
-                        rod.mesh.rotation.x += (Math.PI/2 - rod.mesh.rotation.x) * 0.1;
+                        // Gravity pulls players down (0 rotation)
+                        rod.rotateGroup.rotation.z += (0 - rod.rotateGroup.rotation.z) * 0.1;
                     }
                 });
 
-                // 3. Ball Physics
+                // Ball
                 ball.position.add(ballVelocity);
                 if(ball.position.x > 7.5 || ball.position.x < -7.5) {
-                    ballVelocity.x *= -1;
-                    ballVelocity.z += (Math.random() - 0.5) * 0.05; 
+                    ballVelocity.x *= -1; ballVelocity.z += (Math.random()-0.5)*0.05;
                 }
-                if(ball.position.z > 4.5 || ball.position.z < -4.5) {
-                    ballVelocity.z *= -1;
-                }
-                if(Math.random() > 0.99) {
-                    ballVelocity.x *= 1.1; ballVelocity.z *= 1.1;
-                }
-                ballVelocity.clampLength(0.06, 0.2);
-
-                // 4. Snow
-                const snowPositions = snowMesh.geometry.attributes.position.array;
-                for(let i=1; i<snowCount*3; i+=3) {
-                    snowPositions[i] -= 0.05; if(snowPositions[i] < -25) snowPositions[i] = 25;
-                }
+                if(ball.position.z > 4.5 || ball.position.z < -4.5) ballVelocity.z *= -1;
+                
+                // Particles
+                const pos = snowMesh.geometry.attributes.position.array;
+                for(let i=1; i<pos.length; i+=3) { pos[i] -= 0.05; if(pos[i]<-25) pos[i]=25; }
                 snowMesh.geometry.attributes.position.needsUpdate = true;
-
-                const logoPositions = logoSnowMesh.geometry.attributes.position.array;
-                for(let i=1; i<logoSnowCount*3; i+=3) {
-                    logoPositions[i] -= 0.07; 
-                    logoPositions[i-1] += Math.sin(time + i)*0.01; 
-                    if(logoPositions[i] < -25) {
-                        logoPositions[i] = 25;
-                        logoPositions[i-1] = (Math.random() - 0.5) * 50; 
-                    }
-                }
+                
+                const lPos = logoSnowMesh.geometry.attributes.position.array;
+                for(let i=1; i<lPos.length; i+=3) { lPos[i] -= 0.07; if(lPos[i]<-25) lPos[i]=25; }
                 logoSnowMesh.geometry.attributes.position.needsUpdate = true;
 
                 renderer.render(scene, camera);
-            };
-
+            }
             animate();
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-            document.addEventListener('mousemove', (e) => {
-                mouseX = (e.clientX / window.innerWidth) - 0.5;
-                mouseY = (e.clientY / window.innerHeight) - 0.5;
-            });
+
+            window.addEventListener('resize', () => { camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+            document.addEventListener('mousemove', (e) => { mouseX=(e.clientX/window.innerWidth)-0.5; mouseY=(e.clientY/window.innerHeight)-0.5; });
         }
 
-        // --- APP LOGIC ---
+        // ... App Logic ...
         const funnyNames = ["Részeg Rénszarvasok", "Beigli Betyárok", "Grincs Gárdája", "Forralt Bor FC", "Hólapátolók", "Kevinék", "Reszkessetek", "Jéghercegnők", "Krampusz United", "Diós Bejgli"];
         let state = { teams: [], matches: [], rules: ["Nincs döntetlen (10 gólig tart a meccs).", "A pörgetés tilos.", "Fair play mindenek felett.", "Gól után középkezdés."], generated: false };
 
