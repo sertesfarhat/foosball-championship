@@ -41,7 +41,6 @@
     <style>
         body { margin: 0; overflow-x: hidden; background-color: #0f131a; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 3D Canvas Background */
         #canvas-container {
             position: fixed;
             top: 0; left: 0;
@@ -50,21 +49,22 @@
             background: radial-gradient(circle at center, #1a202c 0%, #0f131a 100%);
         }
 
-        /* Nav gradient */
-        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0)); }
+        /* Transparent Nav to let 3D garland show through/under */
+        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95) 0%, rgba(15, 19, 26, 0.8) 100%); }
         
-        /* Custom Scrollbar */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f131a; }
         ::-webkit-scrollbar-thumb { background: #ee3e38; border-radius: 4px; }
 
-        .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.5); }
+        .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.6); }
         .fade-in { animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         section { scroll-margin-top: 150px; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
+        /* Spacing for Hero */
         main { padding-top: 8rem; }
         #welcome { margin-top: 2rem; }
     </style>
@@ -225,15 +225,17 @@
             const redLight = new THREE.PointLight(0xee3e38, 0.6, 25); redLight.position.set(-10, 8, 2); scene.add(redLight);
             const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25); goldLight.position.set(10, 8, 2); scene.add(goldLight);
 
-            // === 3D GARLAND (Top Position) ===
+            // === 3D GARLAND (CORRECTED VISIBILITY) ===
             const garlandGroup = new THREE.Group();
             function createGarland() {
+                // Coordinates adjusted to be VISIBLE behind the table but high up
+                // Y=12 is lower than before, Z=-10 puts it in the background wall area
                 const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(-22, 26, 8), 
-                    new THREE.Vector3(-11, 24, 8),
-                    new THREE.Vector3(0, 23, 8),
-                    new THREE.Vector3(11, 24, 8),
-                    new THREE.Vector3(22, 26, 8)
+                    new THREE.Vector3(-22, 14, -10), 
+                    new THREE.Vector3(-11, 12, -10),
+                    new THREE.Vector3(0, 11, -10),
+                    new THREE.Vector3(11, 12, -10),
+                    new THREE.Vector3(22, 14, -10)
                 ]);
 
                 const needleGeo = new THREE.ConeGeometry(0.12, 0.9, 5);
