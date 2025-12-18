@@ -41,7 +41,6 @@
     <style>
         body { margin: 0; overflow-x: hidden; background-color: #0f131a; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* 3D Canvas Background */
         #canvas-container {
             position: fixed;
             top: 0; left: 0;
@@ -50,69 +49,50 @@
             background: radial-gradient(circle at center, #1a202c 0%, #0f131a 100%);
         }
 
-        /* Nav gradient to blend with 3D scene */
-        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0)); }
-        .nav-garland { position: relative; z-index: 50; }
-
-        /* Custom Scrollbar */
+        /* Transparent Nav to let 3D garland show through/under */
+        nav { background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95) 0%, rgba(15, 19, 26, 0.8) 100%); }
+        
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f131a; }
         ::-webkit-scrollbar-thumb { background: #ee3e38; border-radius: 4px; }
 
-        /* Typography & Effects */
-        .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.5); }
-
-        /* Animations */
+        .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.6); }
         .fade-in { animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Section Spacing */
+        
         section { scroll-margin-top: 150px; }
-
-        /* Glass Panels */
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Layout Fixes */
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        /* Spacing for Hero */
         main { padding-top: 8rem; }
-        #welcome { margin-top: 1rem; }
+        #welcome { margin-top: 2rem; }
     </style>
 </head>
 <body class="font-sans antialiased text-gray-200">
 
     <div id="canvas-container"></div>
 
-    <nav class="fixed top-0 w-full z-50 h-24 flex items-start pt-4 justify-between px-6 lg:px-12 nav-garland">
-        
+    <nav class="fixed top-0 w-full z-50 h-24 flex items-start pt-4 justify-between px-6 lg:px-12">
         <div class="flex items-center gap-3 z-50">
             <i class="fas fa-tree text-brand-green text-2xl drop-shadow-lg filter shadow-black"></i>
             <span class="font-festive text-2xl text-white tracking-widest drop-shadow-md"><span class="text-white">MÚSZ</span> <span class="text-brand-red">BAJNOKSÁG</span></span>
         </div>
-        
         <div class="hidden md:flex gap-10 text-xs font-bold uppercase tracking-widest text-gray-300 z-50 mx-auto mt-2">
             <a href="#welcome" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Kezdőlap</a>
             <a href="#welcome" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Sorsolás</a>
             <a href="#meccsek-section" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Meccsek</a>
             <a href="#tabella-section" class="hover:text-brand-gold transition-colors duration-300 drop-shadow-md">Tabella</a>
         </div>
-        
         <div class="w-8"></div>
     </nav>
 
     <main class="w-full flex-grow relative z-10 pb-20">
-        
-        <section id="welcome" class="min-h-[80vh] flex flex-col items-center justify-start pt-6 text-center px-4 relative">
+        <section id="welcome" class="min-h-[85vh] flex flex-col items-center justify-start pt-6 text-center px-4 relative">
             
-            <div class="relative z-20 mb-8 fade-in" style="animation-delay: 0.1s;">
-                <h1 class="font-festive text-4xl md:text-5xl text-white leading-tight drop-shadow-xl mb-2">
-                    MÚSZ KARÁCSONYI
-                </h1>
-                <h1 class="font-festive text-6xl md:text-8xl text-brand-gold title-glow leading-tight drop-shadow-xl transform -rotate-1">
-                    CSOCSÓ KUPA
-                </h1>
+            <div class="relative z-20 mb-8 fade-in">
+                <h1 class="font-festive text-4xl md:text-5xl text-white leading-tight drop-shadow-xl mb-2">MÚSZ KARÁCSONYI</h1>
+                <h1 class="font-festive text-6xl md:text-8xl text-brand-gold title-glow leading-tight drop-shadow-xl transform -rotate-1">CSOCSÓ KUPA</h1>
             </div>
 
             <div class="z-20 fade-in" style="animation-delay: 0.2s;">
@@ -127,32 +107,21 @@
                 </button>
             </div>
 
-            <div class="mt-12 fade-in z-20" style="animation-delay: 0.4s;">
+            <div class="mt-16 fade-in z-20" style="animation-delay: 0.4s;">
                 <p class="text-gray-500 text-xs uppercase tracking-widest mb-2">Következő Mérkőzés</p>
-                <div id="next-match-display" class="text-xl font-bold text-white bg-black/50 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg">
-                    Jelenleg nincs aktív meccs
-                </div>
+                <div id="next-match-display" class="text-xl font-bold text-white bg-black/50 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg">Jelenleg nincs aktív meccs</div>
             </div>
-
         </section>
 
         <div class="max-w-6xl mx-auto px-4 space-y-24 z-20 relative mt-20">
-
             <section id="meccsek-section">
                 <div class="flex items-center gap-4 mb-8">
                     <h2 class="text-3xl font-bold text-white uppercase tracking-wider">Mérkőzések</h2>
                     <div class="h-1 flex-grow bg-gray-800 rounded"></div>
                 </div>
-
-                <div id="finals-container" class="mb-12 grid md:grid-cols-2 gap-6">
-                    </div>
-
+                <div id="finals-container" class="mb-12 grid md:grid-cols-2 gap-6"></div>
                 <h3 class="text-brand-gold text-sm font-bold uppercase tracking-widest mb-4">Csoportkör</h3>
-                <div id="matches-list" class="grid md:grid-cols-1 gap-3">
-                    <div class="glass-panel p-6 rounded text-center text-gray-500 italic">
-                        Nincs aktív menetrend. Generálj egyet az admin felületen.
-                    </div>
-                </div>
+                <div id="matches-list" class="grid md:grid-cols-1 gap-3"></div>
             </section>
 
             <section id="tabella-section">
@@ -160,22 +129,14 @@
                     <h2 class="text-3xl font-bold text-white uppercase tracking-wider">Tabella</h2>
                     <div class="h-1 flex-grow bg-gray-800 rounded"></div>
                 </div>
-                
                 <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
                     <table class="w-full text-left">
                         <thead class="bg-black/40 text-gray-400 text-xs uppercase tracking-wider font-bold">
                             <tr>
-                                <th class="p-4">#</th>
-                                <th class="p-4">Csapat</th>
-                                <th class="p-4 text-center">M</th>
-                                <th class="p-4 text-center">Gy</th>
-                                <th class="p-4 text-center">V</th>
-                                <th class="p-4 text-right">Pont</th>
+                                <th class="p-4">#</th><th class="p-4">Csapat</th><th class="p-4 text-center">M</th><th class="p-4 text-center">Gy</th><th class="p-4 text-center">V</th><th class="p-4 text-right">Pont</th>
                             </tr>
                         </thead>
-                        <tbody id="standings-body" class="divide-y divide-gray-800 text-sm">
-                            <tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Nincs adat.</td></tr>
-                        </tbody>
+                        <tbody id="standings-body" class="divide-y divide-gray-800 text-sm"></tbody>
                     </table>
                 </div>
             </section>
@@ -189,17 +150,14 @@
                     <ul id="rules-list" class="space-y-3 text-gray-300 list-disc list-inside"></ul>
                 </div>
             </section>
-
         </div>
     </main>
 
     <footer class="bg-black/80 border-t border-gray-800 py-8 mt-auto text-center relative z-20">
         <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-gray-500 text-xs">
             <p>&copy; 2025 MÚSZ Bajnokság. Minden jog fenntartva.</p>
-            
             <button onclick="openAdminModal()" class="mt-4 md:mt-0 hover:text-brand-gold transition flex items-center gap-2 group">
-                <i class="fas fa-lock group-hover:text-brand-red"></i> 
-                <span class="uppercase tracking-wider font-bold">Admin Belépés</span>
+                <i class="fas fa-lock group-hover:text-brand-red"></i> <span class="uppercase tracking-wider font-bold">Admin Belépés</span>
             </button>
         </div>
     </footer>
@@ -207,37 +165,30 @@
     <div id="admin-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-md">
         <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl p-8 relative shadow-2xl">
             <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fas fa-times fa-lg"></i></button>
-            
             <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-2">Adminisztráció</h2>
-
             <div id="admin-login-view">
-                <label class="block text-xs uppercase text-gray-500 mb-2">Jelszó</label>
-                <input type="password" id="admin-pass" class="w-full bg-black/50 border border-gray-700 rounded p-3 text-white mb-4 focus:border-brand-red focus:outline-none transition">
-                <button onclick="adminLogin()" class="w-full bg-brand-red text-white font-bold py-3 rounded hover:bg-red-600 transition">Belépés</button>
+                <input type="password" id="admin-pass" class="w-full bg-black/50 border border-gray-700 rounded p-3 text-white mb-4 focus:border-brand-red outline-none" placeholder="Jelszó">
+                <button onclick="adminLogin()" class="w-full bg-brand-red text-white font-bold py-3 rounded hover:bg-red-600">Belépés</button>
                 <p id="login-error" class="text-brand-red mt-2 text-sm hidden">Helytelen jelszó!</p>
             </div>
-
             <div id="admin-dashboard-view" class="hidden space-y-8">
                 <div class="bg-black/30 p-4 rounded border border-gray-800">
                     <h3 class="text-white font-bold mb-3">1. Csapatok Generálása</h3>
-                    <textarea id="player-input" rows="4" class="w-full bg-black/50 border border-gray-700 rounded p-2 text-sm text-gray-300 mb-3 focus:outline-none" placeholder="Illeszd be a neveket (soronként 1 név)..."></textarea>
-                    <button onclick="generateTournament()" class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold transition">Sorsolás Indítása</button>
+                    <textarea id="player-input" rows="4" class="w-full bg-black/50 border border-gray-700 rounded p-2 text-sm text-gray-300 mb-3 outline-none" placeholder="Nevek..."></textarea>
+                    <button onclick="generateTournament()" class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold">Indítás</button>
                 </div>
-
                 <div class="bg-black/30 p-4 rounded border border-gray-800">
                     <h3 class="text-white font-bold mb-3">2. Eredmények</h3>
                     <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
-
-                <div class="bg-black/30 p-4 rounded border border-gray-800">
+                 <div class="bg-black/30 p-4 rounded border border-gray-800">
                     <h3 class="text-white font-bold mb-3">3. Szabályok</h3>
-                    <div class="flex gap-2 mb-2">
+                     <div class="flex gap-2 mb-2">
                         <input type="text" id="new-rule-input" class="flex-1 bg-black/50 border border-gray-700 rounded p-2 text-sm text-white focus:outline-none" placeholder="Új szabály...">
                         <button onclick="addRule()" class="bg-brand-red px-3 rounded text-white hover:bg-red-600"><i class="fas fa-plus"></i></button>
                     </div>
                     <ul id="admin-rules-list" class="space-y-1 text-sm text-gray-400"></ul>
-                </div>
-
+                 </div>
                 <div class="flex justify-end pt-4">
                     <span id="save-status" class="text-green-500 text-sm self-center mr-3 opacity-0 transition-opacity">Mentve!</span>
                     <button onclick="forceSave()" class="bg-brand-red text-white px-6 py-2 rounded font-bold hover:bg-red-600 transition">Mentés</button>
@@ -251,10 +202,11 @@
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x0f131a, 0.025);
+            scene.fog = new THREE.FogExp2(0x0f131a, 0.02);
 
+            // ADJUSTED CAMERA: Lower and closer to see the table details
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 20, 18); // High angle, clearer view
+            camera.position.set(0, 12, 14); 
             camera.lookAt(0, 0, 0);
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -264,36 +216,35 @@
             container.appendChild(renderer.domElement);
 
             // === LIGHTING ===
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
             
-            const mainSpot = new THREE.SpotLight(0xffffff, 1.2);
-            mainSpot.position.set(0, 25, 0);
+            const mainSpot = new THREE.SpotLight(0xffffff, 1.5);
+            mainSpot.position.set(5, 15, 5);
             mainSpot.castShadow = true;
-            mainSpot.shadow.mapSize.width = 2048;
-            mainSpot.shadow.mapSize.height = 2048;
             scene.add(mainSpot);
 
-            const redLight = new THREE.PointLight(0xee3e38, 0.6, 20);
-            redLight.position.set(-10, 5, 5);
+            const redLight = new THREE.PointLight(0xee3e38, 0.8, 30);
+            redLight.position.set(-10, 5, 2);
             scene.add(redLight);
-            const goldLight = new THREE.PointLight(0xfacc15, 0.6, 20);
-            goldLight.position.set(10, 5, 5);
+            
+            const goldLight = new THREE.PointLight(0xfacc15, 0.8, 30);
+            goldLight.position.set(10, 5, 2);
             scene.add(goldLight);
 
 
-            // === 3D GARLAND ===
+            // === 3D GARLAND (Moved forward to frame view) ===
             const garlandGroup = new THREE.Group();
             function createGarland() {
+                // Curve positioned to hang at top of screen relative to camera view
                 const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3(-18, 10, -5),
-                    new THREE.Vector3(-9, 7, -5),
-                    new THREE.Vector3(0, 9, -5),
-                    new THREE.Vector3(9, 7, -5),
-                    new THREE.Vector3(18, 10, -5)
+                    new THREE.Vector3(-14, 8, 8),
+                    new THREE.Vector3(-7, 6, 8),
+                    new THREE.Vector3(0, 7.5, 8),
+                    new THREE.Vector3(7, 6, 8),
+                    new THREE.Vector3(14, 8, 8)
                 ]);
 
-                // Needles
                 const needleGeo = new THREE.ConeGeometry(0.1, 0.8, 5);
                 const needleMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.8 });
                 const count = 3000;
@@ -303,6 +254,7 @@
                 for(let i=0; i<count; i++) {
                     const t = i / count;
                     const pos = curve.getPoint(t);
+                    // Add thickness
                     pos.x += (Math.random() - 0.5) * 1.5;
                     pos.y += (Math.random() - 0.5) * 1.5;
                     pos.z += (Math.random() - 0.5) * 1.5;
@@ -315,10 +267,10 @@
                 garlandGroup.add(needles);
 
                 // Ornaments
-                const ballGeo = new THREE.SphereGeometry(0.35, 16, 16);
+                const ballGeo = new THREE.SphereGeometry(0.25, 16, 16);
                 const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.6, roughness: 0.3 });
                 const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.2 });
-                const ornCount = 50;
+                const ornCount = 60;
                 const redBalls = new THREE.InstancedMesh(ballGeo, redMat, ornCount/2);
                 const goldBalls = new THREE.InstancedMesh(ballGeo, goldMat, ornCount/2);
                 let r=0, g=0;
@@ -326,7 +278,8 @@
                 for(let i=0; i<ornCount; i++) {
                     const t = Math.random();
                     const pos = curve.getPoint(t);
-                    pos.y -= 0.6; pos.z += 0.5;
+                    pos.y -= 0.5; 
+                    pos.z += 0.5; // Hang forward
                     dummyOrn.position.copy(pos); dummyOrn.scale.setScalar(1); dummyOrn.updateMatrix();
                     if(i%2==0) redBalls.setMatrixAt(r++, dummyOrn.matrix);
                     else goldBalls.setMatrixAt(g++, dummyOrn.matrix);
@@ -334,26 +287,22 @@
                 garlandGroup.add(redBalls); garlandGroup.add(goldBalls);
             }
             createGarland();
-            // Position garland high up in the back
-            garlandGroup.position.z = -5;
-            garlandGroup.position.y = 2;
             scene.add(garlandGroup);
 
 
             // === IMPROVED FOOSBALL TABLE ===
             const tableGroup = new THREE.Group();
             
-            // Materials
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.6 });
             const fieldMat = new THREE.MeshStandardMaterial({ color: 0x388E3C, roughness: 0.9 });
             const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.6, transparent: true });
             const metalMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.3 });
-            const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
             const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
             const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
-            // 1. Cabinet (Thicker, more substantial)
+            // 1. Cabinet
             const wallLongGeo = new THREE.BoxGeometry(16, 2.5, 0.8);
             const wallShortGeo = new THREE.BoxGeometry(0.8, 2.5, 10.6);
             
@@ -383,30 +332,29 @@
 
             // 4. Rods & Players
             const activeRods = []; 
-            // Geometries reused
-            const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 12); // Thinner rods
+            const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 13); // Rods slightly longer to stick out
             const playerBodyGeo = new THREE.BoxGeometry(0.6, 1.4, 0.4); 
             const playerHeadGeo = new THREE.SphereGeometry(0.35, 16, 16);
-            const handleGeo = new THREE.CylinderGeometry(0.15, 0.15, 1);
+            const handleGeo = new THREE.CylinderGeometry(0.15, 0.15, 1.2);
 
             function createRodRow(x, teamColor, count) {
                 const rodGroup = new THREE.Group();
                 rodGroup.position.set(x, 1.5, 0);
                 
-                // The Metal Rod
                 const rodMesh = new THREE.Mesh(rodGeo, metalMat);
                 rodMesh.rotation.x = Math.PI/2;
                 rodMesh.castShadow = true;
                 rodGroup.add(rodMesh);
 
-                // Handles (Visual detail)
+                // Add handle to the correct side
                 const handle = new THREE.Mesh(handleGeo, handleMat);
                 handle.rotation.x = Math.PI/2;
-                // Alternate handle side based on team/rod
-                handle.position.z = (teamColor === 'red' ? 6.2 : -6.2);
+                // Alternate sides for realism (Red attacks right, Blue attacks left usually, but simplistic here)
+                // Let's alternate: Odd rows Left, Even rows Right
+                const handleZ = (activeRods.length % 2 === 0) ? 6.8 : -6.8;
+                handle.position.z = handleZ;
                 rodGroup.add(handle);
 
-                // Players
                 const spacing = 8 / (count + 1);
                 for(let i=1; i<=count; i++) {
                     const z = -4 + (i * spacing);
@@ -414,11 +362,11 @@
                     playerGroup.position.z = z;
                     
                     const body = new THREE.Mesh(playerBodyGeo, teamColor === 'red' ? redTeamMat : blueTeamMat);
-                    body.position.y = -0.6; // Hang down
+                    body.position.y = -0.6; 
                     body.castShadow = true;
                     
                     const head = new THREE.Mesh(playerHeadGeo, skinMat);
-                    head.position.y = 0.3; // Above body
+                    head.position.y = 0.3; 
                     
                     playerGroup.add(body);
                     playerGroup.add(head);
@@ -426,26 +374,23 @@
                 }
                 tableGroup.add(rodGroup);
                 
-                // Animation data
                 activeRods.push({ 
                     mesh: rodGroup, 
                     initialX: x,
                     slideSpeed: Math.random() * 0.02 + 0.01,
                     slideOffset: Math.random() * 100,
-                    kickSpeed: Math.random() * 0.05,
                     team: teamColor
                 });
             }
 
-            // Setup Rows (Standard Foosball Config)
-            createRodRow(-6.5, 'red', 1);  // G
-            createRodRow(-4.5, 'red', 2);  // D
-            createRodRow(-2.5, 'blue', 3); // F
-            createRodRow(-0.5, 'red', 5);  // M
-            createRodRow(1.5, 'blue', 5);  // M
-            createRodRow(3.5, 'red', 3);   // F
-            createRodRow(5.5, 'blue', 2);  // D
-            createRodRow(7.5, 'blue', 1);  // G
+            createRodRow(-6.5, 'red', 1);
+            createRodRow(-4.5, 'red', 2);
+            createRodRow(-2.5, 'blue', 3);
+            createRodRow(-0.5, 'red', 5);
+            createRodRow(1.5, 'blue', 5);
+            createRodRow(3.5, 'red', 3);
+            createRodRow(5.5, 'blue', 2);
+            createRodRow(7.5, 'blue', 1);
 
             // 5. The Ball
             const ballGeo = new THREE.SphereGeometry(0.18, 16, 16);
@@ -455,9 +400,9 @@
             ball.castShadow = true;
             tableGroup.add(ball);
 
-            // Angle table for better view
-            tableGroup.rotation.x = 0.35;
-            tableGroup.rotation.y = 0.1;
+            // Orientation
+            tableGroup.rotation.x = 0.3; 
+            tableGroup.rotation.y = 0.2;
             scene.add(tableGroup);
 
 
@@ -494,26 +439,30 @@
                 const time = Date.now() * 0.001;
 
                 // 1. Table Parallax
-                tableGroup.rotation.y = 0.1 + (mouseX * 0.15);
-                tableGroup.rotation.x = 0.35 + (mouseY * 0.05);
+                tableGroup.rotation.y = 0.2 + (mouseX * 0.15);
+                tableGroup.rotation.x = 0.3 + (mouseY * 0.05);
 
                 // 2. Garland Sway
                 garlandGroup.rotation.z = Math.sin(time * 0.5) * 0.02;
 
                 // 3. Rods Animation
                 activeRods.forEach((rod) => {
-                    // Slide Z
-                    const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 0.5;
+                    // Slide Z (Range roughly -1.5 to 1.5)
+                    const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 1.2;
                     rod.mesh.position.z = slide;
 
-                    // Ball tracking (Simple AI)
-                    if (Math.abs(ball.position.x - rod.initialX) < 1.0) {
-                        // Kick if close
-                        rod.mesh.rotation.x += 0.2; 
-                        // Move slightly towards ball
-                        rod.mesh.position.z += (ball.position.z - rod.mesh.position.z) * 0.05;
+                    // Ball tracking/Kicking logic
+                    // If ball is near this rod's X
+                    if (Math.abs(ball.position.x - rod.initialX) < 0.8) {
+                        // Kick!
+                        rod.mesh.rotation.x += 0.3; 
+                        // Move slightly towards ball Z
+                        const targetZ = ball.position.z;
+                        if(targetZ > -3.5 && targetZ < 3.5) {
+                             rod.mesh.position.z += (targetZ - rod.mesh.position.z) * 0.1;
+                        }
                     } else {
-                        // Reset kick
+                        // Reset to flat
                         rod.mesh.rotation.x += (Math.PI/2 - rod.mesh.rotation.x) * 0.1;
                     }
                 });
@@ -524,18 +473,17 @@
                 // Walls
                 if(ball.position.x > 7.5 || ball.position.x < -7.5) {
                     ballVelocity.x *= -1;
-                    ballVelocity.z += (Math.random() - 0.5) * 0.02; // Randomize bounce
+                    ballVelocity.z += (Math.random() - 0.5) * 0.05; 
                 }
                 if(ball.position.z > 4.5 || ball.position.z < -4.5) {
                     ballVelocity.z *= -1;
                 }
-                // Random speed change
-                if(Math.random() > 0.98) {
+                if(Math.random() > 0.99) { // Random speed change
                     ballVelocity.x *= 1.1; ballVelocity.z *= 1.1;
                 }
-                ballVelocity.clampLength(0.05, 0.18);
+                ballVelocity.clampLength(0.06, 0.2);
 
-                // 5. Snow
+                // 5. Snow Update
                 const snowPositions = snowMesh.geometry.attributes.position.array;
                 for(let i=1; i<snowCount*3; i+=3) {
                     snowPositions[i] -= 0.05; if(snowPositions[i] < -25) snowPositions[i] = 25;
@@ -568,7 +516,7 @@
             });
         }
 
-        // --- APP LOGIC ---
+        // --- APP LOGIC (Standard) ---
         const funnyNames = ["Részeg Rénszarvasok", "Beigli Betyárok", "Grincs Gárdája", "Forralt Bor FC", "Hólapátolók", "Kevinék", "Reszkessetek", "Jéghercegnők", "Krampusz United", "Diós Bejgli"];
         let state = { teams: [], matches: [], rules: ["Nincs döntetlen (10 gólig tart a meccs).", "A pörgetés tilos.", "Fair play mindenek felett.", "Gól után középkezdés."], generated: false };
 
