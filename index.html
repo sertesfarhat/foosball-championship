@@ -65,9 +65,14 @@
 
     .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.6); }
     .fade-in { animation: fadeIn 0.8s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     section { scroll-margin-top: 150px; }
+    main { padding-top: 8rem; }
+    #welcome { margin-top: 2rem; }
 
     .glass-panel {
       background: rgba(15, 23, 42, 0.85);
@@ -75,11 +80,8 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    main { padding-top: 8rem; }
-    #welcome { margin-top: 2rem; }
-
     /* =========================
-       COOL MATCH CARDS
+       MATCH CARDS (cool list)
        ========================= */
     .match-card{
       background: linear-gradient(180deg, rgba(2,6,23,.88), rgba(15,23,42,.78));
@@ -93,18 +95,19 @@
     .match-card:before{
       content:"";
       position:absolute; inset:-2px;
-      background: radial-gradient(circle at 30% 20%, rgba(250,204,21,.22), transparent 45%),
-                  radial-gradient(circle at 80% 70%, rgba(238,62,56,.18), transparent 50%);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(250,204,21,.18), transparent 45%),
+        radial-gradient(circle at 80% 70%, rgba(238,62,56,.14), transparent 55%);
       pointer-events:none;
     }
     .match-card:hover{
-      border-color: rgba(250,204,21,.28);
+      border-color: rgba(250,204,21,.26);
       box-shadow: 0 26px 80px rgba(0,0,0,.55);
       transform: translateY(-2px);
     }
 
     .team-chip{
-      background: rgba(0,0,0,.35);
+      background: rgba(0,0,0,.32);
       border: 1px solid rgba(255,255,255,.12);
       padding: 10px 14px;
       border-radius: 14px;
@@ -117,25 +120,27 @@
       border: 1px solid rgba(255,255,255,.14);
       border-radius: 999px;
       padding: 6px 12px;
-      letter-spacing: .2em;
+      letter-spacing: .18em;
       text-transform: uppercase;
       font-weight: 900;
       font-size: 11px;
       position: relative;
       z-index: 1;
+      white-space: nowrap;
     }
 
     .score-badge{
       background: rgba(0,0,0,.62);
-      border: 1px solid rgba(250,204,21,.28);
+      border: 1px solid rgba(250,204,21,.26);
       border-radius: 14px;
       padding: 8px 14px;
       font-weight: 900;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
       position: relative;
       z-index: 1;
-      min-width: 88px;
+      min-width: 94px;
       text-align: center;
+      white-space: nowrap;
     }
 
     .status-tag{
@@ -150,15 +155,97 @@
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.35);
       z-index: 2;
+      white-space: nowrap;
     }
     .status-upnext{ border-color: rgba(250,204,21,.25); color: #facc15; }
     .status-played{ border-color: rgba(255,255,255,.10); color: rgba(255,255,255,.55); }
 
     .subline{
       font-size: 11px;
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.58);
       margin-top: 4px;
-      letter-spacing: .06em;
+      letter-spacing: .05em;
+    }
+
+    /* =========================
+       NEXT MATCH "SCOREBOARD PLATE"
+       ========================= */
+    .next-card{
+      background: linear-gradient(180deg, rgba(2,6,23,.72), rgba(15,23,42,.55));
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 24px 80px rgba(0,0,0,.60);
+      backdrop-filter: blur(18px);
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .next-card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(circle at 25% 15%, rgba(250,204,21,.20), transparent 48%),
+        radial-gradient(circle at 80% 80%, rgba(238,62,56,.12), transparent 55%);
+      pointer-events:none;
+    }
+    .next-card:after{
+      content:"";
+      position:absolute;
+      left:-30%; top:-60%;
+      width:160%; height:120%;
+      background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.07) 45%, transparent 55%);
+      transform: rotate(8deg);
+      pointer-events:none;
+      opacity:.65;
+    }
+    .next-side{
+      background: rgba(0,0,0,.28);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 12px 14px;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .next-accent-left{ box-shadow: inset 4px 0 0 rgba(238,62,56,.95); }
+    .next-accent-right{ box-shadow: inset -4px 0 0 rgba(59,130,246,.90); }
+
+    .next-label{
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      margin-bottom: 6px;
+    }
+
+    .next-team{
+      font-weight: 900;
+      font-size: 18px;
+      color: #fff;
+      line-height: 1.05;
+    }
+
+    .next-players{
+      font-size: 11px;
+      color: rgba(255,255,255,.62);
+      margin-top: 6px;
+      letter-spacing: .05em;
+    }
+
+    .vs-coin{
+      background: rgba(0,0,0,.52);
+      border: 1px solid rgba(250,204,21,.38);
+      color: #facc15;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-size: 11px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+      position: relative;
+      z-index: 2;
+      white-space: nowrap;
     }
 
     /* Standings readability */
@@ -211,11 +298,12 @@
         </button>
       </div>
 
-      <div class="mt-16 fade-in z-20" style="animation-delay: 0.4s;">
+      <div class="mt-16 fade-in z-20 w-full max-w-3xl" style="animation-delay: 0.4s;">
         <p class="text-gray-400 text-xs uppercase tracking-widest mb-2 font-bold shadow-black drop-shadow-md">Következő Mérkőzés</p>
-        <div id="next-match-display"
-          class="text-white bg-black/80 px-6 py-3 rounded border border-gray-700 backdrop-blur-md shadow-lg text-left min-w-[320px]">
-          Jelenleg nincs aktív meccs
+
+        <!-- SCOREBOARD PLATE -->
+        <div id="next-match-display" class="next-card p-4 md:p-5 text-left">
+          <div class="text-center text-gray-300 font-bold">Jelenleg nincs aktív meccs</div>
         </div>
       </div>
     </section>
@@ -296,7 +384,6 @@
       </div>
 
       <div id="admin-dashboard-view" class="hidden space-y-8">
-
         <!-- Seeded pairing -->
         <div class="bg-black/30 p-4 rounded border border-gray-800">
           <h3 class="text-white font-bold mb-3">1. Párosítás (6 fix + 6 partner)</h3>
@@ -322,7 +409,7 @@
             <h3 class="text-white font-bold">2. Eredmények</h3>
             <span class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Csoport: 5 • Döntő/Bronz: 10</span>
           </div>
-          <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+          <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
           <p class="text-xs text-gray-500 mt-2">Tipp: ha döntetlent írsz be, nem engedi menteni (nincs döntetlen).</p>
         </div>
 
@@ -364,14 +451,12 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.shadowMap.enabled = true;
 
-      // nicer tonemapping
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.08;
 
       container.appendChild(renderer.domElement);
 
-      // Lights
       scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 
       const mainSpot = new THREE.SpotLight(0xffffff, 1.35);
@@ -393,7 +478,6 @@
       goldLight.position.set(10, 8, 2);
       scene.add(goldLight);
 
-      // Pine texture (garland)
       function createPineTexture() {
         const size = 128;
         const canvas = document.createElement('canvas');
@@ -417,7 +501,6 @@
       }
       const pineTexture = createPineTexture();
 
-      // Garland
       const garlandGroup = new THREE.Group();
       function createFluffyGarland() {
         const curve = new THREE.CatmullRomCurve3([
@@ -469,16 +552,13 @@
       createFluffyGarland();
       scene.add(garlandGroup);
 
-      // =========================
-      // BETTER LOOKING FOOSBALL TABLE
-      // =========================
+      // ===== Better field texture =====
       function createIceTexture() {
         const w = 512, h = 512;
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
         const ctx = c.getContext('2d');
 
-        // base gradient
         const g = ctx.createLinearGradient(0, 0, w, h);
         g.addColorStop(0, '#bfe9ff');
         g.addColorStop(0.5, '#9fd9f7');
@@ -486,7 +566,6 @@
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, w, h);
 
-        // subtle noise / scratches
         ctx.globalAlpha = 0.12;
         for (let i=0; i<1200; i++) {
           const x = Math.random()*w, y = Math.random()*h;
@@ -501,7 +580,6 @@
         }
         ctx.globalAlpha = 1;
 
-        // rink lines
         ctx.globalAlpha = 0.65;
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 6;
@@ -529,20 +607,10 @@
 
       const tableGroup = new THREE.Group();
 
-      const woodMat = new THREE.MeshStandardMaterial({
-        color: 0xf3f3f3,
-        roughness: 0.34,
-        metalness: 0.05
-      });
-
-      const rimMat = new THREE.MeshStandardMaterial({
-        color: 0xe6e6e6,
-        roughness: 0.22,
-        metalness: 0.10
-      });
-
-      const iceTex = createIceTexture();
-      const fieldMat = new THREE.MeshStandardMaterial({
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0xf3f3f3, roughness: 0.34, metalness: 0.05 });
+      const rimMat  = new THREE.MeshStandardMaterial({ color: 0xe6e6e6, roughness: 0.22, metalness: 0.10 });
+      const iceTex  = createIceTexture();
+      const fieldMat= new THREE.MeshStandardMaterial({
         map: iceTex,
         roughness: 0.55,
         metalness: 0.02,
@@ -556,7 +624,6 @@
       const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
       const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
-      // outer walls
       const wallLongGeo = new THREE.BoxGeometry(16.2, 2.6, 0.85);
       const wallShortGeo = new THREE.BoxGeometry(0.85, 2.6, 10.9);
       const wN = new THREE.Mesh(wallLongGeo, woodMat); wN.position.set(0, 1.05, -5.15); wN.receiveShadow=true;
@@ -565,43 +632,31 @@
       const wW = new THREE.Mesh(wallShortGeo, woodMat); wW.position.set(-8.15,1.05, 0);  wW.receiveShadow=true;
       tableGroup.add(wN, wS, wE, wW);
 
-      // inner rim (gives depth + nicer frame)
       const rimLong = new THREE.Mesh(new THREE.BoxGeometry(15.6, 0.45, 0.35), rimMat);
       rimLong.position.set(0, 1.85, -4.75);
       rimLong.castShadow = true;
-      const rimLong2 = rimLong.clone();
-      rimLong2.position.z = 4.75;
+      const rimLong2 = rimLong.clone(); rimLong2.position.z = 4.75;
 
       const rimShort = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 9.6), rimMat);
       rimShort.position.set(7.75, 1.85, 0);
       rimShort.castShadow = true;
-      const rimShort2 = rimShort.clone();
-      rimShort2.position.x = -7.75;
+      const rimShort2 = rimShort.clone(); rimShort2.position.x = -7.75;
 
       tableGroup.add(rimLong, rimLong2, rimShort, rimShort2);
 
-      // play field
       const field = new THREE.Mesh(new THREE.BoxGeometry(15.3, 0.55, 9.3), fieldMat);
       field.receiveShadow = true;
       field.position.y = 0.1;
       tableGroup.add(field);
 
-      // glossy overlay plane for "ice shine"
       const shine = new THREE.Mesh(
         new THREE.PlaneGeometry(15.25, 9.25),
-        new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.08,
-          roughness: 0.08,
-          metalness: 0.02
-        })
+        new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.08, roughness: 0.08, metalness: 0.02 })
       );
       shine.rotation.x = -Math.PI/2;
       shine.position.y = 0.48;
       tableGroup.add(shine);
 
-      // center line + ring (lighter & cleaner)
       const centerLine = new THREE.Mesh(
         new THREE.PlaneGeometry(0.16, 9.3),
         new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.40, transparent:true})
@@ -618,22 +673,18 @@
       centerCircle.position.y = 0.50;
       tableGroup.add(centerCircle);
 
-      // fake goal holes (dark panels)
       const goalMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
       const goal1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 0.2), goalMat);
       goal1.position.set(0, 0.9, -5.42);
-      const goal2 = goal1.clone();
-      goal2.position.z = 5.42;
+      const goal2 = goal1.clone(); goal2.position.z = 5.42;
       tableGroup.add(goal1, goal2);
 
-      // legs
       const legGeo = new THREE.BoxGeometry(1.2, 7, 1.2);
       const l1=new THREE.Mesh(legGeo, woodMat); l1.position.set(7,-3.5,4);  tableGroup.add(l1);
       const l2=new THREE.Mesh(legGeo, woodMat); l2.position.set(7,-3.5,-4); tableGroup.add(l2);
       const l3=new THREE.Mesh(legGeo, woodMat); l3.position.set(-7,-3.5,4); tableGroup.add(l3);
       const l4=new THREE.Mesh(legGeo, woodMat); l4.position.set(-7,-3.5,-4);tableGroup.add(l4);
 
-      // rods + players
       const activeRods = [];
       const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 18);
       const playerBodyGeo = new THREE.BoxGeometry(0.6, 1.4, 0.4);
@@ -692,7 +743,6 @@
       createRodRow(5.5, 'blue', 2);
       createRodRow(7.5, 'blue', 1);
 
-      // ball
       const ball = new THREE.Mesh(
         new THREE.SphereGeometry(0.18,16,16),
         new THREE.MeshStandardMaterial({color:0xffffff, roughness: 0.25, metalness: 0.05})
@@ -728,7 +778,6 @@
       );
       scene.add(snowMesh);
 
-      // Animation
       let ballVelocity = new THREE.Vector3(0.08, 0, 0.05);
 
       function animate() {
@@ -786,9 +835,7 @@
       generated: false
     };
 
-    function getGoalLimit(match) {
-      return match.type === 'group' ? 5 : 10;
-    }
+    function getGoalLimit(match) { return match.type === 'group' ? 5 : 10; }
 
     window.onload = function() {
       initThreeJS();
@@ -827,7 +874,7 @@
       setTimeout(() => el.classList.add("opacity-0"), 1200);
     }
 
-    // NEW seeded pairing (6 + 6)
+    // Seeded pairing (6 + 6)
     function generateTournamentSeeded() {
       const seededRaw = document.getElementById('seeded-input').value.trim();
       const partnerRaw = document.getElementById('partner-input').value.trim();
@@ -946,7 +993,7 @@
         `;
       });
 
-      // Next match display (NOW includes TEAM NAMES + MEMBERS)
+      // NEXT MATCH (scoreboard plate)
       const nextMatch = state.matches.find(m => m.status === 'scheduled' && m.t1 && m.t2);
       const nextBox = document.getElementById('next-match-display');
 
@@ -956,27 +1003,29 @@
         const limit = getGoalLimit(nextMatch);
 
         nextBox.innerHTML = `
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <div class="text-lg font-extrabold text-white">${t1?.name || ''}</div>
-              <div class="text-xs text-gray-300">${t1?.members ? t1.members.join(' & ') : ''}</div>
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 md:gap-4 items-center">
+            <div class="next-side next-accent-left">
+              <div class="next-label">Hazai</div>
+              <div class="next-team">${t1?.name || ''}</div>
+              <div class="next-players">${t1?.members ? t1.members.join(' & ') : ''}</div>
             </div>
 
-            <div class="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs uppercase tracking-widest font-black text-brand-gold">
-              VS • ${limit}
+            <div class="flex items-center justify-center">
+              <div class="vs-coin">VS • ${limit}</div>
             </div>
 
-            <div class="text-right">
-              <div class="text-lg font-extrabold text-white">${t2?.name || ''}</div>
-              <div class="text-xs text-gray-300">${t2?.members ? t2.members.join(' & ') : ''}</div>
+            <div class="next-side next-accent-right text-right">
+              <div class="next-label">Vendég</div>
+              <div class="next-team">${t2?.name || ''}</div>
+              <div class="next-players">${t2?.members ? t2.members.join(' & ') : ''}</div>
             </div>
           </div>
         `;
       } else {
-        nextBox.innerHTML = "Nincs aktív meccs / Vége";
+        nextBox.innerHTML = `<div class="text-center text-gray-300 font-bold">Nincs aktív meccs / Vége</div>`;
       }
 
-      // Matches rendering (cards)
+      // Matches
       const mList = document.getElementById('matches-list');
       const fList = document.getElementById('finals-container');
       mList.innerHTML = '';
@@ -985,7 +1034,6 @@
       const groups = state.matches.filter(m => m.type === 'group');
       const finals = state.matches.filter(m => m.type !== 'group');
 
-      // Group cards (NOW includes team member names)
       groups.forEach(m => {
         const t1 = state.teams.find(t=>t.id===m.t1);
         const t2 = state.teams.find(t=>t.id===m.t2);
@@ -1025,7 +1073,6 @@
         `;
       });
 
-      // Finals cards (limit 10)
       finals.sort((a,b) => b.type==='gold'?1:-1).forEach(m => {
         const t1 = state.teams.find(t=>t.id===m.t1);
         const t2 = state.teams.find(t=>t.id===m.t2);
@@ -1069,7 +1116,7 @@
         `;
       });
 
-      // Admin match list (NOW enforces 5/10 with max=...)
+      // Admin match list (enforce 5/10)
       const aList = document.getElementById('admin-match-list');
       aList.innerHTML = '';
       state.matches.forEach(m => {
@@ -1110,7 +1157,6 @@
 
       const limit = getGoalLimit(m);
 
-      // normalize
       if (v === "") {
         m[f] = null;
         m.status = 'scheduled';
@@ -1120,14 +1166,10 @@
 
       let val = parseInt(v);
       if (isNaN(val)) val = null;
-      if (val !== null) {
-        val = Math.max(0, Math.min(limit, val));
-      }
+      if (val !== null) val = Math.max(0, Math.min(limit, val));
 
-      // apply
       m[f] = val;
 
-      // no draw rule (if both set and equal)
       if (m.s1 !== null && m.s2 !== null && m.s1 === m.s2) {
         alert("Nincs döntetlen! Kérlek állíts be győztest.");
         m[f] = null;
@@ -1136,7 +1178,6 @@
         return;
       }
 
-      // mark played only when both present
       m.status = (m.s1!==null && m.s2!==null) ? 'played' : 'scheduled';
       saveData();
     }
