@@ -9,7 +9,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Berkshire+Swash&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet" />
@@ -80,7 +79,7 @@
     #welcome { margin-top: 2rem; }
 
     /* =========================
-       COOL MATCH CARDS (NEW)
+       COOL MATCH CARDS
        ========================= */
     .match-card{
       background: linear-gradient(180deg, rgba(2,6,23,.88), rgba(15,23,42,.78));
@@ -135,6 +134,8 @@
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
       position: relative;
       z-index: 1;
+      min-width: 88px;
+      text-align: center;
     }
 
     .status-tag{
@@ -153,7 +154,14 @@
     .status-upnext{ border-color: rgba(250,204,21,.25); color: #facc15; }
     .status-played{ border-color: rgba(255,255,255,.10); color: rgba(255,255,255,.55); }
 
-    /* Standings zebra + hover (optional but helps) */
+    .subline{
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 4px;
+      letter-spacing: .06em;
+    }
+
+    /* Standings readability */
     #standings-body tr:nth-child(odd)  { background: rgba(255,255,255,0.03); }
     #standings-body tr:nth-child(even) { background: rgba(0,0,0,0.18); }
     #standings-body tr:hover           { background: rgba(255,255,255,0.08); }
@@ -206,7 +214,7 @@
       <div class="mt-16 fade-in z-20" style="animation-delay: 0.4s;">
         <p class="text-gray-400 text-xs uppercase tracking-widest mb-2 font-bold shadow-black drop-shadow-md">Következő Mérkőzés</p>
         <div id="next-match-display"
-          class="text-xl font-bold text-white bg-black/80 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg">
+          class="text-white bg-black/80 px-6 py-3 rounded border border-gray-700 backdrop-blur-md shadow-lg text-left min-w-[320px]">
           Jelenleg nincs aktív meccs
         </div>
       </div>
@@ -289,7 +297,7 @@
 
       <div id="admin-dashboard-view" class="hidden space-y-8">
 
-        <!-- NEW: Seeded pairing -->
+        <!-- Seeded pairing -->
         <div class="bg-black/30 p-4 rounded border border-gray-800">
           <h3 class="text-white font-bold mb-3">1. Párosítás (6 fix + 6 partner)</h3>
 
@@ -307,14 +315,15 @@
             class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold">
             Indítás
           </button>
-
-          <!-- Optional: keep your old random generator if you ever want it -->
-          <!-- <button onclick="generateTournament()" class="mt-2 bg-gray-800 hover:bg-gray-700 text-white w-full py-2 rounded text-sm font-bold">Régi random sorsolás</button> -->
         </div>
 
         <div class="bg-black/30 p-4 rounded border border-gray-800">
-          <h3 class="text-white font-bold mb-3">2. Eredmények</h3>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-white font-bold">2. Eredmények</h3>
+            <span class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Csoport: 5 • Döntő/Bronz: 10</span>
+          </div>
           <div id="admin-match-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+          <p class="text-xs text-gray-500 mt-2">Tipp: ha döntetlent írsz be, nem engedi menteni (nincs döntetlen).</p>
         </div>
 
         <div class="bg-black/30 p-4 rounded border border-gray-800">
@@ -344,45 +353,57 @@
     function initThreeJS() {
       const container = document.getElementById('canvas-container');
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x0f131a, 0.025);
+      scene.fog = new THREE.FogExp2(0x0f131a, 0.024);
 
       const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.set(0, 13, 20);
+      camera.position.set(0, 12.5, 20.5);
       camera.lookAt(0, 0, 0);
 
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.shadowMap.enabled = true;
+
+      // nicer tonemapping
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.08;
+
       container.appendChild(renderer.domElement);
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambientLight);
+      // Lights
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 
-      const mainSpot = new THREE.SpotLight(0xffffff, 1.3);
-      mainSpot.position.set(5, 25, 5);
+      const mainSpot = new THREE.SpotLight(0xffffff, 1.35);
+      mainSpot.position.set(6, 26, 6);
       mainSpot.castShadow = true;
       mainSpot.shadow.mapSize.width = 2048;
       mainSpot.shadow.mapSize.height = 2048;
       scene.add(mainSpot);
 
-      const redLight = new THREE.PointLight(0xee3e38, 0.6, 25);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.35);
+      fill.position.set(-8, 10, -10);
+      scene.add(fill);
+
+      const redLight = new THREE.PointLight(0xee3e38, 0.55, 28);
       redLight.position.set(-10, 8, 2);
       scene.add(redLight);
 
-      const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25);
+      const goldLight = new THREE.PointLight(0xfacc15, 0.55, 28);
       goldLight.position.set(10, 8, 2);
       scene.add(goldLight);
 
+      // Pine texture (garland)
       function createPineTexture() {
         const size = 128;
         const canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
-        const cx = size/2; const cy = size/2;
+        const cx = size/2, cy = size/2;
         ctx.strokeStyle = '#166534';
         ctx.lineWidth = 2;
+
         for (let i=0; i<60; i++) {
           const angle = Math.random() * Math.PI * 2;
           const length = Math.random() * (size/2 - 5);
@@ -396,6 +417,7 @@
       }
       const pineTexture = createPineTexture();
 
+      // Garland
       const garlandGroup = new THREE.Group();
       function createFluffyGarland() {
         const curve = new THREE.CatmullRomCurve3([
@@ -409,19 +431,18 @@
         const particleCount = 2000;
         const geo = new THREE.BufferGeometry();
         const positions = [];
-
         for (let i=0; i<particleCount; i++) {
           const t = i / particleCount;
-          const point = curve.getPoint(t);
+          const p = curve.getPoint(t);
           positions.push(
-            point.x + (Math.random()-0.5)*2.5,
-            point.y + (Math.random()-0.5)*2.5,
-            point.z + (Math.random()-0.5)*2.5
+            p.x + (Math.random()-0.5)*2.6,
+            p.y + (Math.random()-0.5)*2.2,
+            p.z + (Math.random()-0.5)*2.2
           );
         }
         geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         const mat = new THREE.PointsMaterial({
-          size: 2.5,
+          size: 2.4,
           map: pineTexture,
           transparent: true,
           opacity: 0.95,
@@ -433,66 +454,186 @@
         garlandMesh.frustumCulled = false;
         garlandGroup.add(garlandMesh);
 
-        const ballGeo = new THREE.SphereGeometry(0.4, 16, 16);
-        const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.7, roughness: 0.2 });
-        const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.2 });
+        const ballGeo = new THREE.SphereGeometry(0.42, 16, 16);
+        const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.75, roughness: 0.22 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.82, roughness: 0.20 });
 
-        for (let i=0; i<40; i++) {
+        for (let i=0; i<34; i++) {
           const t = Math.random();
-          const point = curve.getPoint(t);
+          const p = curve.getPoint(t);
           const ball = new THREE.Mesh(ballGeo, i%2===0 ? redMat : goldMat);
-          ball.position.set(point.x+(Math.random()-0.5), point.y-1.0, point.z+0.5);
+          ball.position.set(p.x+(Math.random()-0.5)*0.8, p.y-1.05, p.z+0.6);
           garlandGroup.add(ball);
         }
       }
       createFluffyGarland();
       scene.add(garlandGroup);
 
+      // =========================
+      // BETTER LOOKING FOOSBALL TABLE
+      // =========================
+      function createIceTexture() {
+        const w = 512, h = 512;
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+
+        // base gradient
+        const g = ctx.createLinearGradient(0, 0, w, h);
+        g.addColorStop(0, '#bfe9ff');
+        g.addColorStop(0.5, '#9fd9f7');
+        g.addColorStop(1, '#7fc7ee');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        // subtle noise / scratches
+        ctx.globalAlpha = 0.12;
+        for (let i=0; i<1200; i++) {
+          const x = Math.random()*w, y = Math.random()*h;
+          const len = 10 + Math.random()*60;
+          const ang = (Math.random()*Math.PI);
+          ctx.strokeStyle = Math.random() > 0.5 ? '#ffffff' : '#d9f3ff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + Math.cos(ang)*len, y + Math.sin(ang)*len);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // rink lines
+        ctx.globalAlpha = 0.65;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(40, 40, w-80, h-80);
+
+        ctx.globalAlpha = 0.50;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(w/2, 40);
+        ctx.lineTo(w/2, h-40);
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.60;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, 80, 0, Math.PI*2);
+        ctx.stroke();
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(1, 1);
+        tex.anisotropy = 8;
+        return tex;
+      }
+
       const tableGroup = new THREE.Group();
 
-      const woodMat = new THREE.MeshStandardMaterial({ color: 0xe3e3e3, roughness: 0.4 });
-      const fieldMat = new THREE.MeshStandardMaterial({ color: 0x88ccee, roughness: 0.7 });
-      const metalMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.1 });
+      const woodMat = new THREE.MeshStandardMaterial({
+        color: 0xf3f3f3,
+        roughness: 0.34,
+        metalness: 0.05
+      });
+
+      const rimMat = new THREE.MeshStandardMaterial({
+        color: 0xe6e6e6,
+        roughness: 0.22,
+        metalness: 0.10
+      });
+
+      const iceTex = createIceTexture();
+      const fieldMat = new THREE.MeshStandardMaterial({
+        map: iceTex,
+        roughness: 0.55,
+        metalness: 0.02,
+        emissive: new THREE.Color(0x0b1b2a),
+        emissiveIntensity: 0.12
+      });
+
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.12 });
       const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
       const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
       const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
       const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
-      const wallLongGeo = new THREE.BoxGeometry(16, 2.5, 0.8);
-      const wallShortGeo = new THREE.BoxGeometry(0.8, 2.5, 10.6);
-
-      const wN = new THREE.Mesh(wallLongGeo, woodMat); wN.position.set(0, 1, -5); wN.receiveShadow=true;
-      const wS = new THREE.Mesh(wallLongGeo, woodMat); wS.position.set(0, 1, 5);  wS.receiveShadow=true;
-      const wE = new THREE.Mesh(wallShortGeo, woodMat); wE.position.set(8, 1, 0);  wE.receiveShadow=true;
-      const wW = new THREE.Mesh(wallShortGeo, woodMat); wW.position.set(-8, 1, 0); wW.receiveShadow=true;
+      // outer walls
+      const wallLongGeo = new THREE.BoxGeometry(16.2, 2.6, 0.85);
+      const wallShortGeo = new THREE.BoxGeometry(0.85, 2.6, 10.9);
+      const wN = new THREE.Mesh(wallLongGeo, woodMat); wN.position.set(0, 1.05, -5.15); wN.receiveShadow=true;
+      const wS = new THREE.Mesh(wallLongGeo, woodMat); wS.position.set(0, 1.05,  5.15); wS.receiveShadow=true;
+      const wE = new THREE.Mesh(wallShortGeo, woodMat); wE.position.set(8.15, 1.05, 0);  wE.receiveShadow=true;
+      const wW = new THREE.Mesh(wallShortGeo, woodMat); wW.position.set(-8.15,1.05, 0);  wW.receiveShadow=true;
       tableGroup.add(wN, wS, wE, wW);
 
-      const field = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.5, 9.5), fieldMat);
+      // inner rim (gives depth + nicer frame)
+      const rimLong = new THREE.Mesh(new THREE.BoxGeometry(15.6, 0.45, 0.35), rimMat);
+      rimLong.position.set(0, 1.85, -4.75);
+      rimLong.castShadow = true;
+      const rimLong2 = rimLong.clone();
+      rimLong2.position.z = 4.75;
+
+      const rimShort = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 9.6), rimMat);
+      rimShort.position.set(7.75, 1.85, 0);
+      rimShort.castShadow = true;
+      const rimShort2 = rimShort.clone();
+      rimShort2.position.x = -7.75;
+
+      tableGroup.add(rimLong, rimLong2, rimShort, rimShort2);
+
+      // play field
+      const field = new THREE.Mesh(new THREE.BoxGeometry(15.3, 0.55, 9.3), fieldMat);
       field.receiveShadow = true;
+      field.position.y = 0.1;
       tableGroup.add(field);
 
+      // glossy overlay plane for "ice shine"
+      const shine = new THREE.Mesh(
+        new THREE.PlaneGeometry(15.25, 9.25),
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.08,
+          roughness: 0.08,
+          metalness: 0.02
+        })
+      );
+      shine.rotation.x = -Math.PI/2;
+      shine.position.y = 0.48;
+      tableGroup.add(shine);
+
+      // center line + ring (lighter & cleaner)
       const centerLine = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.15, 9.5),
-        new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.6, transparent:true})
+        new THREE.PlaneGeometry(0.16, 9.3),
+        new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.40, transparent:true})
       );
       centerLine.rotation.x = -Math.PI/2;
-      centerLine.position.y = 0.26;
+      centerLine.position.y = 0.50;
       tableGroup.add(centerLine);
 
       const centerCircle = new THREE.Mesh(
-        new THREE.RingGeometry(1.5, 1.65, 32),
-        new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.6, transparent:true})
+        new THREE.RingGeometry(1.5, 1.68, 48),
+        new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.40, transparent:true})
       );
       centerCircle.rotation.x = -Math.PI/2;
-      centerCircle.position.y = 0.26;
+      centerCircle.position.y = 0.50;
       tableGroup.add(centerCircle);
 
+      // fake goal holes (dark panels)
+      const goalMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
+      const goal1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 0.2), goalMat);
+      goal1.position.set(0, 0.9, -5.42);
+      const goal2 = goal1.clone();
+      goal2.position.z = 5.42;
+      tableGroup.add(goal1, goal2);
+
+      // legs
       const legGeo = new THREE.BoxGeometry(1.2, 7, 1.2);
       const l1=new THREE.Mesh(legGeo, woodMat); l1.position.set(7,-3.5,4);  tableGroup.add(l1);
       const l2=new THREE.Mesh(legGeo, woodMat); l2.position.set(7,-3.5,-4); tableGroup.add(l2);
       const l3=new THREE.Mesh(legGeo, woodMat); l3.position.set(-7,-3.5,4); tableGroup.add(l3);
       const l4=new THREE.Mesh(legGeo, woodMat); l4.position.set(-7,-3.5,-4);tableGroup.add(l4);
 
+      // rods + players
       const activeRods = [];
       const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 18);
       const playerBodyGeo = new THREE.BoxGeometry(0.6, 1.4, 0.4);
@@ -501,7 +642,7 @@
 
       function createRodRow(x, team, count) {
         const slideGroup = new THREE.Group();
-        slideGroup.position.set(x, 1.5, 0);
+        slideGroup.position.set(x, 1.55, 0);
         const rotateGroup = new THREE.Group();
         slideGroup.add(rotateGroup);
 
@@ -536,7 +677,7 @@
         tableGroup.add(slideGroup);
         activeRods.push({
           slideGroup, rotateGroup,
-          initialX: x, team,
+          initialX: x,
           slideOffset: Math.random()*100,
           slideSpeed: Math.random()*0.01+0.005
         });
@@ -551,20 +692,21 @@
       createRodRow(5.5, 'blue', 2);
       createRodRow(7.5, 'blue', 1);
 
+      // ball
       const ball = new THREE.Mesh(
         new THREE.SphereGeometry(0.18,16,16),
-        new THREE.MeshStandardMaterial({color:0xffffff})
+        new THREE.MeshStandardMaterial({color:0xffffff, roughness: 0.25, metalness: 0.05})
       );
-      ball.position.set(0, 0.45, 0);
+      ball.position.set(0, 0.62, 0);
       ball.castShadow = true;
       tableGroup.add(ball);
 
-      tableGroup.rotation.x = 0.35;
-      tableGroup.rotation.y = 0;
+      tableGroup.rotation.x = 0.33;
       scene.add(tableGroup);
 
+      // Snow
       const sGeo = new THREE.BufferGeometry();
-      const sCount = 1000;
+      const sCount = 1100;
       const sPos = new Float32Array(sCount * 3);
       for (let i=0; i<sCount*3; i++) sPos[i] = (Math.random() - 0.5) * 60;
       sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
@@ -582,10 +724,11 @@
 
       const snowMesh = new THREE.Points(
         sGeo,
-        new THREE.PointsMaterial({ size: 0.2, map: createSnowTex(), transparent: true, opacity: 0.8, depthWrite: false })
+        new THREE.PointsMaterial({ size: 0.2, map: createSnowTex(), transparent: true, opacity: 0.82, depthWrite: false })
       );
       scene.add(snowMesh);
 
+      // Animation
       let ballVelocity = new THREE.Vector3(0.08, 0, 0.05);
 
       function animate() {
@@ -604,7 +747,7 @@
         ball.position.add(ballVelocity);
         if (ball.position.x > 7.5 || ball.position.x < -7.5) { ballVelocity.x *= -1; ballVelocity.z += (Math.random()-0.5)*0.05; }
         if (ball.position.z > 4.5 || ball.position.z < -4.5) ballVelocity.z *= -1;
-        if (Math.random() > 0.99) { ballVelocity.x *= 1.1; ballVelocity.z *= 1.1; }
+        if (Math.random() > 0.992) { ballVelocity.x *= 1.06; ballVelocity.z *= 1.06; }
         ballVelocity.clampLength(0.06, 0.2);
 
         const pos = snowMesh.geometry.attributes.position.array;
@@ -633,9 +776,19 @@
     let state = {
       teams: [],
       matches: [],
-      rules: ["Nincs döntetlen (10 gólig tart a meccs).", "A pörgetés tilos.", "Fair play mindenek felett.", "Gól után középkezdés."],
+      rules: [
+        "Csoportkör: 5 gólig (nincs döntetlen).",
+        "Bronzmeccs és döntő: 10 gólig (nincs döntetlen).",
+        "A pörgetés tilos.",
+        "Fair play mindenek felett.",
+        "Gól után középkezdés."
+      ],
       generated: false
     };
+
+    function getGoalLimit(match) {
+      return match.type === 'group' ? 5 : 10;
+    }
 
     window.onload = function() {
       initThreeJS();
@@ -674,38 +827,6 @@
       setTimeout(() => el.classList.add("opacity-0"), 1200);
     }
 
-    // Old random generator kept (optional)
-    function generateTournament() {
-      const raw = prompt("Régi random sorsolás: adj meg neveket soronként:");
-      if (!raw) return;
-      let players = raw.split('\n').filter(n => n.trim().length > 0);
-      for (let i = players.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [players[i], players[j]] = [players[j], players[i]];
-      }
-      const teams = [];
-      const shuffledNames = [...funnyNames].sort(() => 0.5 - Math.random());
-      let pIndex = 0, teamId = 1;
-      while (pIndex < players.length) {
-        let name = shuffledNames[teamId - 1] || `Csapat ${teamId}`;
-        let members = (players.length - pIndex === 1) ? [players[pIndex], "VÁRAKOZÓ"] : [players[pIndex], players[pIndex+1]];
-        teams.push({ id: teamId++, name, members, stats: { played:0, w:0, l:0, pts:0, gf:0, ga:0 }});
-        pIndex += (players.length - pIndex === 1) ? 1 : 2;
-      }
-      let matches = [], matchId = 1;
-      for (let i=0; i<teams.length; i++) {
-        for (let j=i+1; j<teams.length; j++) {
-          matches.push({ id: matchId++, t1: teams[i].id, t2: teams[j].id, s1:null, s2:null, status:'scheduled', type:'group' });
-        }
-      }
-      matches.sort(() => 0.5 - Math.random());
-      matches.push({ id: 998, t1:null, t2:null, s1:null, s2:null, status:'scheduled', type:'bronze', label:'Bronzmeccs' });
-      matches.push({ id: 999, t1:null, t2:null, s1:null, s2:null, status:'scheduled', type:'gold', label:'DÖNTŐ' });
-      state.teams = teams;
-      state.matches = matches;
-      saveData();
-    }
-
     // NEW seeded pairing (6 + 6)
     function generateTournamentSeeded() {
       const seededRaw = document.getElementById('seeded-input').value.trim();
@@ -720,7 +841,6 @@
         return alert(`Pontosan 6-6 név kell.\nMost: fix=${seeded.length}, partner=${partners.length}`);
       }
 
-      // shuffle ONLY partners
       for (let i = partners.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [partners[i], partners[j]] = [partners[j], partners[i]];
@@ -756,6 +876,7 @@
 
     function calculateStandings() {
       state.teams.forEach(t => t.stats = { played:0, w:0, l:0, pts:0, gf:0, ga:0 });
+
       const groups = state.matches.filter(m => m.type === 'group');
       let allPlayed = groups.length > 0;
 
@@ -825,15 +946,37 @@
         `;
       });
 
-      // Next match
+      // Next match display (NOW includes TEAM NAMES + MEMBERS)
       const nextMatch = state.matches.find(m => m.status === 'scheduled' && m.t1 && m.t2);
-      document.getElementById('next-match-display').innerHTML = nextMatch
-        ? `<span class="text-white">${state.teams.find(t=>t.id===nextMatch.t1)?.name || ''}</span>
-           <span class="text-brand-red mx-2">vs</span>
-           <span class="text-white">${state.teams.find(t=>t.id===nextMatch.t2)?.name || ''}</span>`
-        : "Nincs aktív meccs / Vége";
+      const nextBox = document.getElementById('next-match-display');
 
-      // Matches rendering (COOL CARDS)
+      if (nextMatch) {
+        const t1 = state.teams.find(t=>t.id===nextMatch.t1);
+        const t2 = state.teams.find(t=>t.id===nextMatch.t2);
+        const limit = getGoalLimit(nextMatch);
+
+        nextBox.innerHTML = `
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="text-lg font-extrabold text-white">${t1?.name || ''}</div>
+              <div class="text-xs text-gray-300">${t1?.members ? t1.members.join(' & ') : ''}</div>
+            </div>
+
+            <div class="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs uppercase tracking-widest font-black text-brand-gold">
+              VS • ${limit}
+            </div>
+
+            <div class="text-right">
+              <div class="text-lg font-extrabold text-white">${t2?.name || ''}</div>
+              <div class="text-xs text-gray-300">${t2?.members ? t2.members.join(' & ') : ''}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        nextBox.innerHTML = "Nincs aktív meccs / Vége";
+      }
+
+      // Matches rendering (cards)
       const mList = document.getElementById('matches-list');
       const fList = document.getElementById('finals-container');
       mList.innerHTML = '';
@@ -842,56 +985,70 @@
       const groups = state.matches.filter(m => m.type === 'group');
       const finals = state.matches.filter(m => m.type !== 'group');
 
-      // Group cards
+      // Group cards (NOW includes team member names)
       groups.forEach(m => {
         const t1 = state.teams.find(t=>t.id===m.t1);
         const t2 = state.teams.find(t=>t.id===m.t2);
         if(!t1 || !t2) return;
 
         const isPlayed = m.status === 'played';
+        const limit = getGoalLimit(m);
+
         const statusTag = isPlayed
           ? `<div class="status-tag status-played">PLAYED</div>`
-          : `<div class="status-tag status-upnext">UP NEXT</div>`;
+          : `<div class="status-tag status-upnext">UP NEXT • ${limit}</div>`;
 
         const midBadge = isPlayed
           ? `<div class="score-badge text-brand-gold text-xl">${m.s1} : ${m.s2}</div>`
-          : `<div class="vs-badge text-gray-200">VS</div>`;
+          : `<div class="vs-badge text-gray-200">VS • ${limit}</div>`;
 
         mList.innerHTML += `
           <div class="match-card rounded-2xl p-5 flex items-center gap-4 md:gap-6">
             ${statusTag}
+
             <div class="flex-1 team-chip">
               <div class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-1">Hazai</div>
               <div class="text-white font-extrabold text-lg leading-tight">${t1.name}</div>
+              <div class="subline">${t1.members ? t1.members.join(' & ') : ''}</div>
             </div>
 
-            <div class="flex items-center justify-center min-w-[110px]">
+            <div class="flex items-center justify-center min-w-[120px]">
               ${midBadge}
             </div>
 
             <div class="flex-1 team-chip text-right">
               <div class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-1">Vendég</div>
               <div class="text-white font-extrabold text-lg leading-tight">${t2.name}</div>
+              <div class="subline">${t2.members ? t2.members.join(' & ') : ''}</div>
             </div>
           </div>
         `;
       });
 
-      // Finals (keep your previous simple cards)
+      // Finals cards (limit 10)
       finals.sort((a,b) => b.type==='gold'?1:-1).forEach(m => {
         const t1 = state.teams.find(t=>t.id===m.t1);
         const t2 = state.teams.find(t=>t.id===m.t2);
         const borderColor = m.type==='gold' ? 'border-brand-gold' : 'border-orange-700';
+        const limit = getGoalLimit(m); // 10
 
         let content;
         if (t1 && t2) {
           content = `
-            <div class="flex justify-between items-center mt-2">
-              <span class="font-bold text-white text-lg">${t1.name}</span>
+            <div class="flex justify-between items-center mt-2 gap-3">
+              <div class="text-left">
+                <div class="font-bold text-white text-lg">${t1.name}</div>
+                <div class="subline">${t1.members ? t1.members.join(' & ') : ''}</div>
+              </div>
+
               ${m.status==='played'
                 ? `<span class="score-badge text-2xl text-brand-gold mx-2">${m.s1}-${m.s2}</span>`
-                : `<span class="vs-badge text-gray-200 mx-2">VS</span>`}
-              <span class="font-bold text-white text-lg">${t2.name}</span>
+                : `<span class="vs-badge text-gray-200 mx-2">VS • ${limit}</span>`}
+
+              <div class="text-right">
+                <div class="font-bold text-white text-lg">${t2.name}</div>
+                <div class="subline">${t2.members ? t2.members.join(' & ') : ''}</div>
+              </div>
             </div>`;
         } else {
           const label1 = m.type === 'gold' ? '1. Helyezett' : '3. Helyezett';
@@ -899,7 +1056,7 @@
           content = `
             <div class="flex justify-between items-center mt-2 opacity-60">
               <span class="font-bold text-gray-200">${label1}</span>
-              <span class="vs-badge text-gray-200 mx-2">VS</span>
+              <span class="vs-badge text-gray-200 mx-2">VS • ${limit}</span>
               <span class="font-bold text-gray-200">${label2}</span>
             </div>`;
         }
@@ -912,24 +1069,36 @@
         `;
       });
 
-      // Admin match list
+      // Admin match list (NOW enforces 5/10 with max=...)
       const aList = document.getElementById('admin-match-list');
       aList.innerHTML = '';
       state.matches.forEach(m => {
         const t1 = state.teams.find(t=>t.id===m.t1);
         const t2 = state.teams.find(t=>t.id===m.t2);
 
+        const limit = getGoalLimit(m);
         let name1 = t1 ? t1.name : (m.type==='group' ? '?' : (m.type==='gold'?'1. Hely':'3. Hely'));
         let name2 = t2 ? t2.name : (m.type==='group' ? '?' : (m.type==='gold'?'2. Hely':'4. Hely'));
 
         aList.innerHTML += `
           <div class="flex items-center gap-2 bg-gray-800 p-2 rounded text-xs mb-1">
-            <span class="w-6 text-gray-500">#${m.id}</span>
-            <span class="flex-1 text-right truncate text-gray-300">${name1}</span>
-            <input type="number" onchange="updateScore(${m.id},'s1',this.value)" value="${m.s1??''}" class="w-10 bg-black text-white text-center border border-gray-600 rounded">
-            <span>-</span>
-            <input type="number" onchange="updateScore(${m.id},'s2',this.value)" value="${m.s2??''}" class="w-10 bg-black text-white text-center border border-gray-600 rounded">
-            <span class="flex-1 text-left truncate text-gray-300">${name2}</span>
+            <span class="w-10 text-gray-500 font-bold">#${m.id}</span>
+            <span class="text-[10px] uppercase tracking-widest text-gray-400 font-black w-14 text-center">${limit} gól</span>
+            <span class="flex-1 text-right truncate text-gray-200 font-bold">${name1}</span>
+
+            <input type="number" min="0" max="${limit}"
+              onchange="updateScore(${m.id},'s1',this.value)"
+              value="${m.s1??''}"
+              class="w-12 bg-black text-white text-center border border-gray-600 rounded" />
+
+            <span class="text-gray-400">-</span>
+
+            <input type="number" min="0" max="${limit}"
+              onchange="updateScore(${m.id},'s2',this.value)"
+              value="${m.s2??''}"
+              class="w-12 bg-black text-white text-center border border-gray-600 rounded" />
+
+            <span class="flex-1 text-left truncate text-gray-200 font-bold">${name2}</span>
           </div>
         `;
       });
@@ -937,11 +1106,39 @@
 
     function updateScore(id, f, v) {
       const m = state.matches.find(x=>x.id===id);
-      if (m) {
-        m[f] = v==="" ? null : parseInt(v);
-        m.status = (m.s1!==null && m.s2!==null) ? 'played' : 'scheduled';
+      if (!m) return;
+
+      const limit = getGoalLimit(m);
+
+      // normalize
+      if (v === "") {
+        m[f] = null;
+        m.status = 'scheduled';
         saveData();
+        return;
       }
+
+      let val = parseInt(v);
+      if (isNaN(val)) val = null;
+      if (val !== null) {
+        val = Math.max(0, Math.min(limit, val));
+      }
+
+      // apply
+      m[f] = val;
+
+      // no draw rule (if both set and equal)
+      if (m.s1 !== null && m.s2 !== null && m.s1 === m.s2) {
+        alert("Nincs döntetlen! Kérlek állíts be győztest.");
+        m[f] = null;
+        m.status = 'scheduled';
+        saveData();
+        return;
+      }
+
+      // mark played only when both present
+      m.status = (m.s1!==null && m.s2!==null) ? 'played' : 'scheduled';
+      saveData();
     }
 
     function addRule() {
