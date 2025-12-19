@@ -7,6 +7,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -49,51 +50,25 @@
 
     #canvas-container {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 0;
       background: radial-gradient(circle at center, #1e293b 0%, #0f131a 100%);
     }
 
-    /* Nav gradient */
     nav {
       background: linear-gradient(to bottom, rgba(15, 19, 26, 0.95), rgba(15, 19, 26, 0));
     }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0f131a;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #ee3e38;
-      border-radius: 4px;
-    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f131a; }
+    ::-webkit-scrollbar-thumb { background: #ee3e38; border-radius: 4px; }
 
-    .title-glow {
-      text-shadow: 0 0 25px rgba(250, 204, 21, 0.6);
-    }
-    .fade-in {
-      animation: fadeIn 0.8s ease-out;
-    }
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    .title-glow { text-shadow: 0 0 25px rgba(250, 204, 21, 0.6); }
+    .fade-in { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    section {
-      scroll-margin-top: 150px;
-    }
+    section { scroll-margin-top: 150px; }
 
     .glass-panel {
       background: rgba(15, 23, 42, 0.85);
@@ -101,57 +76,87 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    main {
-      padding-top: 8rem;
-    }
-    #welcome {
-      margin-top: 2rem;
-    }
+    main { padding-top: 8rem; }
+    #welcome { margin-top: 2rem; }
 
     /* =========================
-       VISIBILITY BOOST (NEW)
+       COOL MATCH CARDS (NEW)
        ========================= */
-
-    /* Strong separation for match rows + finals cards */
-    #matches-list > div,
-    #finals-container > div {
-      background: rgba(2, 6, 23, 0.92) !important;
-      border: 1px solid rgba(255, 255, 255, 0.16) !important;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    .match-card{
+      background: linear-gradient(180deg, rgba(2,6,23,.88), rgba(15,23,42,.78));
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(14px);
+      position: relative;
+      overflow: hidden;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .match-card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(circle at 30% 20%, rgba(250,204,21,.22), transparent 45%),
+                  radial-gradient(circle at 80% 70%, rgba(238,62,56,.18), transparent 50%);
+      pointer-events:none;
+    }
+    .match-card:hover{
+      border-color: rgba(250,204,21,.28);
+      box-shadow: 0 26px 80px rgba(0,0,0,.55);
+      transform: translateY(-2px);
     }
 
-    /* Zebra striping for match rows */
-    #matches-list > div:nth-child(even) {
-      background: rgba(15, 23, 42, 0.92) !important;
+    .team-chip{
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 10px 14px;
+      border-radius: 14px;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Stronger hover state */
-    #matches-list > div:hover,
-    #finals-container > div:hover {
-      border-color: rgba(250, 204, 21, 0.35) !important;
-      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
-    }
-
-    /* Score pill */
-    .score-pill {
-      display: inline-block;
+    .vs-badge{
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
       padding: 6px 12px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(250, 204, 21, 0.25);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 900;
+      font-size: 11px;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Standings zebra + hover */
-    #standings-body tr:nth-child(odd) {
-      background: rgba(255, 255, 255, 0.03);
+    .score-badge{
+      background: rgba(0,0,0,.62);
+      border: 1px solid rgba(250,204,21,.28);
+      border-radius: 14px;
+      padding: 8px 14px;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+      position: relative;
+      z-index: 1;
     }
-    #standings-body tr:nth-child(even) {
-      background: rgba(0, 0, 0, 0.18);
+
+    .status-tag{
+      position:absolute;
+      top: 12px; right: 12px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.35);
+      z-index: 2;
     }
-    #standings-body tr:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
+    .status-upnext{ border-color: rgba(250,204,21,.25); color: #facc15; }
+    .status-played{ border-color: rgba(255,255,255,.10); color: rgba(255,255,255,.55); }
+
+    /* Standings zebra + hover (optional but helps) */
+    #standings-body tr:nth-child(odd)  { background: rgba(255,255,255,0.03); }
+    #standings-body tr:nth-child(even) { background: rgba(0,0,0,0.18); }
+    #standings-body tr:hover           { background: rgba(255,255,255,0.08); }
   </style>
 </head>
 
@@ -185,29 +190,23 @@
         </h1>
       </div>
 
-      <div class="z-20 fade-in" style="animation-delay: 0.2s">
-        <p
-          class="text-gray-200 text-sm md:text-base max-w-lg mb-10 leading-relaxed bg-black/80 p-6 rounded-xl backdrop-blur-md border border-white/10 shadow-2xl"
-        >
+      <div class="z-20 fade-in" style="animation-delay: 0.2s;">
+        <p class="text-gray-200 text-sm md:text-base max-w-lg mb-10 leading-relaxed bg-black/80 p-6 rounded-xl backdrop-blur-md border border-white/10 shadow-2xl">
           A hivatalos MÚSZ csocsó bajnokság visszatért! Regisztráljatok, pörgessétek fel az ünnepi hangulatot!
         </p>
       </div>
 
-      <div class="z-20 fade-in" style="animation-delay: 0.3s">
-        <button
-          onclick="document.getElementById('matches-list').scrollIntoView({behavior: 'smooth'})"
-          class="bg-brand-red hover:bg-red-600 text-white font-bold uppercase tracking-wide text-sm px-8 py-4 rounded shadow-lg transition transform hover:scale-105 border border-red-400"
-        >
+      <div class="z-20 fade-in" style="animation-delay: 0.3s;">
+        <button onclick="document.getElementById('matches-list').scrollIntoView({behavior: 'smooth'})"
+          class="bg-brand-red hover:bg-red-600 text-white font-bold uppercase tracking-wide text-sm px-8 py-4 rounded shadow-lg transition transform hover:scale-105 border border-red-400">
           Meccsek Megtekintése
         </button>
       </div>
 
-      <div class="mt-16 fade-in z-20" style="animation-delay: 0.4s">
+      <div class="mt-16 fade-in z-20" style="animation-delay: 0.4s;">
         <p class="text-gray-400 text-xs uppercase tracking-widest mb-2 font-bold shadow-black drop-shadow-md">Következő Mérkőzés</p>
-        <div
-          id="next-match-display"
-          class="text-xl font-bold text-white bg-black/80 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg"
-        >
+        <div id="next-match-display"
+          class="text-xl font-bold text-white bg-black/80 px-6 py-2 rounded border border-gray-700 backdrop-blur-md shadow-lg">
           Jelenleg nincs aktív meccs
         </div>
       </div>
@@ -223,7 +222,7 @@
         <div id="finals-container" class="mb-12 grid md:grid-cols-2 gap-6"></div>
 
         <h3 class="text-brand-gold text-sm font-bold uppercase tracking-widest mb-4">Csoportkör</h3>
-        <div id="matches-list" class="grid md:grid-cols-1 gap-3"></div>
+        <div id="matches-list" class="grid md:grid-cols-1 gap-4"></div>
       </section>
 
       <section id="tabella-section">
@@ -271,6 +270,7 @@
     </div>
   </footer>
 
+  <!-- ADMIN MODAL -->
   <div id="admin-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-md">
     <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl p-8 relative shadow-2xl">
       <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
@@ -280,28 +280,36 @@
       <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-2">Adminisztráció</h2>
 
       <div id="admin-login-view">
-        <input
-          type="password"
-          id="admin-pass"
+        <input type="password" id="admin-pass"
           class="w-full bg-black/50 border border-gray-700 rounded p-3 text-white mb-4 focus:border-brand-red outline-none"
-          placeholder="Jelszó"
-        />
+          placeholder="Jelszó" />
         <button onclick="adminLogin()" class="w-full bg-brand-red text-white font-bold py-3 rounded hover:bg-red-600">Belépés</button>
         <p id="login-error" class="text-brand-red mt-2 text-sm hidden">Helytelen jelszó!</p>
       </div>
 
       <div id="admin-dashboard-view" class="hidden space-y-8">
+
+        <!-- NEW: Seeded pairing -->
         <div class="bg-black/30 p-4 rounded border border-gray-800">
-          <h3 class="text-white font-bold mb-3">1. Csapatok Generálása</h3>
-          <textarea
-            id="player-input"
-            rows="4"
+          <h3 class="text-white font-bold mb-3">1. Párosítás (6 fix + 6 partner)</h3>
+
+          <label class="text-xs uppercase tracking-widest text-gray-500 font-bold">Fix 6 név (seed)</label>
+          <textarea id="seeded-input" rows="6"
+            class="w-full bg-black/50 border border-gray-700 rounded p-2 text-sm text-gray-300 mb-4 outline-none"
+            placeholder="1) ...&#10;2) ...&#10;3) ..."></textarea>
+
+          <label class="text-xs uppercase tracking-widest text-gray-500 font-bold">Második 6 név (partner pool)</label>
+          <textarea id="partner-input" rows="6"
             class="w-full bg-black/50 border border-gray-700 rounded p-2 text-sm text-gray-300 mb-3 outline-none"
-            placeholder="Nevek..."
-          ></textarea>
-          <button onclick="generateTournament()" class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold">
+            placeholder="1) ...&#10;2) ...&#10;3) ..."></textarea>
+
+          <button onclick="generateTournamentSeeded()"
+            class="bg-gray-700 hover:bg-gray-600 text-white w-full py-2 rounded text-sm font-bold">
             Indítás
           </button>
+
+          <!-- Optional: keep your old random generator if you ever want it -->
+          <!-- <button onclick="generateTournament()" class="mt-2 bg-gray-800 hover:bg-gray-700 text-white w-full py-2 rounded text-sm font-bold">Régi random sorsolás</button> -->
         </div>
 
         <div class="bg-black/30 p-4 rounded border border-gray-800">
@@ -312,13 +320,12 @@
         <div class="bg-black/30 p-4 rounded border border-gray-800">
           <h3 class="text-white font-bold mb-3">3. Szabályok</h3>
           <div class="flex gap-2 mb-2">
-            <input
-              type="text"
-              id="new-rule-input"
+            <input type="text" id="new-rule-input"
               class="flex-1 bg-black/50 border border-gray-700 rounded p-2 text-sm text-white focus:outline-none"
-              placeholder="Új szabály..."
-            />
-            <button onclick="addRule()" class="bg-brand-red px-3 rounded text-white hover:bg-red-600"><i class="fas fa-plus"></i></button>
+              placeholder="Új szabály..." />
+            <button onclick="addRule()" class="bg-brand-red px-3 rounded text-white hover:bg-red-600">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
           <ul id="admin-rules-list" class="space-y-1 text-sm text-gray-400"></ul>
         </div>
@@ -335,11 +342,10 @@
 
   <script>
     function initThreeJS() {
-      const container = document.getElementById("canvas-container");
+      const container = document.getElementById('canvas-container');
       const scene = new THREE.Scene();
       scene.fog = new THREE.FogExp2(0x0f131a, 0.025);
 
-      // Camera setup
       const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
       camera.position.set(0, 13, 20);
       camera.lookAt(0, 0, 0);
@@ -350,51 +356,48 @@
       renderer.shadowMap.enabled = true;
       container.appendChild(renderer.domElement);
 
-      // Lights
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
       scene.add(ambientLight);
+
       const mainSpot = new THREE.SpotLight(0xffffff, 1.3);
       mainSpot.position.set(5, 25, 5);
       mainSpot.castShadow = true;
       mainSpot.shadow.mapSize.width = 2048;
       mainSpot.shadow.mapSize.height = 2048;
       scene.add(mainSpot);
+
       const redLight = new THREE.PointLight(0xee3e38, 0.6, 25);
       redLight.position.set(-10, 8, 2);
       scene.add(redLight);
+
       const goldLight = new THREE.PointLight(0xfacc15, 0.6, 25);
       goldLight.position.set(10, 8, 2);
       scene.add(goldLight);
 
-      // === 1. PINE TEXTURE ===
       function createPineTexture() {
         const size = 128;
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
-        const cx = size / 2;
-        const cy = size / 2;
-        ctx.strokeStyle = "#166534";
+        const cx = size/2; const cy = size/2;
+        ctx.strokeStyle = '#166534';
         ctx.lineWidth = 2;
-        for (let i = 0; i < 60; i++) {
+        for (let i=0; i<60; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const length = Math.random() * (size / 2 - 5);
+          const length = Math.random() * (size/2 - 5);
           ctx.beginPath();
           ctx.moveTo(cx, cy);
-          ctx.lineTo(cx + Math.cos(angle) * length, cy + Math.sin(angle) * length);
-          ctx.globalAlpha = 0.6 + Math.random() * 0.4;
+          ctx.lineTo(cx + Math.cos(angle)*length, cy + Math.sin(angle)*length);
+          ctx.globalAlpha = 0.6 + Math.random()*0.4;
           ctx.stroke();
         }
         return new THREE.CanvasTexture(canvas);
       }
       const pineTexture = createPineTexture();
 
-      // === 2. PARTICLE GARLAND (High Position) ===
       const garlandGroup = new THREE.Group();
       function createFluffyGarland() {
-        // FIXED COORDINATES: Y=12, Z=5 (Foreground Top)
         const curve = new THREE.CatmullRomCurve3([
           new THREE.Vector3(-22, 12, 5),
           new THREE.Vector3(-11, 10, 5),
@@ -406,20 +409,26 @@
         const particleCount = 2000;
         const geo = new THREE.BufferGeometry();
         const positions = [];
-        for (let i = 0; i < particleCount; i++) {
+
+        for (let i=0; i<particleCount; i++) {
           const t = i / particleCount;
           const point = curve.getPoint(t);
-          positions.push(point.x + (Math.random() - 0.5) * 2.5, point.y + (Math.random() - 0.5) * 2.5, point.z + (Math.random() - 0.5) * 2.5);
+          positions.push(
+            point.x + (Math.random()-0.5)*2.5,
+            point.y + (Math.random()-0.5)*2.5,
+            point.z + (Math.random()-0.5)*2.5
+          );
         }
-        geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         const mat = new THREE.PointsMaterial({
           size: 2.5,
           map: pineTexture,
           transparent: true,
           opacity: 0.95,
           depthWrite: false,
-          color: 0xffffff,
+          color: 0xffffff
         });
+
         const garlandMesh = new THREE.Points(geo, mat);
         garlandMesh.frustumCulled = false;
         garlandGroup.add(garlandMesh);
@@ -427,42 +436,35 @@
         const ballGeo = new THREE.SphereGeometry(0.4, 16, 16);
         const redMat = new THREE.MeshStandardMaterial({ color: 0xee3e38, metalness: 0.7, roughness: 0.2 });
         const goldMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.2 });
-        for (let i = 0; i < 40; i++) {
+
+        for (let i=0; i<40; i++) {
           const t = Math.random();
           const point = curve.getPoint(t);
-          const ball = new THREE.Mesh(ballGeo, i % 2 === 0 ? redMat : goldMat);
-          ball.position.set(point.x + (Math.random() - 0.5), point.y - 1.0, point.z + 0.5);
+          const ball = new THREE.Mesh(ballGeo, i%2===0 ? redMat : goldMat);
+          ball.position.set(point.x+(Math.random()-0.5), point.y-1.0, point.z+0.5);
           garlandGroup.add(ball);
         }
       }
       createFluffyGarland();
       scene.add(garlandGroup);
 
-      // === ICE TABLE ===
       const tableGroup = new THREE.Group();
 
       const woodMat = new THREE.MeshStandardMaterial({ color: 0xe3e3e3, roughness: 0.4 });
       const fieldMat = new THREE.MeshStandardMaterial({ color: 0x88ccee, roughness: 0.7 });
       const metalMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.1 });
       const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
-      const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xd32f2f });
-      const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976d2 });
+      const redTeamMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
+      const blueTeamMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 });
       const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
 
       const wallLongGeo = new THREE.BoxGeometry(16, 2.5, 0.8);
       const wallShortGeo = new THREE.BoxGeometry(0.8, 2.5, 10.6);
-      const wN = new THREE.Mesh(wallLongGeo, woodMat);
-      wN.position.set(0, 1, -5);
-      wN.receiveShadow = true;
-      const wS = new THREE.Mesh(wallLongGeo, woodMat);
-      wS.position.set(0, 1, 5);
-      wS.receiveShadow = true;
-      const wE = new THREE.Mesh(wallShortGeo, woodMat);
-      wE.position.set(8, 1, 0);
-      wE.receiveShadow = true;
-      const wW = new THREE.Mesh(wallShortGeo, woodMat);
-      wW.position.set(-8, 1, 0);
-      wW.receiveShadow = true;
+
+      const wN = new THREE.Mesh(wallLongGeo, woodMat); wN.position.set(0, 1, -5); wN.receiveShadow=true;
+      const wS = new THREE.Mesh(wallLongGeo, woodMat); wS.position.set(0, 1, 5);  wS.receiveShadow=true;
+      const wE = new THREE.Mesh(wallShortGeo, woodMat); wE.position.set(8, 1, 0);  wE.receiveShadow=true;
+      const wW = new THREE.Mesh(wallShortGeo, woodMat); wW.position.set(-8, 1, 0); wW.receiveShadow=true;
       tableGroup.add(wN, wS, wE, wW);
 
       const field = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.5, 9.5), fieldMat);
@@ -471,33 +473,25 @@
 
       const centerLine = new THREE.Mesh(
         new THREE.PlaneGeometry(0.15, 9.5),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.6, transparent: true })
+        new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.6, transparent:true})
       );
-      centerLine.rotation.x = -Math.PI / 2;
+      centerLine.rotation.x = -Math.PI/2;
       centerLine.position.y = 0.26;
       tableGroup.add(centerLine);
 
       const centerCircle = new THREE.Mesh(
         new THREE.RingGeometry(1.5, 1.65, 32),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.6, transparent: true })
+        new THREE.MeshBasicMaterial({color:0xffffff, opacity:0.6, transparent:true})
       );
-      centerCircle.rotation.x = -Math.PI / 2;
+      centerCircle.rotation.x = -Math.PI/2;
       centerCircle.position.y = 0.26;
       tableGroup.add(centerCircle);
 
       const legGeo = new THREE.BoxGeometry(1.2, 7, 1.2);
-      const l1 = new THREE.Mesh(legGeo, woodMat);
-      l1.position.set(7, -3.5, 4);
-      tableGroup.add(l1);
-      const l2 = new THREE.Mesh(legGeo, woodMat);
-      l2.position.set(7, -3.5, -4);
-      tableGroup.add(l2);
-      const l3 = new THREE.Mesh(legGeo, woodMat);
-      l3.position.set(-7, -3.5, 4);
-      tableGroup.add(l3);
-      const l4 = new THREE.Mesh(legGeo, woodMat);
-      l4.position.set(-7, -3.5, -4);
-      tableGroup.add(l4);
+      const l1=new THREE.Mesh(legGeo, woodMat); l1.position.set(7,-3.5,4);  tableGroup.add(l1);
+      const l2=new THREE.Mesh(legGeo, woodMat); l2.position.set(7,-3.5,-4); tableGroup.add(l2);
+      const l3=new THREE.Mesh(legGeo, woodMat); l3.position.set(-7,-3.5,4); tableGroup.add(l3);
+      const l4=new THREE.Mesh(legGeo, woodMat); l4.position.set(-7,-3.5,-4);tableGroup.add(l4);
 
       const activeRods = [];
       const rodGeo = new THREE.CylinderGeometry(0.08, 0.08, 18);
@@ -512,25 +506,28 @@
         slideGroup.add(rotateGroup);
 
         const rodMesh = new THREE.Mesh(rodGeo, metalMat);
-        rodMesh.rotation.x = Math.PI / 2;
+        rodMesh.rotation.x = Math.PI/2;
         rodMesh.castShadow = true;
         rotateGroup.add(rodMesh);
 
         const handle = new THREE.Mesh(handleGeo, handleMat);
-        handle.rotation.x = Math.PI / 2;
-        handle.position.z = activeRods.length % 2 === 0 ? 9 : -9;
+        handle.rotation.x = Math.PI/2;
+        handle.position.z = (activeRods.length % 2 === 0) ? 9 : -9;
         rotateGroup.add(handle);
 
         const spacing = 8 / (count + 1);
-        for (let i = 1; i <= count; i++) {
-          const z = -4 + i * spacing;
+        for (let i=1; i<=count; i++) {
+          const z = -4 + (i * spacing);
           const playerGroup = new THREE.Group();
           playerGroup.position.z = z;
-          const body = new THREE.Mesh(playerBodyGeo, team === "red" ? redTeamMat : blueTeamMat);
+
+          const body = new THREE.Mesh(playerBodyGeo, team==='red'?redTeamMat:blueTeamMat);
           body.position.y = -0.6;
           body.castShadow = true;
+
           const head = new THREE.Mesh(playerHeadGeo, skinMat);
           head.position.y = 0.3;
+
           playerGroup.add(body);
           playerGroup.add(head);
           rotateGroup.add(playerGroup);
@@ -538,25 +535,26 @@
 
         tableGroup.add(slideGroup);
         activeRods.push({
-          slideGroup: slideGroup,
-          rotateGroup: rotateGroup,
-          initialX: x,
-          team: team,
-          slideOffset: Math.random() * 100,
-          slideSpeed: Math.random() * 0.01 + 0.005,
+          slideGroup, rotateGroup,
+          initialX: x, team,
+          slideOffset: Math.random()*100,
+          slideSpeed: Math.random()*0.01+0.005
         });
       }
 
-      createRodRow(-6.5, "red", 1);
-      createRodRow(-4.5, "red", 2);
-      createRodRow(-2.5, "blue", 3);
-      createRodRow(-0.5, "red", 5);
-      createRodRow(1.5, "blue", 5);
-      createRodRow(3.5, "red", 3);
-      createRodRow(5.5, "blue", 2);
-      createRodRow(7.5, "blue", 1);
+      createRodRow(-6.5, 'red', 1);
+      createRodRow(-4.5, 'red', 2);
+      createRodRow(-2.5, 'blue', 3);
+      createRodRow(-0.5, 'red', 5);
+      createRodRow(1.5, 'blue', 5);
+      createRodRow(3.5, 'red', 3);
+      createRodRow(5.5, 'blue', 2);
+      createRodRow(7.5, 'blue', 1);
 
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+      const ball = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18,16,16),
+        new THREE.MeshStandardMaterial({color:0xffffff})
+      );
       ball.position.set(0, 0.45, 0);
       ball.castShadow = true;
       tableGroup.add(ball);
@@ -565,21 +563,19 @@
       tableGroup.rotation.y = 0;
       scene.add(tableGroup);
 
-      // Snow
       const sGeo = new THREE.BufferGeometry();
       const sCount = 1000;
       const sPos = new Float32Array(sCount * 3);
-      for (let i = 0; i < sCount * 3; i++) sPos[i] = (Math.random() - 0.5) * 60;
-      sGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
+      for (let i=0; i<sCount*3; i++) sPos[i] = (Math.random() - 0.5) * 60;
+      sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
 
       function createSnowTex() {
-        const c = document.createElement("canvas");
-        c.width = 32;
-        c.height = 32;
-        const x = c.getContext("2d");
-        x.fillStyle = "#fff";
+        const c = document.createElement('canvas');
+        c.width=32; c.height=32;
+        const x = c.getContext('2d');
+        x.fillStyle='#fff';
         x.beginPath();
-        x.arc(16, 16, 10, 0, Math.PI * 2);
+        x.arc(16,16,10,0,Math.PI*2);
         x.fill();
         return new THREE.CanvasTexture(c);
       }
@@ -590,7 +586,6 @@
       );
       scene.add(snowMesh);
 
-      // Animation
       let ballVelocity = new THREE.Vector3(0.08, 0, 0.05);
 
       function animate() {
@@ -599,7 +594,7 @@
 
         garlandGroup.rotation.z = Math.sin(time * 0.5) * 0.02;
 
-        activeRods.forEach((rod) => {
+        activeRods.forEach(rod => {
           const slide = Math.sin(time * rod.slideSpeed + rod.slideOffset) * 0.3;
           rod.slideGroup.position.z = slide;
           if (Math.abs(ball.position.x - rod.initialX) < 0.8) rod.rotateGroup.rotation.z += 0.3;
@@ -607,19 +602,13 @@
         });
 
         ball.position.add(ballVelocity);
-        if (ball.position.x > 7.5 || ball.position.x < -7.5) {
-          ballVelocity.x *= -1;
-          ballVelocity.z += (Math.random() - 0.5) * 0.05;
-        }
+        if (ball.position.x > 7.5 || ball.position.x < -7.5) { ballVelocity.x *= -1; ballVelocity.z += (Math.random()-0.5)*0.05; }
         if (ball.position.z > 4.5 || ball.position.z < -4.5) ballVelocity.z *= -1;
-        if (Math.random() > 0.99) {
-          ballVelocity.x *= 1.1;
-          ballVelocity.z *= 1.1;
-        }
+        if (Math.random() > 0.99) { ballVelocity.x *= 1.1; ballVelocity.z *= 1.1; }
         ballVelocity.clampLength(0.06, 0.2);
 
         const pos = snowMesh.geometry.attributes.position.array;
-        for (let i = 1; i < pos.length; i += 3) {
+        for (let i=1; i<pos.length; i+=3) {
           pos[i] -= 0.06;
           if (pos[i] < -25) pos[i] = 25;
         }
@@ -629,52 +618,43 @@
       }
       animate();
 
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth/window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
     }
 
-    // Logic
-    const funnyNames = [
-      "Részeg Rénszarvasok",
-      "Beigli Betyárok",
-      "Grincs Gárdája",
-      "Forralt Bor FC",
-      "Hólapátolók",
-      "Kevinék",
-      "Reszkessetek",
-      "Jéghercegnők",
-      "Krampusz United",
-      "Diós Bejgli",
-    ];
+    // =========================
+    // LOGIC
+    // =========================
+    const funnyNames = ["Részeg Rénszarvasok","Beigli Betyárok","Grincs Gárdája","Forralt Bor FC","Hólapátolók","Kevinék","Reszkessetek","Jéghercegnők","Krampusz United","Diós Bejgli"];
 
     let state = {
       teams: [],
       matches: [],
       rules: ["Nincs döntetlen (10 gólig tart a meccs).", "A pörgetés tilos.", "Fair play mindenek felett.", "Gól után középkezdés."],
-      generated: false,
+      generated: false
     };
 
-    window.onload = function () {
+    window.onload = function() {
       initThreeJS();
       loadData();
     };
 
     function loadData() {
-      const local = localStorage.getItem("foosball_data");
+      const local = localStorage.getItem('foosball_data');
       if (local) {
         state = JSON.parse(local);
         renderAll();
       }
-      if (typeof db !== "undefined") {
-        db.ref("tournament").on("value", (s) => {
+      if (typeof db !== 'undefined') {
+        db.ref('tournament').on('value', (s) => {
           const d = s.val();
           if (d) {
             state = d;
             renderAll();
-            localStorage.setItem("foosball_data", JSON.stringify(state));
+            localStorage.setItem('foosball_data', JSON.stringify(state));
           }
         });
       }
@@ -682,8 +662,8 @@
 
     function saveData() {
       renderAll();
-      localStorage.setItem("foosball_data", JSON.stringify(state));
-      if (typeof db !== "undefined") db.ref("tournament").set(state);
+      localStorage.setItem('foosball_data', JSON.stringify(state));
+      if (typeof db !== 'undefined') db.ref('tournament').set(state);
     }
 
     function forceSave() {
@@ -694,44 +674,80 @@
       setTimeout(() => el.classList.add("opacity-0"), 1200);
     }
 
+    // Old random generator kept (optional)
     function generateTournament() {
-      const raw = document.getElementById("player-input").value.trim();
-      if (!raw) return alert("Kérlek adj meg neveket!");
-      let players = raw.split("\n").filter((n) => n.trim().length > 0);
-
+      const raw = prompt("Régi random sorsolás: adj meg neveket soronként:");
+      if (!raw) return;
+      let players = raw.split('\n').filter(n => n.trim().length > 0);
       for (let i = players.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [players[i], players[j]] = [players[j], players[i]];
       }
+      const teams = [];
+      const shuffledNames = [...funnyNames].sort(() => 0.5 - Math.random());
+      let pIndex = 0, teamId = 1;
+      while (pIndex < players.length) {
+        let name = shuffledNames[teamId - 1] || `Csapat ${teamId}`;
+        let members = (players.length - pIndex === 1) ? [players[pIndex], "VÁRAKOZÓ"] : [players[pIndex], players[pIndex+1]];
+        teams.push({ id: teamId++, name, members, stats: { played:0, w:0, l:0, pts:0, gf:0, ga:0 }});
+        pIndex += (players.length - pIndex === 1) ? 1 : 2;
+      }
+      let matches = [], matchId = 1;
+      for (let i=0; i<teams.length; i++) {
+        for (let j=i+1; j<teams.length; j++) {
+          matches.push({ id: matchId++, t1: teams[i].id, t2: teams[j].id, s1:null, s2:null, status:'scheduled', type:'group' });
+        }
+      }
+      matches.sort(() => 0.5 - Math.random());
+      matches.push({ id: 998, t1:null, t2:null, s1:null, s2:null, status:'scheduled', type:'bronze', label:'Bronzmeccs' });
+      matches.push({ id: 999, t1:null, t2:null, s1:null, s2:null, status:'scheduled', type:'gold', label:'DÖNTŐ' });
+      state.teams = teams;
+      state.matches = matches;
+      saveData();
+    }
+
+    // NEW seeded pairing (6 + 6)
+    function generateTournamentSeeded() {
+      const seededRaw = document.getElementById('seeded-input').value.trim();
+      const partnerRaw = document.getElementById('partner-input').value.trim();
+
+      if(!seededRaw || !partnerRaw) return alert("Kérlek add meg mindkét listát!");
+
+      const seeded = seededRaw.split('\n').map(x=>x.trim()).filter(Boolean);
+      const partners = partnerRaw.split('\n').map(x=>x.trim()).filter(Boolean);
+
+      if(seeded.length !== 6 || partners.length !== 6) {
+        return alert(`Pontosan 6-6 név kell.\nMost: fix=${seeded.length}, partner=${partners.length}`);
+      }
+
+      // shuffle ONLY partners
+      for (let i = partners.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [partners[i], partners[j]] = [partners[j], partners[i]];
+      }
 
       const teams = [];
       const shuffledNames = [...funnyNames].sort(() => 0.5 - Math.random());
-      let pIndex = 0,
-        teamId = 1;
 
-      while (pIndex < players.length) {
-        let name = shuffledNames[teamId - 1] || `Csapat ${teamId}`;
-        let members = players.length - pIndex === 1 ? [players[pIndex], "VÁRAKOZÓ"] : [players[pIndex], players[pIndex + 1]];
+      for(let i=0; i<6; i++){
         teams.push({
-          id: teamId++,
-          name: name,
-          members: members,
-          stats: { played: 0, w: 0, l: 0, pts: 0, gf: 0, ga: 0 },
+          id: i+1,
+          name: shuffledNames[i] || `Csapat ${i+1}`,
+          members: [seeded[i], partners[i]],
+          stats: { played:0, w:0, l:0, pts:0, gf:0, ga:0 }
         });
-        pIndex += players.length - pIndex === 1 ? 1 : 2;
       }
 
-      let matches = [],
-        matchId = 1;
-      for (let i = 0; i < teams.length; i++) {
-        for (let j = i + 1; j < teams.length; j++) {
-          matches.push({ id: matchId++, t1: teams[i].id, t2: teams[j].id, s1: null, s2: null, status: "scheduled", type: "group" });
+      let matches = [], matchId = 1;
+      for (let i=0; i<teams.length; i++) {
+        for (let j=i+1; j<teams.length; j++) {
+          matches.push({ id: matchId++, t1: teams[i].id, t2: teams[j].id, s1:null, s2:null, status:'scheduled', type:'group' });
         }
       }
 
       matches.sort(() => 0.5 - Math.random());
-      matches.push({ id: 998, t1: null, t2: null, s1: null, s2: null, status: "scheduled", type: "bronze", label: "Bronzmeccs" });
-      matches.push({ id: 999, t1: null, t2: null, s1: null, s2: null, status: "scheduled", type: "gold", label: "DÖNTŐ" });
+      matches.push({ id: 998, t1:null, t2:null, s1:null, s2:null, status:'scheduled', type:'bronze', label:'Bronzmeccs' });
+      matches.push({ id: 999, t1:null, t2:null, s1:null, s2:null, status:'scheduled', type:'gold', label:'DÖNTŐ' });
 
       state.teams = teams;
       state.matches = matches;
@@ -739,51 +755,41 @@
     }
 
     function calculateStandings() {
-      state.teams.forEach((t) => (t.stats = { played: 0, w: 0, l: 0, pts: 0, gf: 0, ga: 0 }));
-      const groups = state.matches.filter((m) => m.type === "group");
+      state.teams.forEach(t => t.stats = { played:0, w:0, l:0, pts:0, gf:0, ga:0 });
+      const groups = state.matches.filter(m => m.type === 'group');
       let allPlayed = groups.length > 0;
 
-      groups.forEach((m) => {
-        if (m.status !== "played") allPlayed = false;
-        if (m.status === "played") {
-          const t1 = state.teams.find((t) => t.id === m.t1);
-          const t2 = state.teams.find((t) => t.id === m.t2);
-          if (t1 && t2) {
-            t1.stats.played++;
-            t2.stats.played++;
-            t1.stats.gf += parseInt(m.s1);
-            t1.stats.ga += parseInt(m.s2);
-            t2.stats.gf += parseInt(m.s2);
-            t2.stats.ga += parseInt(m.s1);
-            if (m.s1 > m.s2) {
-              t1.stats.w++;
-              t1.stats.pts += 3;
-              t2.stats.l++;
-            } else if (m.s2 > m.s1) {
-              t2.stats.w++;
-              t2.stats.pts += 3;
-              t1.stats.l++;
-            }
-          }
+      groups.forEach(m => {
+        if (m.status !== 'played') allPlayed = false;
+
+        if (m.status === 'played') {
+          const t1 = state.teams.find(t => t.id === m.t1);
+          const t2 = state.teams.find(t => t.id === m.t2);
+          if (!t1 || !t2) return;
+
+          t1.stats.played++; t2.stats.played++;
+          t1.stats.gf += parseInt(m.s1); t1.stats.ga += parseInt(m.s2);
+          t2.stats.gf += parseInt(m.s2); t2.stats.ga += parseInt(m.s1);
+
+          if (m.s1 > m.s2) { t1.stats.w++; t1.stats.pts += 3; t2.stats.l++; }
+          else if (m.s2 > m.s1) { t2.stats.w++; t2.stats.pts += 3; t1.stats.l++; }
         }
       });
 
-      state.teams.sort((a, b) => b.stats.pts - a.stats.pts || b.stats.gf - b.stats.ga - (a.stats.gf - a.stats.ga));
+      state.teams.sort((a,b) =>
+        b.stats.pts - a.stats.pts ||
+        (b.stats.gf - b.stats.ga) - (a.stats.gf - a.stats.ga)
+      );
 
-      const bronze = state.matches.find((m) => m.type === "bronze");
-      const gold = state.matches.find((m) => m.type === "gold");
-
+      const bronze = state.matches.find(m => m.type === 'bronze');
+      const gold = state.matches.find(m => m.type === 'gold');
       if (bronze && gold && state.teams.length >= 4) {
         if (allPlayed) {
-          gold.t1 = state.teams[0].id;
-          gold.t2 = state.teams[1].id;
-          bronze.t1 = state.teams[2].id;
-          bronze.t2 = state.teams[3].id;
+          gold.t1 = state.teams[0].id; gold.t2 = state.teams[1].id;
+          bronze.t1 = state.teams[2].id; bronze.t2 = state.teams[3].id;
         } else {
-          gold.t1 = null;
-          gold.t2 = null;
-          bronze.t1 = null;
-          bronze.t2 = null;
+          gold.t1 = null; gold.t2 = null;
+          bronze.t1 = null; bronze.t2 = null;
         }
       }
     }
@@ -791,173 +797,184 @@
     function renderAll() {
       calculateStandings();
 
-      document.getElementById("rules-list").innerHTML = state.rules.map((r) => `<li>${r}</li>`).join("");
-      document.getElementById("admin-rules-list").innerHTML = state.rules
-        .map(
-          (r, i) => `
-          <li class="flex justify-between items-center bg-gray-800 p-2 rounded">
-            <span>${r}</span>
-            <button onclick="deleteRule(${i})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
-          </li>`
-        )
-        .join("");
+      document.getElementById('rules-list').innerHTML = state.rules.map(r => `<li>${r}</li>`).join('');
+      document.getElementById('admin-rules-list').innerHTML = state.rules.map((r,i) =>
+        `<li class="flex justify-between items-center bg-gray-800 p-2 rounded">
+          <span>${r}</span>
+          <button onclick="deleteRule(${i})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+        </li>`
+      ).join('');
 
-      const tbody = document.getElementById("standings-body");
-      tbody.innerHTML = "";
+      // Standings
+      const tbody = document.getElementById('standings-body');
+      tbody.innerHTML = '';
       state.teams.forEach((t, i) => {
-        let rowColor = i < 3 ? (i === 0 ? "text-brand-gold" : "text-gray-200") : "text-gray-500";
+        let rowColor = i < 3 ? (i===0 ? 'text-brand-gold' : 'text-gray-200') : 'text-gray-500';
         tbody.innerHTML += `
           <tr class="transition">
-            <td class="p-4 font-bold ${rowColor}">${i + 1}.</td>
+            <td class="p-4 font-bold ${rowColor}">${i+1}.</td>
             <td class="p-4">
               <div class="font-bold text-white">${t.name}</div>
-              <div class="text-xs text-gray-400">${t.members ? t.members.join(" & ") : ""}</div>
+              <div class="text-xs text-gray-400">${t.members ? t.members.join(' & ') : ''}</div>
             </td>
             <td class="p-4 text-center text-gray-200">${t.stats.played}</td>
             <td class="p-4 text-center text-green-400">${t.stats.w}</td>
             <td class="p-4 text-center text-red-400">${t.stats.l}</td>
             <td class="p-4 text-right font-bold text-white">${t.stats.pts}</td>
-          </tr>`;
+          </tr>
+        `;
       });
 
-      const mList = document.getElementById("matches-list");
-      const fList = document.getElementById("finals-container");
-      mList.innerHTML = "";
-      fList.innerHTML = "";
-
-      const groups = state.matches.filter((m) => m.type === "group");
-      const finals = state.matches.filter((m) => m.type !== "group");
-
-      const nextMatch = state.matches.find((m) => m.status === "scheduled" && m.t1 && m.t2);
-      document.getElementById("next-match-display").innerHTML = nextMatch
-        ? `<span class="text-white">${state.teams.find((t) => t.id === nextMatch.t1).name}</span> <span class="text-brand-red mx-2">vs</span> <span class="text-white">${state.teams.find((t) => t.id === nextMatch.t2).name}</span>`
+      // Next match
+      const nextMatch = state.matches.find(m => m.status === 'scheduled' && m.t1 && m.t2);
+      document.getElementById('next-match-display').innerHTML = nextMatch
+        ? `<span class="text-white">${state.teams.find(t=>t.id===nextMatch.t1)?.name || ''}</span>
+           <span class="text-brand-red mx-2">vs</span>
+           <span class="text-white">${state.teams.find(t=>t.id===nextMatch.t2)?.name || ''}</span>`
         : "Nincs aktív meccs / Vége";
 
-      // GROUP MATCHES
-      groups.forEach((m) => {
-        const t1 = state.teams.find((t) => t.id === m.t1);
-        const t2 = state.teams.find((t) => t.id === m.t2);
-        if (!t1 || !t2) return;
+      // Matches rendering (COOL CARDS)
+      const mList = document.getElementById('matches-list');
+      const fList = document.getElementById('finals-container');
+      mList.innerHTML = '';
+      fList.innerHTML = '';
 
-        const score =
-          m.status === "played"
-            ? `<span class="score-pill text-xl font-black text-brand-gold">${m.s1} - ${m.s2}</span>`
-            : `<span class="score-pill text-xs font-bold uppercase tracking-widest text-gray-200">VS</span>`;
+      const groups = state.matches.filter(m => m.type === 'group');
+      const finals = state.matches.filter(m => m.type !== 'group');
+
+      // Group cards
+      groups.forEach(m => {
+        const t1 = state.teams.find(t=>t.id===m.t1);
+        const t2 = state.teams.find(t=>t.id===m.t2);
+        if(!t1 || !t2) return;
+
+        const isPlayed = m.status === 'played';
+        const statusTag = isPlayed
+          ? `<div class="status-tag status-played">PLAYED</div>`
+          : `<div class="status-tag status-upnext">UP NEXT</div>`;
+
+        const midBadge = isPlayed
+          ? `<div class="score-badge text-brand-gold text-xl">${m.s1} : ${m.s2}</div>`
+          : `<div class="vs-badge text-gray-200">VS</div>`;
 
         mList.innerHTML += `
-          <div class="glass-panel p-4 rounded flex justify-between items-center ${m.status === "played" ? "opacity-90" : ""}">
-            <div class="flex-1 text-right pr-4 font-bold text-white">${t1.name}</div>
-            <div class="w-28 text-center">${score}</div>
-            <div class="flex-1 text-left pl-4 font-bold text-white">${t2.name}</div>
-          </div>`;
+          <div class="match-card rounded-2xl p-5 flex items-center gap-4 md:gap-6">
+            ${statusTag}
+            <div class="flex-1 team-chip">
+              <div class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-1">Hazai</div>
+              <div class="text-white font-extrabold text-lg leading-tight">${t1.name}</div>
+            </div>
+
+            <div class="flex items-center justify-center min-w-[110px]">
+              ${midBadge}
+            </div>
+
+            <div class="flex-1 team-chip text-right">
+              <div class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-1">Vendég</div>
+              <div class="text-white font-extrabold text-lg leading-tight">${t2.name}</div>
+            </div>
+          </div>
+        `;
       });
 
-      // FINALS
-      finals
-        .sort((a, b) => (b.type === "gold" ? 1 : -1))
-        .forEach((m) => {
-          const t1 = state.teams.find((t) => t.id === m.t1);
-          const t2 = state.teams.find((t) => t.id === m.t2);
+      // Finals (keep your previous simple cards)
+      finals.sort((a,b) => b.type==='gold'?1:-1).forEach(m => {
+        const t1 = state.teams.find(t=>t.id===m.t1);
+        const t2 = state.teams.find(t=>t.id===m.t2);
+        const borderColor = m.type==='gold' ? 'border-brand-gold' : 'border-orange-700';
 
-          const borderColor = m.type === "gold" ? "border-brand-gold" : "border-orange-700";
-          let content;
-
-          if (t1 && t2) {
-            const score =
-              m.status === "played"
-                ? `<span class="score-pill text-2xl font-black text-brand-gold mx-2">${m.s1}-${m.s2}</span>`
-                : `<span class="score-pill text-xs font-bold uppercase tracking-widest text-gray-200 mx-2">VS</span>`;
-
-            content = `
-              <div class="flex justify-between items-center mt-2">
-                <span class="font-bold text-white text-lg">${t1.name}</span>
-                ${score}
-                <span class="font-bold text-white text-lg">${t2.name}</span>
-              </div>`;
-          } else {
-            const label1 = m.type === "gold" ? "1. Helyezett" : "3. Helyezett";
-            const label2 = m.type === "gold" ? "2. Helyezett" : "4. Helyezett";
-            content = `
-              <div class="flex justify-between items-center mt-2 opacity-60">
-                <span class="font-bold text-gray-200">${label1}</span>
-                <span class="score-pill text-xs font-bold uppercase tracking-widest text-gray-200 mx-2">VS</span>
-                <span class="font-bold text-gray-200">${label2}</span>
-              </div>`;
-          }
-
-          fList.innerHTML += `
-            <div class="glass-panel p-6 rounded border-t-4 ${borderColor} relative">
-              <div class="absolute top-2 right-2 text-[10px] uppercase font-bold tracking-widest ${
-                m.type === "gold" ? "text-brand-gold" : "text-orange-500"
-              }">${m.label}</div>
-              ${content}
+        let content;
+        if (t1 && t2) {
+          content = `
+            <div class="flex justify-between items-center mt-2">
+              <span class="font-bold text-white text-lg">${t1.name}</span>
+              ${m.status==='played'
+                ? `<span class="score-badge text-2xl text-brand-gold mx-2">${m.s1}-${m.s2}</span>`
+                : `<span class="vs-badge text-gray-200 mx-2">VS</span>`}
+              <span class="font-bold text-white text-lg">${t2.name}</span>
             </div>`;
-        });
+        } else {
+          const label1 = m.type === 'gold' ? '1. Helyezett' : '3. Helyezett';
+          const label2 = m.type === 'gold' ? '2. Helyezett' : '4. Helyezett';
+          content = `
+            <div class="flex justify-between items-center mt-2 opacity-60">
+              <span class="font-bold text-gray-200">${label1}</span>
+              <span class="vs-badge text-gray-200 mx-2">VS</span>
+              <span class="font-bold text-gray-200">${label2}</span>
+            </div>`;
+        }
 
-      // ADMIN MATCH LIST
-      const aList = document.getElementById("admin-match-list");
-      aList.innerHTML = "";
-      state.matches.forEach((m) => {
-        const t1 = state.teams.find((t) => t.id === m.t1);
-        const t2 = state.teams.find((t) => t.id === m.t2);
+        fList.innerHTML += `
+          <div class="match-card p-6 rounded-2xl border-t-4 ${borderColor} relative">
+            <div class="absolute top-2 right-2 text-[10px] uppercase font-bold tracking-widest ${m.type==='gold'?'text-brand-gold':'text-orange-500'}">${m.label}</div>
+            ${content}
+          </div>
+        `;
+      });
 
-        let name1 = t1 ? t1.name : m.type === "group" ? "?" : m.type === "gold" ? "1. Hely" : "3. Hely";
-        let name2 = t2 ? t2.name : m.type === "group" ? "?" : m.type === "gold" ? "2. Hely" : "4. Hely";
+      // Admin match list
+      const aList = document.getElementById('admin-match-list');
+      aList.innerHTML = '';
+      state.matches.forEach(m => {
+        const t1 = state.teams.find(t=>t.id===m.t1);
+        const t2 = state.teams.find(t=>t.id===m.t2);
+
+        let name1 = t1 ? t1.name : (m.type==='group' ? '?' : (m.type==='gold'?'1. Hely':'3. Hely'));
+        let name2 = t2 ? t2.name : (m.type==='group' ? '?' : (m.type==='gold'?'2. Hely':'4. Hely'));
 
         aList.innerHTML += `
           <div class="flex items-center gap-2 bg-gray-800 p-2 rounded text-xs mb-1">
             <span class="w-6 text-gray-500">#${m.id}</span>
             <span class="flex-1 text-right truncate text-gray-300">${name1}</span>
-            <input type="number" onchange="updateScore(${m.id},'s1',this.value)" value="${m.s1 ?? ""}"
-              class="w-8 bg-black text-white text-center border border-gray-600 rounded" />
+            <input type="number" onchange="updateScore(${m.id},'s1',this.value)" value="${m.s1??''}" class="w-10 bg-black text-white text-center border border-gray-600 rounded">
             <span>-</span>
-            <input type="number" onchange="updateScore(${m.id},'s2',this.value)" value="${m.s2 ?? ""}"
-              class="w-8 bg-black text-white text-center border border-gray-600 rounded" />
+            <input type="number" onchange="updateScore(${m.id},'s2',this.value)" value="${m.s2??''}" class="w-10 bg-black text-white text-center border border-gray-600 rounded">
             <span class="flex-1 text-left truncate text-gray-300">${name2}</span>
-          </div>`;
+          </div>
+        `;
       });
     }
 
     function updateScore(id, f, v) {
-      const m = state.matches.find((x) => x.id === id);
+      const m = state.matches.find(x=>x.id===id);
       if (m) {
-        m[f] = v === "" ? null : parseInt(v);
-        m.status = m.s1 !== null && m.s2 !== null ? "played" : "scheduled";
+        m[f] = v==="" ? null : parseInt(v);
+        m.status = (m.s1!==null && m.s2!==null) ? 'played' : 'scheduled';
         saveData();
       }
     }
 
     function addRule() {
-      const i = document.getElementById("new-rule-input");
-      if (i.value.trim()) {
+      const i = document.getElementById('new-rule-input');
+      if(i.value.trim()){
         state.rules.push(i.value.trim());
-        i.value = "";
+        i.value='';
         saveData();
       }
     }
 
     function deleteRule(i) {
-      state.rules.splice(i, 1);
+      state.rules.splice(i,1);
       saveData();
     }
 
     function openAdminModal() {
-      document.getElementById("admin-modal").classList.remove("hidden");
-      document.getElementById("admin-modal").classList.add("flex");
+      document.getElementById('admin-modal').classList.remove('hidden');
+      document.getElementById('admin-modal').classList.add('flex');
     }
 
     function closeAdminModal() {
-      document.getElementById("admin-modal").classList.add("hidden");
-      document.getElementById("admin-modal").classList.remove("flex");
+      document.getElementById('admin-modal').classList.add('hidden');
+      document.getElementById('admin-modal').classList.remove('flex');
     }
 
     function adminLogin() {
-      if (document.getElementById("admin-pass").value === "Jimmy92") {
-        document.getElementById("admin-login-view").classList.add("hidden");
-        document.getElementById("admin-dashboard-view").classList.remove("hidden");
+      if(document.getElementById('admin-pass').value === 'Jimmy92') {
+        document.getElementById('admin-login-view').classList.add('hidden');
+        document.getElementById('admin-dashboard-view').classList.remove('hidden');
         renderAll();
       } else {
-        document.getElementById("login-error").classList.remove("hidden");
+        document.getElementById('login-error').classList.remove('hidden');
       }
     }
   </script>
